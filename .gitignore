@@ -1,0 +1,42 @@
+# Common ignores
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+env/
+venv/
+build/
+dist/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Logs
+*.log
+
+# VS Code
+.vscode/
+# Ignore archives
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.tgz
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temp/Cache
+*.tmp
+*.bak
+*.swp
+*~
+*.mp4
+*.wav
+*.pdf

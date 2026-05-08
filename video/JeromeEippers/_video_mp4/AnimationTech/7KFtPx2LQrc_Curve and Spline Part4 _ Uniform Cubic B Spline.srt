@@ -1,0 +1,603 @@
+1
+00:00:00,000 --> 00:00:04,600
+Hi, in the previous video, we've seen how to compute the cardinal spline and
+
+2
+00:00:05,679 --> 00:00:11,560
+the cardinal spline was an interpolation spline that was going through every data point
+
+3
+00:00:11,560 --> 00:00:17,400
+But we've noticed that at best we could have only a C1 continuity and we could not have a C2 continuity
+
+4
+00:00:17,480 --> 00:00:20,800
+What we will study today is the uniform cubic B spline
+
+5
+00:00:21,039 --> 00:00:24,760
+Which is an approximation curve because we won't go through the data point
+
+6
+00:00:24,960 --> 00:00:28,719
+But at this time it will actually give us a C2 continuity
+
+7
+00:00:28,719 --> 00:00:34,799
+So, we'll see how to compute a uniform cubic B-spline using the DeBoer algorithm.
+
+8
+00:00:34,799 --> 00:00:39,840
+And the DeBoer algorithm is fairly simple to use.
+
+9
+00:00:39,840 --> 00:00:43,679
+The stuff that you have to do is if you have a bunch of points and you want to fit a curve
+
+10
+00:00:43,679 --> 00:00:48,640
+through it, the first step is to split every edge in three.
+
+11
+00:00:48,640 --> 00:00:54,620
+So, you have equidistance points now on those lines.
+
+12
+00:00:54,620 --> 00:00:56,340
+Now that we have those, we could actually
+
+13
+00:00:56,340 --> 00:01:00,420
+start to connect the last and the first one,
+
+14
+00:01:00,420 --> 00:01:03,020
+and then the last and the first, the last and the first,
+
+15
+00:01:03,020 --> 00:01:05,140
+and so on and so on.
+
+16
+00:01:05,140 --> 00:01:07,020
+And once you've done this, we could
+
+17
+00:01:07,020 --> 00:01:10,939
+start to split each of those new edges in half.
+
+18
+00:01:10,939 --> 00:01:14,620
+So you have a point in the middle now every time.
+
+19
+00:01:14,620 --> 00:01:17,620
+Now that we have those points, what we could do
+
+20
+00:01:17,620 --> 00:01:20,380
+is to use those four points we have here
+
+21
+00:01:20,380 --> 00:01:23,380
+and give them inside of a basic curve,
+
+22
+00:01:23,379 --> 00:01:28,539
+saying that that's a cubic-basic curve we want to build here.
+
+23
+00:01:28,539 --> 00:01:34,619
+And then we can give the next four points to the next cubic-basic curve.
+
+24
+00:01:34,619 --> 00:01:38,619
+And that's how you actually build a uniform cubic base plane.
+
+25
+00:01:38,619 --> 00:01:44,379
+Now it has the advantage that it has computed for us.
+
+26
+00:01:44,379 --> 00:01:48,379
+Those dungeons make sure that the points on each side
+
+27
+00:01:48,379 --> 00:01:52,500
+were equidistant and on the same line.
+
+28
+00:01:52,500 --> 00:01:56,260
+So actually, we've done all the stuff that we said
+
+29
+00:01:56,260 --> 00:01:58,340
+that was annoying to do in the basic curve
+
+30
+00:01:58,340 --> 00:02:00,579
+when we stick them back to back.
+
+31
+00:02:00,579 --> 00:02:02,340
+And by doing so in this way
+
+32
+00:02:02,340 --> 00:02:06,859
+and making sure that we have the points in the proper place,
+
+33
+00:02:06,859 --> 00:02:11,539
+what happened is that we have a C2 continuity.
+
+34
+00:02:11,539 --> 00:02:15,900
+So if I re-draw this exact same curve here,
+
+35
+00:02:15,900 --> 00:02:20,900
+you could see now that my first derivative is continuous
+
+36
+00:02:20,900 --> 00:02:31,659
+And my second directive is also continuous, so I have continuity in C1, C0, C1 and C2.
+
+37
+00:02:31,659 --> 00:02:39,980
+Now at the same way we've computed the cardinous plane using Hermit curves and then we decided
+
+38
+00:02:39,980 --> 00:02:45,300
+to try to find the mathematics to be able to compute directly cardinous plane without
+
+39
+00:02:45,300 --> 00:02:48,219
+the need of going through Hermit curves.
+
+40
+00:02:48,219 --> 00:02:50,859
+We could do the same for Uniform Cubic Spline.
+
+41
+00:02:50,859 --> 00:02:55,740
+Instead of having a function that will give us all the points
+
+42
+00:02:55,740 --> 00:02:58,460
+that we have to give to basic half to compute those,
+
+43
+00:02:58,460 --> 00:03:00,900
+we can actually find a formula that will allow us
+
+44
+00:03:00,900 --> 00:03:04,579
+to directly compute a Uniform Cubic B Spline.
+
+45
+00:03:04,579 --> 00:03:07,960
+And this algorithm is the Cox-DeBoer basis.
+
+46
+00:03:09,060 --> 00:03:11,460
+It's a bit like going from the basic half
+
+47
+00:03:11,460 --> 00:03:14,780
+using the Castellge algorithm to the Bernstein basis.
+
+48
+00:03:14,780 --> 00:03:18,140
+Now we're going from the Bohr algorithm
+
+49
+00:03:18,140 --> 00:03:20,460
+to the Cox-DeBohr basis.
+
+50
+00:03:21,340 --> 00:03:24,740
+And how it works is an iterative process
+
+51
+00:03:24,740 --> 00:03:26,860
+to build those base.
+
+52
+00:03:28,020 --> 00:03:31,319
+And it's a bit tricky to understand,
+
+53
+00:03:31,319 --> 00:03:33,719
+maybe if I just show you the mathematics.
+
+54
+00:03:35,120 --> 00:03:38,719
+It's an iterative function that starts
+
+55
+00:03:39,659 --> 00:03:42,400
+with the simplest step,
+
+56
+00:03:42,400 --> 00:03:44,699
+and I will show you here mathematically.
+
+57
+00:03:44,700 --> 00:03:47,900
+So the way the Cox-DeBord basis start,
+
+58
+00:03:47,900 --> 00:03:50,300
+it says that it has a bunch of knots.
+
+59
+00:03:50,300 --> 00:03:53,100
+So that's your points you want to have.
+
+60
+00:03:53,100 --> 00:03:57,300
+And in this case, because I'm using the cubic version,
+
+61
+00:03:57,300 --> 00:04:02,300
+what I want to have is basically four knots,
+
+62
+00:04:02,420 --> 00:04:05,060
+meaning that I have five points, let's say.
+
+63
+00:04:05,060 --> 00:04:09,260
+And what happened is I have a point at zero at one,
+
+64
+00:04:09,260 --> 00:04:12,260
+two, three, and four, for instance.
+
+65
+00:04:12,260 --> 00:04:16,660
+And that gives me four different curves.
+
+66
+00:04:16,660 --> 00:04:18,819
+And the curves see, and they're just on and off.
+
+67
+00:04:18,819 --> 00:04:21,300
+And that's what the definition is here.
+
+68
+00:04:21,300 --> 00:04:26,300
+It says that if I have a basis of degree zero for index i,
+
+69
+00:04:27,740 --> 00:04:31,900
+it says the value is one if my t value
+
+70
+00:04:31,900 --> 00:04:35,620
+that goes between, in this case, zero to five,
+
+71
+00:04:35,620 --> 00:04:36,860
+or zero to four, sorry.
+
+72
+00:04:36,860 --> 00:04:47,340
+If my T value is bigger than the knots before and smaller than the knots after, actually
+
+73
+00:04:47,340 --> 00:04:50,300
+I'm 1, otherwise I'm 0.
+
+74
+00:04:50,300 --> 00:04:51,379
+And that's what you can see here.
+
+75
+00:04:51,379 --> 00:04:55,900
+I have my first base, which is the blue line.
+
+76
+00:04:55,900 --> 00:05:00,220
+The blue line is 1, and I drop at 0s, and then I get the yellow, and then I get the
+
+77
+00:05:00,220 --> 00:05:03,740
+green, and then I get the red.
+
+78
+00:05:03,740 --> 00:05:08,340
+So I get four different curves that just on and off.
+
+79
+00:05:08,340 --> 00:05:12,980
+And then if you want to start to compute a higher degree,
+
+80
+00:05:12,980 --> 00:05:15,420
+it's an iterative recursive function.
+
+81
+00:05:15,420 --> 00:05:19,500
+So basically it says that you take the level,
+
+82
+00:05:20,500 --> 00:05:25,180
+the base before and with the index i, index i plus one,
+
+83
+00:05:25,180 --> 00:05:27,340
+and you do basically a linear interpolation,
+
+84
+00:05:27,340 --> 00:05:28,980
+which is a bit more complex now
+
+85
+00:05:28,980 --> 00:05:30,579
+because we have range and all that kind of stuff,
+
+86
+00:05:30,579 --> 00:05:33,660
+but that's what those two functions here are doing.
+
+87
+00:05:33,660 --> 00:05:40,140
+do linear interpolation between the different bases and so meaning that we started from the four
+
+88
+00:05:40,140 --> 00:05:52,300
+different base now we have three base that blue triangle is the interpolation between the blue
+
+89
+00:05:52,300 --> 00:05:58,060
+square and the yellow square the yellow triangle is the yellow and green and the green triangle
+
+90
+00:05:58,060 --> 00:06:03,500
+is the green and red and then you can go one higher step and then you can interpolate
+
+91
+00:06:03,500 --> 00:06:09,019
+between the two triangles, which give you that nice curves, and then you can interpret between
+
+92
+00:06:11,019 --> 00:06:18,540
+the two curves and that you get one big curve. And that gives me my final answer, that's the curve
+
+93
+00:06:18,540 --> 00:06:25,980
+I'm interested in to try to compute my uniform cubic B-spline. Bit abstract at this point still,
+
+94
+00:06:26,699 --> 00:06:32,139
+so what I will do is that I will redo exactly the same mathematics as the one I've done here,
+
+95
+00:06:32,139 --> 00:06:38,139
+accept that this time I will do them symbolically so I can compute them and see the mathematics
+
+96
+00:06:38,139 --> 00:06:46,139
+behind that nice curve I have here. And so this is exactly the same formula I've computed except
+
+97
+00:06:46,139 --> 00:06:54,939
+that I've solved it and asked it to collect for my different points, my different bays basically.
+
+98
+00:06:54,939 --> 00:07:04,540
+so I get base 1, base 2, base 3. And that's the formula for this curve, right? So again,
+
+99
+00:07:04,540 --> 00:07:09,819
+you can see that my first base is multiplied by a bunch of t's and all that kind of stuff,
+
+100
+00:07:09,819 --> 00:07:19,100
+as we've had the habit to see most of the time. And if I turn them in four different
+
+101
+00:07:19,100 --> 00:07:27,840
+base so I really have my first base here the function is t the t cube divided by
+
+102
+00:07:27,840 --> 00:07:34,340
+six so I get t cube divided by six give them four different functions and I
+
+103
+00:07:34,340 --> 00:07:40,460
+give them the the proper range you see I have the curve as we have here except
+
+104
+00:07:40,460 --> 00:07:45,700
+that now I have colored them in the four different pieces I had so I have a piece
+
+105
+00:07:45,699 --> 00:07:51,459
+between 0 and 1 and 1, 2, 2, 3, 3 and 4. But that gives me that nice curve.
+
+106
+00:07:54,420 --> 00:07:58,899
+And so now that I have this, basically what I want to do is instead of having
+
+107
+00:07:58,899 --> 00:08:04,500
+that nice curve that goes between 0 and 4, I want to bring that back between 0 and 1.
+
+108
+00:08:04,500 --> 00:08:11,539
+And I basically don't want to squish the curve itself. What I want to do is I want to slide
+
+109
+00:08:11,540 --> 00:08:16,980
+each piece of them to to bring them back to between zero and one so I have my blue between
+
+110
+00:08:16,980 --> 00:08:20,819
+zero and one I want to move the yellow between zero and one the green between zero and one
+
+111
+00:08:20,819 --> 00:08:26,180
+and the red between zero and one and that's what I do here I take the function I had upstairs
+
+112
+00:08:26,180 --> 00:08:32,019
+except that I'm substituting t with t plus one t plus two t plus four to slide them
+
+113
+00:08:33,940 --> 00:08:41,460
+and that's the the different functions you will have now so t cube hasn't moved so my
+
+114
+00:08:41,460 --> 00:08:46,500
+my first one hasn't moved the other one it's a bit different than before
+
+115
+00:08:48,420 --> 00:08:53,460
+and what happened is that if I use this as the four different functions now we could see
+
+116
+00:08:54,500 --> 00:09:01,940
+that I have what I wanted I basically have the four bases right on top of each other between zero
+
+117
+00:09:01,940 --> 00:09:09,940
+and one and it's basically as the one we had with with the Bernstein bases I mean the sum of
+
+118
+00:09:09,940 --> 00:09:12,700
+of all of those curves is always equal to one.
+
+119
+00:09:12,700 --> 00:09:15,300
+No matter where we are between zero and one.
+
+120
+00:09:15,300 --> 00:09:17,220
+That's the advantage of those bases.
+
+121
+00:09:17,220 --> 00:09:21,340
+So it's a basis the same way within the Bernstein basis.
+
+122
+00:09:21,340 --> 00:09:23,780
+It's just different shape.
+
+123
+00:09:23,780 --> 00:09:27,460
+So that will allow us to do a bit of different things.
+
+124
+00:09:27,460 --> 00:09:36,340
+So what we can do is that we could use those four different
+
+125
+00:09:36,340 --> 00:09:39,340
+bases and multiply them by the different points
+
+126
+00:09:39,340 --> 00:09:47,019
+wanted to use. So you have 0.0, 0.1, 0.2 and 0.3. The four different points will be multiplied by
+
+127
+00:09:47,019 --> 00:09:54,540
+the four different bases basically the same way within the basic curve. And so what we do is we
+
+128
+00:09:56,220 --> 00:10:03,580
+take the the the the one we shifted the most on the left. So basically 0.3 is my first base
+
+129
+00:10:03,580 --> 00:10:10,940
+then point two is my second point one is my third and point zero is my fourth
+
+130
+00:10:10,940 --> 00:10:18,300
+and I can turn this into a matrix form as I usually do so what we have is all my
+
+131
+00:10:19,580 --> 00:10:26,700
+mathematics into the matrix form I've just put the divided by six here in front because it's
+
+132
+00:10:26,700 --> 00:10:29,820
+It's basically everything is divided by six all the time.
+
+133
+00:10:29,820 --> 00:10:34,140
+And so that's the B-spline segment now.
+
+134
+00:10:34,140 --> 00:10:37,100
+It's just a matrix form again,
+
+135
+00:10:37,100 --> 00:10:39,500
+and just a multiplication of one matrix.
+
+136
+00:10:39,500 --> 00:10:42,259
+And I can compute a B-spline
+
+137
+00:10:42,259 --> 00:10:45,140
+by just moving back to back a bunch of points.
+
+138
+00:10:45,140 --> 00:10:50,140
+And then we could see that if I render this again,
+
+139
+00:10:51,379 --> 00:10:56,060
+directly I have now the same curve
+
+140
+00:10:56,060 --> 00:11:00,620
+I had before, except that I'm not doing the split linear computing or that kind of stuff,
+
+141
+00:11:00,620 --> 00:11:06,620
+giving that to the basic curve. I'm just directly using my matrix to generate this.
+
+142
+00:11:07,420 --> 00:11:11,740
+And the same way we've done with the card in the spline, you know, if we wanted to actually
+
+143
+00:11:11,740 --> 00:11:18,380
+start at the first point and that kind of stuff. If we want to do the same, basically we actually
+
+144
+00:11:18,380 --> 00:11:25,340
+have now to repeat it two times. So you have to put the first point three times and the last point
+
+145
+00:11:25,340 --> 00:11:33,340
+three times and if you do this you have a curve that starts at point zero and ends at point one.
+
+146
+00:11:34,940 --> 00:11:42,379
+And so this is how you compute the uniform cubic B spline and that will be the last type of spline
+
+147
+00:11:42,379 --> 00:11:49,660
+we will study in these videos because I have most of what we will probably encounter when we do
+
+148
+00:11:49,659 --> 00:11:54,620
+animations. If later we need to go through a different type of curves, because there is
+
+149
+00:11:54,620 --> 00:11:59,500
+still other curves, other splines, we will see if we need to make a new video. But for now,
+
+150
+00:12:00,059 --> 00:12:05,899
+that will be the last type of curve we want to see. And in the next video, what we will see
+
+151
+00:12:05,899 --> 00:12:19,500
+is how we could use those curves to actually encode animation data. See you next time.

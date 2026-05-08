@@ -1,0 +1,1023 @@
+1
+00:00:00,000 --> 00:00:07,360
+You have an animation and you actually want to change the timing of that animation or you want to change some poses and
+
+2
+00:00:07,879 --> 00:00:11,779
+Kind of offset the animations as if it was an animation layer
+
+3
+00:00:12,160 --> 00:00:19,519
+This is the kind of functions we take for granted in all our 3d animation package and even in most of our game engines
+
+4
+00:00:19,839 --> 00:00:23,660
+But once upon a time it was actually a paper
+
+5
+00:00:23,660 --> 00:00:32,700
+Hi, I'm Jerome and today we'll be looking at the motion warping paper from 1995.
+
+6
+00:00:32,700 --> 00:00:41,420
+The motion warping paper takes as an idea that you actually have a bunch of curves that
+
+7
+00:00:41,420 --> 00:00:47,539
+represent animation and it would treat all of those curves separately and then from there
+
+8
+00:00:47,539 --> 00:00:51,340
+you could actually change those curves to tweak your animation.
+
+9
+00:00:51,340 --> 00:00:57,220
+So let's see how it was done and how we could implement this in NumPy.
+
+10
+00:00:57,220 --> 00:01:03,780
+So basically I will import as usual all my libraries and my viewer and I will import
+
+11
+00:01:03,780 --> 00:01:08,379
+my character and I will duplicate it so I get several characters so I can render several
+
+12
+00:01:08,379 --> 00:01:13,540
+characters back to next to each other that make my life easier when I would want to show
+
+13
+00:01:13,540 --> 00:01:15,700
+different options.
+
+14
+00:01:15,700 --> 00:01:21,379
+And what I would do is actually just load one animation and I will load the file and
+
+15
+00:01:21,379 --> 00:01:25,219
+support animation from the LaFan animation set.
+
+16
+00:01:25,219 --> 00:01:31,420
+And from this animation, what I would do is that I will extract two different poses at
+
+17
+00:01:31,420 --> 00:01:32,420
+the end of the animation.
+
+18
+00:01:32,420 --> 00:01:39,420
+So you see I'm taking a pose A at frame 695 and one at 92,000 frames.
+
+19
+00:01:39,420 --> 00:01:46,740
+And then I will only use a small range of the animation, so only 500 frames of animations
+
+20
+00:01:46,740 --> 00:01:51,579
+that I'm interested in inside of this bigger animation.
+
+21
+00:01:51,579 --> 00:01:58,159
+So this is the animation I've kept, and so you could see it's just basically a guy dancing
+
+22
+00:01:58,159 --> 00:02:06,719
+on one foot and giving some kicks on one side and then coming back on the other side.
+
+23
+00:02:06,719 --> 00:02:10,500
+So that's the animation I will use and that's what I want to tweak, where I want to change
+
+24
+00:02:10,500 --> 00:02:13,159
+the timing and I want to change the pose and all that kind of stuff.
+
+25
+00:02:13,159 --> 00:02:20,199
+So just to represent the fact that the paper is talking about a bunch of curves, I would
+
+26
+00:02:20,199 --> 00:02:25,960
+display here one of the numerous curves that I have on the characters.
+
+27
+00:02:25,960 --> 00:02:31,199
+So basically I'm picking the quaternions of the left up leg of this character and you
+
+28
+00:02:31,200 --> 00:02:37,600
+could see so that's the four different values scalar of that quaternion so I
+
+29
+00:02:37,600 --> 00:02:44,400
+get my w x y z so already just one rotation is four different curves for
+
+30
+00:02:44,400 --> 00:02:50,040
+one for one bone and then I have that for all the bones and so what the the
+
+31
+00:02:50,040 --> 00:02:57,560
+paper is basically saying is that you could warp your animation using two
+
+32
+00:02:57,560 --> 00:03:00,879
+two different functions, and the two different functions
+
+33
+00:03:00,879 --> 00:03:05,759
+that they do, so they warp the motion curves
+
+34
+00:03:05,759 --> 00:03:08,120
+with defined by two functions.
+
+35
+00:03:08,120 --> 00:03:12,080
+And basically what they said, they said that the new curve
+
+36
+00:03:12,080 --> 00:03:15,680
+will be a function of t, and that function of t,
+
+37
+00:03:16,980 --> 00:03:20,480
+that new curve will be a function of the original functions
+
+38
+00:03:20,480 --> 00:03:25,480
+at time t, and then they also say that the time t
+
+39
+00:03:25,480 --> 00:03:29,640
+is defined as a function of the original times.
+
+40
+00:03:29,640 --> 00:03:34,280
+So they warp T prime to T in that order.
+
+41
+00:03:34,280 --> 00:03:37,080
+Basically what they say in this paper,
+
+42
+00:03:37,080 --> 00:03:39,440
+they say that it's easier to say,
+
+43
+00:03:39,440 --> 00:03:41,680
+my new animation will have frames
+
+44
+00:03:41,680 --> 00:03:44,440
+that go from zero to 100, for instance,
+
+45
+00:03:44,440 --> 00:03:46,640
+and I will want to map frame zero
+
+46
+00:03:46,640 --> 00:03:49,760
+with the original frame, frame 50, for instance,
+
+47
+00:03:49,760 --> 00:03:53,280
+with frame 60 of my old animation, original animation,
+
+48
+00:03:53,280 --> 00:03:57,439
+and frame 100 might be frame 200 of my original animation.
+
+49
+00:03:57,439 --> 00:04:01,479
+So that's the functions I want to do
+
+50
+00:04:01,479 --> 00:04:04,920
+to map the time differently.
+
+51
+00:04:04,920 --> 00:04:05,920
+And then they have the functions
+
+52
+00:04:05,920 --> 00:04:08,319
+to map the pose differently.
+
+53
+00:04:08,319 --> 00:04:13,159
+And I will start from the timing function
+
+54
+00:04:14,280 --> 00:04:19,040
+because it's easier to assume only one dimension, let's say.
+
+55
+00:04:20,279 --> 00:04:22,000
+And what they say, the inside of the paper,
+
+56
+00:04:22,000 --> 00:04:28,060
+that basically you give a bunch of keyframes saying that's the time inside of animations
+
+57
+00:04:28,060 --> 00:04:34,680
+at the time inside of my old animation. And you need a smooth functions to interpolate
+
+58
+00:04:34,680 --> 00:04:39,160
+those values. And the smooth function they use is the cardinal spline. They basically
+
+59
+00:04:39,160 --> 00:04:43,959
+says that you could use any type of spline, but they went for the cardinal spline. So
+
+60
+00:04:43,959 --> 00:04:51,199
+I will do the same. I will use the cardinal spline. So what I have is, as in the paper,
+
+61
+00:04:51,199 --> 00:04:56,439
+I basically have new time, old time keyframes.
+
+62
+00:04:56,439 --> 00:04:59,519
+So at frame zero, I want to be at frame zero inside
+
+63
+00:04:59,519 --> 00:05:01,000
+of my old animation.
+
+64
+00:05:01,000 --> 00:05:04,279
+At 40, 40, at 100, I want to be at frame 190.
+
+65
+00:05:04,279 --> 00:05:06,439
+So I want to speed up quite a lot.
+
+66
+00:05:06,439 --> 00:05:08,719
+And then I will slow it back down,
+
+67
+00:05:08,719 --> 00:05:11,399
+saying that at the end, at frame 430,
+
+68
+00:05:11,399 --> 00:05:14,599
+I will only be at frame 400 inside of the animation.
+
+69
+00:05:14,599 --> 00:05:17,560
+So I will not even reach the end of the animation
+
+70
+00:05:17,560 --> 00:05:20,599
+with my new animation.
+
+71
+00:05:20,600 --> 00:05:22,920
+So that's the key frames I will have.
+
+72
+00:05:22,920 --> 00:05:30,320
+And basically, I picked the functions from the spline theory
+
+73
+00:05:30,320 --> 00:05:33,160
+papers that videos have made.
+
+74
+00:05:33,160 --> 00:05:35,920
+So I will just reuse the same functions,
+
+75
+00:05:35,920 --> 00:05:40,520
+so that the one that converts the cardinal spline to Hermit,
+
+76
+00:05:40,520 --> 00:05:42,560
+and then how to compute an Hermit spline.
+
+77
+00:05:42,560 --> 00:05:44,800
+So I will have the Hermit function
+
+78
+00:05:44,800 --> 00:05:48,720
+so that I can directly use to do my mapping.
+
+79
+00:05:48,720 --> 00:05:52,400
+And now, basically what I would do
+
+80
+00:05:52,400 --> 00:05:56,880
+is just use the Amid functions
+
+81
+00:05:56,880 --> 00:06:00,400
+to convert the different points into a curve.
+
+82
+00:06:00,400 --> 00:06:02,440
+So we could see what is the mapping
+
+83
+00:06:02,440 --> 00:06:04,160
+I actually want to do for the timing.
+
+84
+00:06:04,160 --> 00:06:07,600
+And so this is the mapping I have.
+
+85
+00:06:07,600 --> 00:06:12,400
+So basically that's the new keyframes
+
+86
+00:06:12,400 --> 00:06:14,160
+I will be generating for my animation.
+
+87
+00:06:14,160 --> 00:06:17,680
+So from frame zero to frame 430.
+
+88
+00:06:17,680 --> 00:06:20,040
+And then we can see the corresponding frame
+
+89
+00:06:20,040 --> 00:06:23,040
+I will go and pick inside of the original animation.
+
+90
+00:06:23,040 --> 00:06:24,199
+So I will have at frame zero,
+
+91
+00:06:24,199 --> 00:06:28,120
+I will be picking the frame zero at frame 100,
+
+92
+00:06:28,120 --> 00:06:29,879
+see nearly at frame 200.
+
+93
+00:06:29,879 --> 00:06:31,879
+That's what I was saying.
+
+94
+00:06:31,879 --> 00:06:35,000
+200, we are on 250s and so on and so on.
+
+95
+00:06:35,000 --> 00:06:38,639
+So that's the mapping that the curves allows me
+
+96
+00:06:38,639 --> 00:06:43,639
+to have between my new frames and my old frames.
+
+97
+00:06:44,879 --> 00:06:47,160
+The only issue I have with this kind of curves
+
+98
+00:06:47,160 --> 00:06:51,720
+that every time I will want to request the values
+
+99
+00:06:51,720 --> 00:06:53,800
+at a specific frame for my new animation,
+
+100
+00:06:53,800 --> 00:06:58,800
+I will have to go and find the corresponding values
+
+101
+00:06:59,240 --> 00:07:03,320
+inside of the AmidCurve to find where I'm supposed
+
+102
+00:07:03,320 --> 00:07:06,160
+to be here and then where I will be at the end.
+
+103
+00:07:06,160 --> 00:07:10,280
+So it's not really user friendly to use the AmidCurve
+
+104
+00:07:10,280 --> 00:07:11,800
+directly this way.
+
+105
+00:07:11,800 --> 00:07:14,920
+And what I will do is that I will resample
+
+106
+00:07:14,920 --> 00:07:19,120
+this pyramid curve now for every frame down here.
+
+107
+00:07:19,120 --> 00:07:22,439
+So basically, I would say now I know that
+
+108
+00:07:22,439 --> 00:07:25,000
+between this point and the other points
+
+109
+00:07:25,000 --> 00:07:27,960
+that I put here at frame 100, I have 100 frames.
+
+110
+00:07:27,960 --> 00:07:31,639
+So I will compute 100 different values.
+
+111
+00:07:31,639 --> 00:07:33,660
+So I get the perfect mapping and so on
+
+112
+00:07:33,660 --> 00:07:37,080
+for every points along my entire curve.
+
+113
+00:07:37,080 --> 00:07:40,720
+So that's what the resampling is doing here.
+
+114
+00:07:40,720 --> 00:07:48,480
+So, it re-samples a curve that you're given, so it will give you as many frames as the
+
+115
+00:07:48,480 --> 00:07:53,760
+frames you're supposed to get here, so that's the re-sample functions.
+
+116
+00:07:53,760 --> 00:08:01,840
+And to show you what it means to take this Aermid curve and regenerate a new curve using
+
+117
+00:08:01,840 --> 00:08:05,040
+that re-sample, basically gives me this now.
+
+118
+00:08:05,040 --> 00:08:12,960
+I still have the curves as it was designed, but now I have for every keyframe in my new animation
+
+119
+00:08:12,960 --> 00:08:16,600
+I have a direct mapping to where I want to be in the old one
+
+120
+00:08:16,600 --> 00:08:20,480
+So I don't have to I don't have to compute anything down here now anymore
+
+121
+00:08:20,480 --> 00:08:24,680
+I can just say hey, I'm computing frame one. What is the value? I'm computing frame 10
+
+122
+00:08:24,680 --> 00:08:28,520
+What is the value and so on and so on so it's basically becoming a big lookup table
+
+123
+00:08:28,840 --> 00:08:33,860
+Which makes my life easier when I want to execute more code after that
+
+124
+00:08:35,039 --> 00:08:46,039
+So now that I know that I want to be able to compute this kind of curves with a linear spacing for all my functions, for all my frames,
+
+125
+00:08:46,039 --> 00:08:51,039
+basically I will write those functions so I can reuse them and that's what those two functions are.
+
+126
+00:08:51,039 --> 00:08:56,039
+I have the build curve is the one that generates these curves.
+
+127
+00:08:56,039 --> 00:09:05,319
+basically saying, if you give me a bunch of keyframes that are going onto an
+
+128
+00:09:05,319 --> 00:09:11,159
+omit, I will re-sample that values to give you now a mapping between for
+
+129
+00:09:11,159 --> 00:09:15,799
+every frames and that values. So that's what the build curve does. So it creates
+
+130
+00:09:15,799 --> 00:09:20,519
+this mapping. And then the warp curve is actually the real functions now. It's the
+
+131
+00:09:20,519 --> 00:09:31,240
+one that you want to use if you want to warp a data using that curve just generated here.
+
+132
+00:09:31,240 --> 00:09:38,679
+So the time warp tells you what is the data for every frame and this one allows you to go into
+
+133
+00:09:38,679 --> 00:09:46,600
+that curve and modify the curve. So basically the only thing it does it looks inside a curve.
+
+134
+00:09:46,600 --> 00:09:52,519
+so if the time warp said you're supposed to look at frame 10 it goes inside of the curve
+
+135
+00:09:52,519 --> 00:09:56,519
+looks at the value for the value for that frame 10 and so on but then he will do
+
+136
+00:09:57,560 --> 00:10:03,480
+a linear interpolation between two frames and why is doing that linear interpolation is because now
+
+137
+00:10:04,360 --> 00:10:12,279
+for instance at frame one at 300 it might tell me that the value here is not a round frame it might
+
+138
+00:10:12,279 --> 00:10:19,399
+be 300, it might be 300.5. So I do need to do the linear interpretation between frame 200 and frame
+
+139
+00:10:19,399 --> 00:10:27,000
+201. So that's what the warp curve does. It goes and it picks the two closest frame and do the
+
+140
+00:10:27,000 --> 00:10:34,600
+linear interpretation between the two and it does it on the entire curve at once and in any
+
+141
+00:10:34,600 --> 00:10:41,480
+dimensions but the entire curves at once. Let's remember this one. So that's the two functions
+
+142
+00:10:41,480 --> 00:10:48,120
+I will be reusing every time I try to build a curve or every time I try to warp a curve using
+
+143
+00:10:48,680 --> 00:10:57,320
+a time warp. And then we could do finally that time warp now. Basically, I can use my build curve
+
+144
+00:10:57,320 --> 00:11:06,039
+to create the warping curve, that blue one. And then I could use the warp curve to go and look at
+
+145
+00:11:06,039 --> 00:11:15,639
+all the quaternions of my animations and warp all those curves using the time-waps curves.
+
+146
+00:11:15,639 --> 00:11:22,279
+So as I said, this function is able to do it on the entire animations, but as in any dimensions.
+
+147
+00:11:22,279 --> 00:11:30,039
+So basically, it can do it for every bones of the WXYZ of each quaternions. So it does it in one
+
+148
+00:11:30,039 --> 00:11:36,679
+pass. So it modifies every curves, which means that now I need to normalize those curves because
+
+149
+00:11:37,799 --> 00:11:42,839
+what happens is that I'm not using a slope here between the quaternions. I'm just
+
+150
+00:11:43,480 --> 00:11:48,679
+warping every curve separately. So I'm basically breaking the rule that says that my quaternions
+
+151
+00:11:48,679 --> 00:11:55,799
+need to be a unit quaternion. So I need to renormalize them. So I renormalize all my quaternions and
+
+152
+00:11:55,800 --> 00:11:59,200
+And then I compute the new curves also for the positions
+
+153
+00:11:59,200 --> 00:12:01,680
+using the warp curves function.
+
+154
+00:12:01,680 --> 00:12:04,840
+And so we can display the results.
+
+155
+00:12:04,840 --> 00:12:07,120
+And basically what you will see is that the yellow,
+
+156
+00:12:07,120 --> 00:12:09,720
+the white one is playing the normal animation,
+
+157
+00:12:09,720 --> 00:12:13,120
+and the green one plays the warped animation.
+
+158
+00:12:13,120 --> 00:12:14,240
+You could see that the beginning,
+
+159
+00:12:14,240 --> 00:12:16,800
+it was speeding up a lot,
+
+160
+00:12:16,800 --> 00:12:19,920
+and now it's slowing down to reach that point
+
+161
+00:12:19,920 --> 00:12:21,480
+at the same time as him.
+
+162
+00:12:21,480 --> 00:12:23,760
+It does not even reach the end of the animation.
+
+163
+00:12:23,759 --> 00:12:29,360
+So that's what the time warp was supposed to do.
+
+164
+00:12:29,360 --> 00:12:31,720
+So basically, I accelerate because I
+
+165
+00:12:31,720 --> 00:12:34,279
+wanted to be at frame 100.
+
+166
+00:12:34,279 --> 00:12:40,120
+I wanted him to be already at the same position as frame 190.
+
+167
+00:12:40,120 --> 00:12:45,080
+And then at frame 350, they had to be back together
+
+168
+00:12:45,080 --> 00:12:46,840
+at the same time.
+
+169
+00:12:46,840 --> 00:12:53,879
+and it was slowing down to reach frame 400 at frame 430.
+
+170
+00:12:53,879 --> 00:12:59,000
+So that's the timing change of the warping functions.
+
+171
+00:12:59,560 --> 00:13:03,399
+So I have the function that allows me to map a value to another one.
+
+172
+00:13:04,280 --> 00:13:07,720
+And in this case, the value that I mapped to another one is the time.
+
+173
+00:13:08,600 --> 00:13:12,840
+And now what we want to do is actually do the pose change.
+
+174
+00:13:12,840 --> 00:13:18,600
+So do the first part of those functions here, the one that we have here that says that we
+
+175
+00:13:18,600 --> 00:13:26,720
+change the curve based on a function that would change the curves itself. And what I
+
+176
+00:13:26,720 --> 00:13:32,759
+will do is again, I will do keyframes. So I will have the frames for which I want to
+
+177
+00:13:32,759 --> 00:13:35,740
+to change the values.
+
+178
+00:13:35,740 --> 00:13:38,960
+Those frames are in the original timing.
+
+179
+00:13:41,220 --> 00:13:43,580
+And for all of those frames,
+
+180
+00:13:43,580 --> 00:13:48,580
+I will actually give a pose that I want to match at that time.
+
+181
+00:13:48,580 --> 00:13:50,100
+So basically at frame zero,
+
+182
+00:13:50,100 --> 00:13:54,379
+what I would say is that I want to have frame zero.
+
+183
+00:13:54,379 --> 00:13:57,340
+So basically frame zero means at frame zero,
+
+184
+00:13:57,340 --> 00:14:01,220
+I want the same pose as the pose that you already have.
+
+185
+00:14:01,220 --> 00:14:10,980
+that frame 190. I want the pose A that extracted at the beginning, remember. Then frame 2 and 20
+
+186
+00:14:10,980 --> 00:14:18,500
+and 3 and 20, I actually want the animation itself. And then at frame 349, I want the pose B
+
+187
+00:14:18,500 --> 00:14:24,019
+that extracted earlier. And then again, the two frames coming from the animation itself.
+
+188
+00:14:24,019 --> 00:14:27,300
+So that's the key frames I want to generate. So basically, it's really,
+
+189
+00:14:27,300 --> 00:14:35,620
+as if I was doing in 3D software it's I'm doing a layer on top of my animations
+
+190
+00:14:35,620 --> 00:14:42,460
+and that's the pose I want to put on that layer and to show you all the
+
+191
+00:14:42,460 --> 00:14:48,660
+different stuff that I'm trying if I don't execute that of course I would not
+
+192
+00:14:48,660 --> 00:14:56,420
+have my keyframes and so if I show you this so this is the animation that is
+
+193
+00:14:56,420 --> 00:15:07,460
+playing and what I said is that at frame 190 I think is that the one yep at frame 190 that
+
+194
+00:15:07,460 --> 00:15:14,260
+would be disposed in the original animation and actually I would want this pose to be visible
+
+195
+00:15:14,260 --> 00:15:22,980
+instead so I want to correct to modify this pose to be this one at frame 190 and then at frame 350
+
+196
+00:15:22,980 --> 00:15:30,779
+50 something, 49, 50. When it reaches this pose, instead of having his leg completely
+
+197
+00:15:30,779 --> 00:15:36,620
+stretched, I want this pose here. So basically, I want to remove entirely the fact that he
+
+198
+00:15:36,620 --> 00:15:43,420
+lifts the legs up. So that's the two pose that I want to change in the layer. And then
+
+199
+00:15:43,420 --> 00:15:49,420
+everything else, I want him to play the normal animation with the ease in and ease out because
+
+200
+00:15:49,420 --> 00:15:53,500
+I have from frame 0s up to frame 200 something here in the middle.
+
+201
+00:15:53,500 --> 00:15:57,020
+That should be again the normal pose and at the end also.
+
+202
+00:15:57,020 --> 00:16:04,380
+So that's what I want to do. To do this, what they do in the paper is that they treat every
+
+203
+00:16:04,380 --> 00:16:12,460
+curves as just curve and they do the mathematics on top. They just do minus and add. What I would
+
+204
+00:16:12,460 --> 00:16:18,220
+do in my case is knowing that I'm actually working with quaternions. So instead of directly
+
+205
+00:16:18,220 --> 00:16:25,960
+just working on each curves and computing offsets on the curves, I will
+
+206
+00:16:25,960 --> 00:16:31,080
+actually compute offsets in the quaternion space directly. So what I will do
+
+207
+00:16:31,080 --> 00:16:37,639
+is that I will multiply all my keyframes that I have here, all those values, key
+
+208
+00:16:37,639 --> 00:16:44,040
+frames, I will convert them into enough sets compared to the actual animations
+
+209
+00:16:44,040 --> 00:16:50,160
+that I want to apply so I will multiply the inverse of all of my animations
+
+210
+00:16:50,160 --> 00:16:55,560
+with the keyframes so that gives me an offset that gives me how much I want to
+
+211
+00:16:55,560 --> 00:17:03,080
+modify the original pose compared to with the pose I have and if I so this is
+
+212
+00:17:03,080 --> 00:17:13,519
+what I compute here so I turn every keyframes as offsets and now basically
+
+213
+00:17:13,519 --> 00:17:23,519
+what I could do is I could use that same function that I had to map the timing from my new timing
+
+214
+00:17:23,519 --> 00:17:36,639
+to the original timing. I will use that to map my local offsets inside of the actual new timing
+
+215
+00:17:36,639 --> 00:17:42,879
+I want to do. So I will build a curve that will give me the amount of offsets I want to apply
+
+216
+00:17:42,880 --> 00:17:49,760
+on every frame. So this is what I'm doing. So I'm basically going through a build curve
+
+217
+00:17:49,760 --> 00:18:00,880
+and I will build that curve separately for each wxyz of microtonance and each xyz of my position.
+
+218
+00:18:00,880 --> 00:18:08,320
+So I need to compute that separately for each curve. And basically, if I display one of the
+
+219
+00:18:08,319 --> 00:18:15,279
+curve you end up with is this one. You could see that you get a quaternion that frame 0 that
+
+220
+00:18:15,279 --> 00:18:20,079
+will be the identity so I mean I don't want to change anything and then at frame 190 that's
+
+221
+00:18:20,079 --> 00:18:26,879
+where my big change happened and then get the identity again no change no change the big change
+
+222
+00:18:26,879 --> 00:18:30,799
+and so on so and that's the same for every different
+
+223
+00:18:30,799 --> 00:18:38,960
+and bones I have inside of my system.
+
+224
+00:18:38,960 --> 00:18:48,399
+So that curve is already the amount offset I want to apply on every bones along the animation.
+
+225
+00:18:48,399 --> 00:18:57,379
+So I could display that change directly to show you basically what it means now using
+
+226
+00:18:57,380 --> 00:19:06,900
+just the position warp, one of the pose warps, and so basically you could see that it's already
+
+227
+00:19:06,900 --> 00:19:19,380
+rotating the head because it knows that it would reach at frame 190, that's the pose I wanted him
+
+228
+00:19:19,380 --> 00:19:25,380
+to be and that's where I want him to be now, which is the case, and he's already slowly
+
+229
+00:19:25,380 --> 00:19:31,860
+applying that change along from frame zero up to there slowly happening applying that change
+
+230
+00:19:31,860 --> 00:19:40,820
+and then quickly it goes back in the right pose and at the end it will also start to not kick
+
+231
+00:19:40,820 --> 00:19:46,900
+because it's is framing and then because it holds the kick a long time it's starting to slowly
+
+232
+00:19:46,900 --> 00:19:54,580
+catching up so that's the change in in the pose that I wanted to do basically as offsets compared
+
+233
+00:19:54,579 --> 00:20:01,699
+to what animation is. And then the final step to complete the paper is to combine both to
+
+234
+00:20:01,699 --> 00:20:07,460
+say that you want to change the pose and you want to change the timing by saying that instead of
+
+235
+00:20:07,460 --> 00:20:15,939
+looking at the change in pose inside of the old timing you will do it in the new timing. So you
+
+236
+00:20:15,939 --> 00:20:21,779
+would basically do the same. You would change the timing and change the pose. So what I'm doing is
+
+237
+00:20:21,779 --> 00:20:26,779
+is that I take the curve, the offsets I've applied here,
+
+238
+00:20:27,139 --> 00:20:31,099
+I take that new curve that does all the change
+
+239
+00:20:31,099 --> 00:20:36,099
+and I also warp it using the time.
+
+240
+00:20:36,859 --> 00:20:40,299
+And so I can have now something related to the new time
+
+241
+00:20:40,299 --> 00:20:41,519
+with the new pose.
+
+242
+00:20:43,660 --> 00:20:46,460
+And you get this, so the green guy will be playing
+
+243
+00:20:46,460 --> 00:20:49,579
+just the retiming and the blue one will be playing
+
+244
+00:20:49,579 --> 00:20:53,819
+the retiming plus the change in the pose.
+
+245
+00:20:59,859 --> 00:21:04,659
+And that's what the motion warping paper was all about.
+
+246
+00:21:04,659 --> 00:21:06,939
+And as I said, it's something that we take for granted
+
+247
+00:21:06,939 --> 00:21:08,819
+in all of our software.
+
+248
+00:21:08,819 --> 00:21:12,539
+But it's always interesting to see how it could be computed
+
+249
+00:21:12,539 --> 00:21:14,659
+and all the curves that are in the background
+
+250
+00:21:14,659 --> 00:21:16,379
+to compute that kind of stuff.
+
+251
+00:21:16,380 --> 00:21:20,820
+It will be used in a lot of different papers after this one,
+
+252
+00:21:20,820 --> 00:21:23,380
+because most of the time you would want to change timing,
+
+253
+00:21:23,380 --> 00:21:25,900
+we want to change posts, we want to reach some stuff,
+
+254
+00:21:25,900 --> 00:21:30,140
+and every single time it's basically this
+
+255
+00:21:30,140 --> 00:21:33,100
+or something close to this that will be used.
+
+256
+00:21:33,100 --> 00:21:35,900
+Hope you enjoyed it and see you next time.

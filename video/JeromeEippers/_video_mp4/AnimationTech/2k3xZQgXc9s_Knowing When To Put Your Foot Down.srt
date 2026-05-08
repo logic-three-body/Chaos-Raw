@@ -1,0 +1,851 @@
+1
+00:00:00,000 --> 00:00:05,639
+Previously, we've seen how to fix sliding issues of our foot, but we had to know when
+
+2
+00:00:05,639 --> 00:00:07,919
+the contact were happening.
+
+3
+00:00:07,919 --> 00:00:12,240
+Now we might want to do this automatically, and this is the purpose of this paper.
+
+4
+00:00:12,240 --> 00:00:17,839
+Hi, I'm Jérôme, and today we'll be looking at knowing when to put your foot down, a paper
+
+5
+00:00:17,839 --> 00:00:20,760
+from 2006.
+
+6
+00:00:20,760 --> 00:00:27,240
+This paper would basically use a model that you train on a few animation examples, and
+
+7
+00:00:27,240 --> 00:00:32,359
+we try to extrapolate on all the animation data you have. So for this what I would do is that I
+
+8
+00:00:32,359 --> 00:00:40,520
+will first load my character of course. I have a few constants that I will need later and finally
+
+9
+00:00:40,520 --> 00:00:45,799
+what I would do is that I will load a bunch of animations and I have different walking style
+
+10
+00:00:45,799 --> 00:00:51,400
+with coming from different actors. I have running animation, I get the dance animation, I get aiming
+
+11
+00:00:51,399 --> 00:01:00,119
+animations. So quite a lot of different types of animations. So I have different types of
+
+12
+00:01:00,119 --> 00:01:05,640
+foot contacts that I will be able to learn in the system. So I get running, I get walking
+
+13
+00:01:05,640 --> 00:01:10,840
+backwards, I get a bunch of dance animations right in the middle there. A lot of different types of
+
+14
+00:01:10,840 --> 00:01:19,719
+animations that we will be able to learn from. And if I look at how much data I have loaded this
+
+15
+00:01:19,719 --> 00:01:30,760
+time, I have 22,600 frames of animations that I would want to use to learn what foot contacts
+
+16
+00:01:30,760 --> 00:01:40,120
+look like. So how this paper works, basically the idea is to train what they call an oracle
+
+17
+00:01:40,120 --> 00:01:53,320
+that is able to look at your foot animations and tell you if it's a contact with the toe
+
+18
+00:01:54,200 --> 00:02:00,920
+heel for the left toe, left heel or right toe, right heel. So what we will build first
+
+19
+00:02:02,200 --> 00:02:07,159
+is the feature vector that represents the data that we will feed to the system to
+
+20
+00:02:07,159 --> 00:02:09,719
+to learn from.
+
+21
+00:02:09,719 --> 00:02:11,960
+And it's not just the entire animations we give him,
+
+22
+00:02:11,960 --> 00:02:15,639
+we will just give a feature vector
+
+23
+00:02:15,639 --> 00:02:18,800
+that has the position of the toe, heel,
+
+24
+00:02:18,800 --> 00:02:20,800
+and knee of both legs,
+
+25
+00:02:22,199 --> 00:02:24,519
+but not only for the specific frames,
+
+26
+00:02:24,519 --> 00:02:26,359
+but also for the frames,
+
+27
+00:02:26,359 --> 00:02:30,079
+for an entire windows of frames before and after.
+
+28
+00:02:30,079 --> 00:02:35,079
+So you basically look at a big windows of frames
+
+29
+00:02:35,080 --> 00:02:41,240
+with the trajectories of all those positions for the heel, toe, and knee. And that's how
+
+30
+00:02:41,240 --> 00:02:47,080
+you predict if at frames, right in the middle, if it's a contact or not. So that's the feature
+
+31
+00:02:47,080 --> 00:02:53,560
+vectors that we're trying to build. What they had as a window, what they said they were using
+
+32
+00:02:53,560 --> 00:02:58,439
+a 10 frames windows before and after, but the paper is actually running at 60 frames per second.
+
+33
+00:02:59,400 --> 00:03:04,520
+Only at 30 frames. So my windows will only be five frames before and five frames after.
+
+34
+00:03:04,520 --> 00:03:16,280
+And what we will create is this, I will compute it for the entire animation at once,
+
+35
+00:03:16,280 --> 00:03:21,719
+so I don't have to recompute that every time I need to compute the feature vectors.
+
+36
+00:03:21,719 --> 00:03:26,200
+So I will compute it once, so I get all my animations, all my frames,
+
+37
+00:03:27,000 --> 00:03:34,200
+then I get my six bones I want to use, I get the XYZ positions in space of
+
+38
+00:03:34,520 --> 00:03:42,439
+my six bones. And I do it for the entire windows of frames, so for my frames and for the five
+
+39
+00:03:42,439 --> 00:03:48,360
+frames before and the five frames after. That gives me my feature vectors here. And I have a
+
+40
+00:03:48,360 --> 00:03:56,760
+second one, which is a feature vector indices, basically will allow me to find back from my
+
+41
+00:03:56,760 --> 00:04:03,640
+feature vectors, which frame animations it corresponds to, because I will have all my
+
+42
+00:04:03,640 --> 00:04:09,400
+animations into one big feature vectors, but it's actually a bunch of different
+
+43
+00:04:09,400 --> 00:04:14,600
+animations with different timing in it. So I need to be able to trace that back.
+
+44
+00:04:16,120 --> 00:04:23,720
+And basically what they say is that the positions and orientations is irrelevant,
+
+45
+00:04:23,720 --> 00:04:29,400
+irrelevant to know if you have a contact or not. So what we want to do is to make sure that
+
+46
+00:04:29,399 --> 00:04:33,079
+every feature vectors is basically realigned in zero zero.
+
+47
+00:04:33,079 --> 00:04:39,399
+So it all looks the same. We really look at the trajectory of the foot itself and not
+
+48
+00:04:39,399 --> 00:04:46,679
+where it was in space. So what I will do for this is that I will project my hips on the ground
+
+49
+00:04:46,679 --> 00:04:53,399
+to use it as the root motion, let's say, and I will compute the position of the
+
+50
+00:04:54,199 --> 00:04:59,159
+foot for the entire windows of frame at that specific position in space.
+
+51
+00:04:59,160 --> 00:05:04,200
+So probably easier to show and to explain what I was doing here.
+
+52
+00:05:04,200 --> 00:05:08,920
+So I compute all my feature vectors and now basically the feature vector is this.
+
+53
+00:05:08,920 --> 00:05:12,520
+You get all those little arrows, little dots.
+
+54
+00:05:12,520 --> 00:05:14,040
+So here we are.
+
+55
+00:05:14,040 --> 00:05:22,360
+And so if I take this for instance, it's one feature for one specific frame.
+
+56
+00:05:22,360 --> 00:05:27,240
+So and you get so you could actually see the motions itself.
+
+57
+00:05:27,240 --> 00:05:33,319
+So it's all stable, but that's the feature vector that the Oracle will see, right?
+
+58
+00:05:35,800 --> 00:05:41,800
+And so now that we have the feature vectors, we could start to try to do the training.
+
+59
+00:05:41,800 --> 00:05:49,720
+And to do the training, what would happen is that we will use a k-nearest neighbor classifier to
+
+60
+00:05:49,720 --> 00:05:57,320
+to classify all those feature vectors and give them a label.
+
+61
+00:05:57,320 --> 00:06:00,480
+But we'll have to do the training by hand first.
+
+62
+00:06:00,480 --> 00:06:06,800
+And what they do is that they go for a 200 frames sequence
+
+63
+00:06:06,800 --> 00:06:08,640
+at once.
+
+64
+00:06:08,640 --> 00:06:13,760
+So they slice the entire animations a bunch of clips.
+
+65
+00:06:13,760 --> 00:06:16,480
+And you do the training on one clip.
+
+66
+00:06:16,480 --> 00:06:19,120
+And we will iterate with that kind of stuff.
+
+67
+00:06:19,120 --> 00:06:25,199
+what I would do is the same thing here. I will start to train my oracle. So I have my trained
+
+68
+00:06:25,199 --> 00:06:30,879
+feature vectors and I will have my trained label that tells me if I have contacts or not.
+
+69
+00:06:30,879 --> 00:06:33,920
+And at this point, they're just empty because I haven't trained anything.
+
+70
+00:06:35,600 --> 00:06:42,480
+And I will start to manually train one clip. And the thing I would do, I'll execute this,
+
+71
+00:06:42,480 --> 00:06:47,200
+I would pick basically the first clip inside of animation.
+
+72
+00:06:47,200 --> 00:06:50,240
+So I take the 200 first frames of animations
+
+73
+00:06:50,240 --> 00:06:53,759
+in my entire system because I don't
+
+74
+00:06:53,759 --> 00:06:55,480
+have anything better to start from.
+
+75
+00:06:55,480 --> 00:06:58,360
+So let's start with the beginning.
+
+76
+00:06:58,360 --> 00:07:03,000
+And so now that I would have this big code here, which
+
+77
+00:07:03,000 --> 00:07:10,360
+actually is just there to let me see the data I'm looking at
+
+78
+00:07:10,360 --> 00:07:12,600
+and the contacts I have.
+
+79
+00:07:12,600 --> 00:07:16,920
+So this is the piece of animations
+
+80
+00:07:16,920 --> 00:07:20,600
+that will start to train, sorry.
+
+81
+00:07:20,600 --> 00:07:21,800
+So that's the piece of animation
+
+82
+00:07:21,800 --> 00:07:26,400
+that we start to train manually for him to learn from.
+
+83
+00:07:26,400 --> 00:07:28,600
+And basically, because I have nothing at this point,
+
+84
+00:07:28,600 --> 00:07:30,600
+you can see I get no contact.
+
+85
+00:07:30,600 --> 00:07:34,639
+But if I come here and I start to click,
+
+86
+00:07:34,639 --> 00:07:36,879
+I will actually have the representations
+
+87
+00:07:36,879 --> 00:07:39,560
+of the contact that's happened here
+
+88
+00:07:39,560 --> 00:07:42,360
+and I could do it for both heel.
+
+89
+00:07:42,360 --> 00:07:44,639
+So you could see tons of green
+
+90
+00:07:44,639 --> 00:07:46,839
+when I say that this is a contact.
+
+91
+00:07:46,839 --> 00:07:49,959
+I will not do it entirely manually under first step
+
+92
+00:07:49,959 --> 00:07:51,240
+because I would be really annoying
+
+93
+00:07:51,240 --> 00:07:52,680
+to go through all of this.
+
+94
+00:07:52,680 --> 00:07:55,480
+So what I would do is that I would generate using speed
+
+95
+00:07:56,600 --> 00:08:00,720
+as we were doing in the other papers before,
+
+96
+00:08:00,720 --> 00:08:03,800
+but I will use bigger range.
+
+97
+00:08:03,800 --> 00:08:08,800
+And then I can start to tweak my data as well.
+
+98
+00:08:09,560 --> 00:08:12,720
+as long as I decide that this is still a contact.
+
+99
+00:08:12,720 --> 00:08:15,259
+So foot contact, that's fairly good.
+
+100
+00:08:18,280 --> 00:08:21,740
+And I would probably, sorry, here I'm back.
+
+101
+00:08:23,040 --> 00:08:25,079
+And so I will start to tweak this manually
+
+102
+00:08:25,079 --> 00:08:27,480
+for each of my animations.
+
+103
+00:08:27,480 --> 00:08:30,959
+Make sure that it is correct most of the time.
+
+104
+00:08:30,959 --> 00:08:32,320
+And I will probably speed this up
+
+105
+00:08:32,320 --> 00:08:37,320
+so you don't see me going in the same doing this by hand.
+
+106
+00:08:37,320 --> 00:08:45,780
+by hand. So I see you when this is done. And now basically, I have tweaked by hand all my
+
+107
+00:08:45,780 --> 00:08:53,160
+contacts. So I'm making sure that they look like what I want them to be. And so I have
+
+108
+00:08:53,160 --> 00:09:00,000
+one piece, I have one clip that I've done manually, and I can start to train my oracle
+
+109
+00:09:00,000 --> 00:09:06,960
+with what I've done so far. So what I would do is I would take the trained feature vector
+
+110
+00:09:07,759 --> 00:09:16,399
+and I would concatenate what I already trained with the new clips I've just done. So this is just to
+
+111
+00:09:17,440 --> 00:09:23,279
+grow slowly what data I've actually trained. So my trained vector is just growing
+
+112
+00:09:23,279 --> 00:09:31,559
+as with my label which means now that I actually have my trained feature vectors
+
+113
+00:09:31,559 --> 00:09:41,759
+and I will be able to start to use the KNRs neighbor classifier. What they do
+
+114
+00:09:41,759 --> 00:09:48,559
+with the KNRs neighbor classifier is basically feed all the features
+
+115
+00:09:48,560 --> 00:09:55,360
+they've trained and all the label into it and then we will use it to predict in the futures.
+
+116
+00:09:57,120 --> 00:10:04,640
+But to win some time, we will not only give the trained feature vectors, we will also
+
+117
+00:10:05,920 --> 00:10:12,000
+give the mirrored version because everything we've done on one side is actually applicable for
+
+118
+00:10:12,000 --> 00:10:19,279
+mirrored animations. So what I will do is that I will mirror the trained feature vectors just by
+
+119
+00:10:19,279 --> 00:10:24,799
+multiplying the x values because basically I've made sure that everything is aligned
+
+120
+00:10:24,799 --> 00:10:29,919
+around the zero zeros and the rotation so I can just mirror the feature vectors and I can
+
+121
+00:10:29,919 --> 00:10:37,039
+mirror the label which is what I'm doing here. So the classifier itself will have a much bigger
+
+122
+00:10:37,039 --> 00:10:42,719
+train feature vectors which will have everything that I have done plus everything mirrored and I can
+
+123
+00:10:43,360 --> 00:10:52,639
+fit this into a nearest neighbor class from scipy because luckily enough it's already
+
+124
+00:10:53,519 --> 00:11:01,039
+written for us and it is extremely fast as long as you just use the default Euler distance matrix
+
+125
+00:11:01,039 --> 00:11:08,639
+And so we will use that one because it gives us a really big boost in performance and it's really easy to do
+
+126
+00:11:09,519 --> 00:11:16,399
+In the paper, they were using also the nearest neighbor, but they were doing it themselves with the brute force manner
+
+127
+00:11:17,599 --> 00:11:23,799
+And they use the error distance anyway, so we could just use what exists for us and
+
+128
+00:11:26,039 --> 00:11:30,240
+Use the speed as much as we have so we've
+
+129
+00:11:31,039 --> 00:11:39,360
+train a classifier with the nearest neighbor with the number of neighbors equal to 10 which is again
+
+130
+00:11:39,360 --> 00:11:45,360
+the values they were using so whatever we give you is as soon as you're trying to ask for a position
+
+131
+00:11:46,079 --> 00:11:51,279
+inside of a feature vectors it will return the 10 closest one which is what we're interested in
+
+132
+00:11:52,639 --> 00:12:00,399
+and then we've trained the the nearest neighbor now the the oracle can start to do predictions
+
+133
+00:12:00,399 --> 00:12:19,120
+so we do need to be able to predict. And how do you predict if a specific feature is a
+
+134
+00:12:19,120 --> 00:12:28,639
+food contact or not? Basically what we do is that we take the 10 nearest labels to the one we have
+
+135
+00:12:28,639 --> 00:12:37,519
+have. And then we sum them and we divide by the total. So it's just a probability that
+
+136
+00:12:37,519 --> 00:12:45,240
+the classifier give us compared to everything else it has seen. So if you have a probability
+
+137
+00:12:45,240 --> 00:12:52,360
+over 60%, we will say that it is a contact. If we have a probability that is less than
+
+138
+00:12:52,360 --> 00:13:02,759
+40%, it is not the contact. And if the probability we find is between 40% and 60%, we basically
+
+139
+00:13:02,759 --> 00:13:10,440
+switch only depending on the previous frame. So if we say I'm in 0.5 and the previous frame
+
+140
+00:13:10,440 --> 00:13:15,080
+says I was in contact, I'm still in contact. If I'm 0.5 and the previous frame said I was
+
+141
+00:13:15,080 --> 00:13:21,320
+not in contact, I'm not in contact either. So it's just to avoid jittering values that
+
+142
+00:13:21,320 --> 00:13:25,640
+if you're always between 0.5, 0.5 and that kind of stuff,
+
+143
+00:13:25,640 --> 00:13:27,879
+it's too avoid to have on, off, on, off, on, off.
+
+144
+00:13:27,879 --> 00:13:33,240
+It's just we smooth the signal by saying only when we were sure it was on,
+
+145
+00:13:33,240 --> 00:13:38,440
+if you're unsure we're still on and then as soon as we're sure it's not, we're not.
+
+146
+00:13:39,080 --> 00:13:41,320
+So this is what the predict function will do.
+
+147
+00:13:41,320 --> 00:13:47,800
+We give him a feature, well it's multi-dimensional inside of sci-pi.
+
+148
+00:13:47,800 --> 00:13:53,240
+So the features itself could be only one specific frame, but it's more interestingly,
+
+149
+00:13:53,240 --> 00:14:00,040
+it could be an entire animation, so they will tell you the label for the entire animations
+
+150
+00:14:00,840 --> 00:14:07,000
+this way. So this is what I do, compute the probabilities. So I'm asking the classifier
+
+151
+00:14:08,360 --> 00:14:14,120
+for the 10 nearest indices, then find the values inside of those labels,
+
+152
+00:14:14,120 --> 00:14:20,440
+divide it by 10 and then check if it's less or more and if it's in between I
+
+153
+00:14:20,440 --> 00:14:27,840
+make sure that it follows the rules. So that returns a label. Now I have the
+
+154
+00:14:27,840 --> 00:14:36,039
+neighbors. The oracle is able to predict but how well we did predict it would
+
+155
+00:14:36,039 --> 00:14:40,919
+probably be really bad because we really train it on really small data. So the
+
+156
+00:14:40,920 --> 00:14:47,840
+The idea now is to iterate through the training process as long as you need.
+
+157
+00:14:47,840 --> 00:15:05,160
+And the idea to do this is basically what they've done, I guess they talk it about
+
+158
+00:15:05,160 --> 00:15:06,160
+the important sampling.
+
+159
+00:15:06,160 --> 00:15:07,360
+So that's that here.
+
+160
+00:15:07,360 --> 00:15:13,279
+So what do we do now that we have a training system?
+
+161
+00:15:13,279 --> 00:15:22,360
+What I could do is I could ask the classifier to actually look into all my animations and
+
+162
+00:15:22,360 --> 00:15:30,480
+tell me which frame has the worst possible distance between all my features.
+
+163
+00:15:30,480 --> 00:15:39,320
+So basically, the clean nearest neighbor will have a bunch of features that will be in space
+
+164
+00:15:39,320 --> 00:15:43,399
+around here, and all my animations will be around there also.
+
+165
+00:15:43,399 --> 00:15:47,879
+But I might have animations that will be really far for which I haven't trained anything.
+
+166
+00:15:47,879 --> 00:15:53,680
+And they're asking to find me the frame of animations that is the furthest away from
+
+167
+00:15:53,680 --> 00:15:56,519
+anything he has seen already.
+
+168
+00:15:56,519 --> 00:16:01,299
+And when I have that frame, I find the clip around that one that I have to train.
+
+169
+00:16:01,299 --> 00:16:03,500
+And I will start to do the training on that one.
+
+170
+00:16:03,500 --> 00:16:10,460
+So I make sure that I basically, I will start to train the system to see the most different
+
+171
+00:16:10,460 --> 00:16:11,460
+animations possible.
+
+172
+00:16:11,460 --> 00:16:13,659
+So this is what this will give me.
+
+173
+00:16:13,659 --> 00:16:23,340
+So basically, I'm requesting all the distance with my indices and asking to find me the
+
+174
+00:16:23,340 --> 00:16:27,820
+the worst one, and that becomes my new animations
+
+175
+00:16:27,820 --> 00:16:30,860
+I would start to train, and I get back the animations I want.
+
+176
+00:16:30,860 --> 00:16:35,860
+So I run this, it gives me a new feature vectors,
+
+177
+00:16:36,540 --> 00:16:39,540
+and I can see what it has done.
+
+178
+00:16:39,540 --> 00:16:41,139
+You see that it started already
+
+179
+00:16:41,139 --> 00:16:42,540
+to predict a bunch of stuff,
+
+180
+00:16:42,540 --> 00:16:47,540
+and it probably gets quite wrong on a lot of stuff, right?
+
+181
+00:16:47,540 --> 00:16:55,620
+quite wrong on a lot of stuff right it did it could detect that sometimes there
+
+182
+00:16:55,620 --> 00:17:04,620
+was contact but then so it detect that left leg fairly good but then still is
+
+183
+00:17:04,620 --> 00:17:11,180
+still in contact so pretty bad and when you only train a retail system so
+
+184
+00:17:11,180 --> 00:17:17,180
+basically what we have to do now is manually correct this clip and then
+
+185
+00:17:17,180 --> 00:17:23,779
+when this one will be corrected we could again concatenate with what we already
+
+186
+00:17:23,779 --> 00:17:28,460
+trained and then we can retrain a new classifier and we keep iterating this
+
+187
+00:17:28,460 --> 00:17:34,400
+way. To avoid doing that with you what I've done is that I've already went
+
+188
+00:17:34,400 --> 00:17:39,740
+through that process several times and I can just reload this data so basically
+
+189
+00:17:39,740 --> 00:17:46,660
+what I've done is that I've trained 10 different clips so out of my 22,000
+
+190
+00:17:46,660 --> 00:17:50,980
+frames have trained 2,000 frames.
+
+191
+00:17:50,980 --> 00:17:57,380
+And I can actually train my classifier with these values.
+
+192
+00:17:57,380 --> 00:18:01,460
+And if I tried to see what was the worst possible animations
+
+193
+00:18:01,460 --> 00:18:07,060
+it could find, this is the first thing.
+
+194
+00:18:07,060 --> 00:18:14,620
+So this is the one that we say is the worst animations
+
+195
+00:18:14,620 --> 00:18:16,180
+predictions possible.
+
+196
+00:18:16,180 --> 00:18:22,900
+And we could see that it's not too bad at what it predicted.
+
+197
+00:18:22,900 --> 00:18:29,259
+So the idea of this paper is just to stop as soon as when
+
+198
+00:18:29,259 --> 00:18:32,060
+it tells you that the worst frame is this one
+
+199
+00:18:32,060 --> 00:18:35,620
+and it's actually not wrong.
+
+200
+00:18:35,620 --> 00:18:38,380
+You could assume that you've finished training, basically,
+
+201
+00:18:38,380 --> 00:18:40,539
+with all the animation of data you have.
+
+202
+00:18:40,539 --> 00:18:43,539
+So this is how this paper works.
+
+203
+00:18:43,539 --> 00:18:48,539
+It's fairly efficient, I would say.
+
+204
+00:18:49,180 --> 00:18:54,180
+It's the first step into that machine learning concept,
+
+205
+00:18:54,700 --> 00:18:57,339
+because basically it's a classifier,
+
+206
+00:18:57,339 --> 00:19:01,259
+it's a model that you train, you fit data and you predict.
+
+207
+00:19:01,259 --> 00:19:04,899
+It's the basics of all machine learning systems.
+
+208
+00:19:04,899 --> 00:19:09,899
+So it was an interesting introduction
+
+209
+00:19:09,940 --> 00:19:11,899
+on all of the systems.
+
+210
+00:19:11,900 --> 00:19:20,300
+I haven't talked about key libraries and how they work and all that kind of stuff.
+
+211
+00:19:20,300 --> 00:19:25,620
+You could find a lot of videos about the system themselves and those libraries themselves
+
+212
+00:19:25,620 --> 00:19:27,540
+if you want to.
+
+213
+00:19:27,540 --> 00:19:30,580
+I hope you liked it and see you next time.

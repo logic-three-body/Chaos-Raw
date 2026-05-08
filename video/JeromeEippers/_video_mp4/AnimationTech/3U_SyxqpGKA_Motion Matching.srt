@@ -1,0 +1,1971 @@
+1
+00:00:00,000 --> 00:00:06,000
+Today we'll be playing with one of the most popular algorithms for character animation in video game.
+
+2
+00:00:06,000 --> 00:00:12,000
+Hi, I'm Jérôme and today we'll be looking at motion matching for character animation.
+
+3
+00:00:12,000 --> 00:00:16,000
+It's not a paper per se because it was never published as a paper,
+
+4
+00:00:16,000 --> 00:00:22,000
+but it has been shown in a lot of different talks and GDC talks and stuff.
+
+5
+00:00:22,000 --> 00:00:26,320
+And so the first thing that is important in motion matching is that you will have
+
+6
+00:00:28,560 --> 00:00:34,880
+the future trajectory. You need to predict what your trajectory is. And only when you have your
+
+7
+00:00:34,880 --> 00:00:41,039
+prediction, what you could do is try to find animations to address that prediction. So you
+
+8
+00:00:41,039 --> 00:00:46,480
+need to have a stable prediction. You need to know in advance what your character would need
+
+9
+00:00:46,480 --> 00:00:53,200
+to be able to do. So for this, what I will do, in my case, I will work with the locomotion only
+
+10
+00:00:53,200 --> 00:01:02,720
+as a first example, and I will use a spring damper model to compute how I want the character to move
+
+11
+00:01:02,720 --> 00:01:08,400
+and also compute at the same time the futures of where the character would be depending on those.
+
+12
+00:01:08,400 --> 00:01:14,880
+I really recommend you to read the article from Daniel Alden that explained all the
+
+13
+00:01:14,879 --> 00:01:18,640
+the mathematics for the spring dampers, the critical spring
+
+14
+00:01:18,640 --> 00:01:22,199
+damper, and how you could use that for a lot of different
+
+15
+00:01:22,199 --> 00:01:26,239
+stuff. But in this case, to compute the position of a
+
+16
+00:01:26,239 --> 00:01:29,359
+character, the velocity and acceleration, and predict where
+
+17
+00:01:29,359 --> 00:01:35,719
+you want to use it. So really, what I have is these functions,
+
+18
+00:01:35,759 --> 00:01:39,840
+and that this one is the most important one. You give him a
+
+19
+00:01:40,000 --> 00:01:43,439
+position at times zero velocity at times zero acceleration at
+
+20
+00:01:43,439 --> 00:01:52,239
+time zero velocity goal your alpha life so it's how much time it takes for the
+
+21
+00:01:52,239 --> 00:01:58,200
+spring to do half of the distance and a delta time and it will return the next
+
+22
+00:01:58,200 --> 00:02:03,239
+position next velocity and next acceleration at that time and that's
+
+23
+00:02:03,239 --> 00:02:08,000
+a second order differential equation that has been solved so the answer is
+
+24
+00:02:08,000 --> 00:02:12,960
+correct no matter what is the delta time you give him any time in the future it
+
+25
+00:02:12,960 --> 00:02:18,800
+would actually have the exact position, velocity, and acceleration you will have in that time.
+
+26
+00:02:18,800 --> 00:02:27,200
+So that's really powerful for that. So I get my gamepad and I can, well, I have a little function
+
+27
+00:02:27,200 --> 00:02:35,040
+to create a sphere I can draw. Then I get this function. Basically, I'm computing the
+
+28
+00:02:36,800 --> 00:02:42,719
+directions I want to move, the velocity I want to have, and the orientations I want to get
+
+29
+00:02:42,960 --> 00:02:47,920
+to get and you have this so if I play this
+
+30
+00:02:51,520 --> 00:02:56,080
+now I can take my pad and then I can
+
+31
+00:02:57,520 --> 00:03:03,360
+so the the black is the current positions where I want to add to my character to be
+
+32
+00:03:03,360 --> 00:03:07,520
+and the yellows are the predicted position orientations I will have
+
+33
+00:03:07,520 --> 00:03:14,880
+10 frames in the future, 20 frames in the future, 30 frames in the future, say, one second in the
+
+34
+00:03:14,880 --> 00:03:20,480
+future there. So basically, and that's perfect. I mean, if I release, you could see that everyone
+
+35
+00:03:20,480 --> 00:03:27,719
+stops on the same spot. So the prediction is perfect. And you can play with it half time to
+
+36
+00:03:27,719 --> 00:03:36,920
+get something smoother if you need to, or if you want something faster in interaction. And I've
+
+37
+00:03:36,920 --> 00:03:43,720
+separate this in position and the same for orientation, I can choose how quickly the
+
+38
+00:03:43,720 --> 00:03:49,400
+orientation change and that kind of stuff. So that is one of the key
+
+39
+00:03:52,520 --> 00:04:00,520
+need for the motion matching. You need to make sure that you have something that moves in a
+
+40
+00:04:00,520 --> 00:04:06,200
+physically plausible way and that's how you predict where you will be. In this case, it's
+
+41
+00:04:06,200 --> 00:04:10,320
+using spring damper to simulate the accelerations
+
+42
+00:04:10,320 --> 00:04:12,800
+and velocities and all kinds of stuff you could have.
+
+43
+00:04:12,800 --> 00:04:14,000
+It could be any other system
+
+44
+00:04:14,000 --> 00:04:16,960
+if you have something that works for you,
+
+45
+00:04:16,960 --> 00:04:21,960
+but accurately predict your trajectory.
+
+46
+00:04:22,900 --> 00:04:24,759
+That's really what is important here.
+
+47
+00:04:26,240 --> 00:04:28,720
+Now that I have this, I can actually load my character.
+
+48
+00:04:28,720 --> 00:04:31,319
+I can load a little displacement.
+
+49
+00:04:31,319 --> 00:04:33,400
+I can load a bunch of animations.
+
+50
+00:04:33,400 --> 00:04:35,520
+So I will have all the running animation
+
+51
+00:04:35,519 --> 00:04:40,159
+from the LaFUN database.
+
+52
+00:04:40,159 --> 00:04:45,639
+And we could see the animations we have here.
+
+53
+00:04:45,639 --> 00:04:53,759
+So basically, it's the character running in all directions,
+
+54
+00:04:53,759 --> 00:05:01,199
+stopping, accelerating, going strafing animations,
+
+55
+00:05:01,199 --> 00:05:04,879
+several animations that get a bunch of motion.
+
+56
+00:05:07,360 --> 00:05:10,360
+Now, the second thing that is important
+
+57
+00:05:10,360 --> 00:05:12,000
+when you do motion matching, of course,
+
+58
+00:05:12,000 --> 00:05:17,000
+if we had the, we have our prediction of trajectory,
+
+59
+00:05:17,039 --> 00:05:20,039
+we see that we've used velocity and acceleration
+
+60
+00:05:20,039 --> 00:05:20,879
+and that kind of stuff.
+
+61
+00:05:20,879 --> 00:05:23,199
+So we have something that is extremely smooth
+
+62
+00:05:23,199 --> 00:05:27,180
+in the trajectory we generate.
+
+63
+00:05:27,180 --> 00:05:29,300
+And we will want to match animation
+
+64
+00:05:29,300 --> 00:05:36,020
+those smooth trajectory. But my animation in this case, you could see that the root of my character
+
+65
+00:05:36,660 --> 00:05:43,540
+is the projected hips on the ground and orientation. So that is a signal
+
+66
+00:05:44,740 --> 00:05:51,620
+that oscillates a lot. And basically it's a signal that has a lot of small noises.
+
+67
+00:05:51,620 --> 00:05:58,459
+And if I tried to match the two, my data will not be perfect.
+
+68
+00:05:58,459 --> 00:06:02,939
+I mean, I would have something that have a lot of noise and I would try to match that noise.
+
+69
+00:06:02,939 --> 00:06:09,139
+So what do we need to do is to make sure that we remove the noise we have in the signal coming from the animation itself.
+
+70
+00:06:09,139 --> 00:06:17,980
+And for this, I would use a filter that I will not try to pronounce because I will probably butcher the name badly,
+
+71
+00:06:17,980 --> 00:06:27,140
+but I will use an SG filter let's say and what the filter does it if you have a
+
+72
+00:06:27,140 --> 00:06:33,340
+signal that has a lot of noise into it you will make a window and you will try
+
+73
+00:06:33,340 --> 00:06:41,379
+to you will slide that window slowly to compute the values and every time inside
+
+74
+00:06:41,379 --> 00:06:50,420
+of that window you will match a polynomial of degree you choose, but you will basically
+
+75
+00:06:50,420 --> 00:06:54,420
+fit the polynomial, take the middle value, move forward, fit the polynomial, take the
+
+76
+00:06:54,420 --> 00:06:58,379
+middle value, move forward, fit the polynomial and so on and so on. What I will do in my
+
+77
+00:06:58,379 --> 00:07:12,659
+case for this motion I will basically fit a window of 2 seconds and I will fit a polynomial
+
+78
+00:07:12,659 --> 00:07:18,939
+of degree 4 in the middle of the time for the positions and I will go a little further
+
+79
+00:07:18,939 --> 00:07:25,980
+and go 65 frames for the rotations but filling a polynomial of degree 5.
+
+80
+00:07:25,980 --> 00:07:30,540
+So that's how I will smooth the signal.
+
+81
+00:07:30,540 --> 00:07:33,300
+Now I will do this inside of a function
+
+82
+00:07:33,300 --> 00:07:38,100
+that I call prepareData, because what you do usually
+
+83
+00:07:38,100 --> 00:07:40,020
+when you have motion matching that kind of stuff,
+
+84
+00:07:40,020 --> 00:07:41,900
+is that you would take all your animations
+
+85
+00:07:41,900 --> 00:07:45,060
+and you would put that inside of what we call a database.
+
+86
+00:07:45,060 --> 00:07:46,580
+That would be a flat structures
+
+87
+00:07:46,580 --> 00:07:48,420
+of all your frame of animations.
+
+88
+00:07:49,420 --> 00:07:51,060
+And so that's what this function does.
+
+89
+00:07:51,060 --> 00:07:52,740
+It takes an animation.
+
+90
+00:07:52,740 --> 00:07:54,780
+So the quaternions and position of all the bones
+
+91
+00:07:54,780 --> 00:07:57,900
+and transition and roots and that stuff.
+
+92
+00:07:58,780 --> 00:08:02,420
+And I will smooth the signal.
+
+93
+00:08:03,380 --> 00:08:07,340
+I will realign my animation to the smooth one.
+
+94
+00:08:07,340 --> 00:08:12,340
+So the smoothed root becomes the root of my animation.
+
+95
+00:08:13,580 --> 00:08:16,060
+And then I will compute the velocities,
+
+96
+00:08:16,060 --> 00:08:18,700
+the local velocities of all of my bones
+
+97
+00:08:18,700 --> 00:08:22,140
+and the local angular velocities of all of my bones.
+
+98
+00:08:22,139 --> 00:08:26,379
+That would be useful for later at the end,
+
+99
+00:08:26,379 --> 00:08:29,339
+but at least I have everything in my database.
+
+100
+00:08:29,339 --> 00:08:32,419
+And so it returns, you know, the animation,
+
+101
+00:08:32,419 --> 00:08:35,860
+the quaternion, the animation of the quaternions,
+
+102
+00:08:35,860 --> 00:08:38,179
+the position, the velocities and good velocities.
+
+103
+00:08:38,179 --> 00:08:40,779
+And then I get the frame range and the frame count.
+
+104
+00:08:42,179 --> 00:08:47,059
+That will actually allows me to know in my database
+
+105
+00:08:47,939 --> 00:08:50,500
+what are the range of each of an animations
+
+106
+00:08:50,500 --> 00:08:53,259
+because I will have all my animations back to back
+
+107
+00:08:53,259 --> 00:08:55,620
+inside of my database and my frame range
+
+108
+00:08:55,620 --> 00:08:59,139
+will tell me, well, that was an animation,
+
+109
+00:08:59,139 --> 00:09:02,059
+that was one animation, that was one animation.
+
+110
+00:09:02,059 --> 00:09:06,779
+And I will build that database for several animations
+
+111
+00:09:06,779 --> 00:09:11,500
+and several ranges of animations and I will have one big.
+
+112
+00:09:12,460 --> 00:09:16,460
+So basically this becomes that database.
+
+113
+00:09:16,460 --> 00:09:25,740
+database. I get all my animations for everything. So if I display now this, so really displaying
+
+114
+00:09:25,740 --> 00:09:33,060
+my database, I get this. You can see now that the displacement linked to the character is
+
+115
+00:09:33,060 --> 00:09:43,540
+now smooth in orientations and positions. I don't have the little association anymore.
+
+116
+00:09:43,539 --> 00:09:47,539
+Now that we have our database of animation itself,
+
+117
+00:09:47,539 --> 00:09:50,259
+we could start to think about how we will use
+
+118
+00:09:50,259 --> 00:09:52,419
+that database to play animations.
+
+119
+00:09:52,419 --> 00:09:56,740
+So how we will match the frame of animations
+
+120
+00:09:56,740 --> 00:09:58,939
+to our future trajectory the way we want it.
+
+121
+00:10:00,059 --> 00:10:04,620
+And for this, what we will do is that we will build
+
+122
+00:10:04,620 --> 00:10:05,620
+a feature vector.
+
+123
+00:10:05,620 --> 00:10:07,959
+So we will extract a bunch of features
+
+124
+00:10:07,959 --> 00:10:09,740
+that we are interested in.
+
+125
+00:10:09,740 --> 00:10:12,980
+And in the case of the locomotions,
+
+126
+00:10:12,980 --> 00:10:15,580
+What will be the most interesting stuff for us
+
+127
+00:10:15,580 --> 00:10:18,620
+will be the hips velocity.
+
+128
+00:10:18,620 --> 00:10:22,360
+So how is the hips moving?
+
+129
+00:10:23,379 --> 00:10:25,980
+I'll get the feet position and velocities.
+
+130
+00:10:25,980 --> 00:10:28,420
+So I will know where my feet are
+
+131
+00:10:28,420 --> 00:10:30,779
+and how they were moving.
+
+132
+00:10:30,779 --> 00:10:33,300
+And then I will get the future states
+
+133
+00:10:35,460 --> 00:10:39,899
+which is sample at 10, 20, or 30 frames in the future
+
+134
+00:10:39,899 --> 00:10:40,899
+inside of my animation.
+
+135
+00:10:40,899 --> 00:10:44,340
+and I will sample the position of the character
+
+136
+00:10:44,340 --> 00:10:45,819
+and the orientation of the character.
+
+137
+00:10:45,819 --> 00:10:48,159
+So it's really the hips, the feet,
+
+138
+00:10:48,159 --> 00:10:49,139
+a velocity of the feet,
+
+139
+00:10:49,139 --> 00:10:50,819
+and then the character positions
+
+140
+00:10:50,819 --> 00:10:52,340
+and the character orientations.
+
+141
+00:10:52,340 --> 00:10:55,919
+So that's how I will build my feature vector.
+
+142
+00:10:57,139 --> 00:10:58,379
+And that's what I would do here.
+
+143
+00:10:58,379 --> 00:11:00,659
+So basically what I'm doing is that
+
+144
+00:11:00,659 --> 00:11:03,179
+converting all my animations in global space,
+
+145
+00:11:03,179 --> 00:11:05,779
+so I will be able to compute the position,
+
+146
+00:11:05,779 --> 00:11:09,079
+the velocity of my foot and my hips also.
+
+147
+00:11:09,080 --> 00:11:14,080
+And then I will take my current frame,
+
+148
+00:11:15,080 --> 00:11:16,600
+so I do it for every frame.
+
+149
+00:11:16,600 --> 00:11:20,000
+So I take my first frame and I compute,
+
+150
+00:11:20,000 --> 00:11:22,120
+I take the positions of frame plus one,
+
+151
+00:11:22,120 --> 00:11:24,240
+plus 10, plus 20, plus 30,
+
+152
+00:11:24,240 --> 00:11:29,240
+just making sure that I'm actually never going over boundaries.
+
+153
+00:11:29,400 --> 00:11:32,300
+So, you know, I had several animations back to back.
+
+154
+00:11:32,300 --> 00:11:35,280
+I don't want to take future positions
+
+155
+00:11:35,280 --> 00:11:36,840
+that comes from different animations.
+
+156
+00:11:36,840 --> 00:11:38,520
+I want to have future positions
+
+157
+00:11:38,519 --> 00:11:42,079
+that only belongs to my current animation.
+
+158
+00:11:43,480 --> 00:11:46,319
+And once you have all of those,
+
+159
+00:11:46,319 --> 00:11:49,240
+what you do is that you bring back all the data
+
+160
+00:11:49,240 --> 00:11:51,720
+as local to the current frame.
+
+161
+00:11:51,720 --> 00:11:56,000
+So I computed the, I have my frame,
+
+162
+00:11:56,000 --> 00:11:59,199
+this is frame zero is somewhere here in the world.
+
+163
+00:11:59,199 --> 00:12:02,000
+I get the features, positions there,
+
+164
+00:12:02,000 --> 00:12:03,480
+and I take all those positions
+
+165
+00:12:03,480 --> 00:12:06,199
+and I bring them back into zero, zero, zero
+
+166
+00:12:06,200 --> 00:12:10,440
+relative to the current frame I'm computing.
+
+167
+00:12:10,440 --> 00:12:12,879
+And when you have that, you could
+
+168
+00:12:12,879 --> 00:12:15,240
+start to build your feature vector.
+
+169
+00:12:15,240 --> 00:12:22,320
+And that will be a big, flat features.
+
+170
+00:12:22,320 --> 00:12:25,520
+When I will have the velocity of my hips,
+
+171
+00:12:25,520 --> 00:12:29,879
+the position of my left foot, position of my right foot,
+
+172
+00:12:29,879 --> 00:12:33,240
+velocity of the feet, and then the future positions,
+
+173
+00:12:33,240 --> 00:12:35,440
+and the future orientations.
+
+174
+00:12:35,440 --> 00:12:36,640
+And I do that for every frame.
+
+175
+00:12:36,640 --> 00:12:41,640
+So it's a, the features becomes a tensor of size,
+
+176
+00:12:43,900 --> 00:12:47,280
+number of frames, and number of columns,
+
+177
+00:12:47,280 --> 00:12:48,920
+study three in my case here.
+
+178
+00:12:48,920 --> 00:12:52,500
+It's all the three points and velocities I have.
+
+179
+00:12:55,440 --> 00:12:58,120
+And then when I've computed all of these,
+
+180
+00:12:58,120 --> 00:13:00,240
+we could start to display what it looks like.
+
+181
+00:13:00,240 --> 00:13:03,640
+So this is what is extracted from
+
+182
+00:13:05,440 --> 00:13:11,600
+our animation. So what we have is the local informations compared to all the current frames
+
+183
+00:13:11,600 --> 00:13:17,600
+of where the foot positions are, the foot velocities, the hips velocity, and the future
+
+184
+00:13:19,280 --> 00:13:26,080
+positions and orientations of the character. And we have that for every frame inside of our database.
+
+185
+00:13:28,480 --> 00:13:34,000
+And that's basically it. I mean, I've extracted all of data, you know, I've already computed
+
+186
+00:13:34,000 --> 00:13:39,519
+the future trajectory so we will start to be able to match the future trajectory with the data we
+
+187
+00:13:39,519 --> 00:13:50,720
+have here. The only issue we have right now is that all of this data has a lot of different
+
+188
+00:13:51,679 --> 00:13:58,639
+values and sizes you know all the values that are from these points are fairly closed around here
+
+189
+00:13:58,639 --> 00:14:04,879
+but the one is really far in the features have big values. And what I have is one feature
+
+190
+00:14:08,240 --> 00:14:16,240
+vector that is basically a vector in 33 dimensions. And I just want to be able to
+
+191
+00:14:17,600 --> 00:14:24,000
+compute the Euclidean distance when I will be searching for the most similar pose.
+
+192
+00:14:24,000 --> 00:14:30,159
+I would just do a flat Euclidean distance, but something that will have a lot more importance than
+
+193
+00:14:30,159 --> 00:14:36,000
+other. And I don't want to have to deal with this because it will be tricky to remember, yeah, maybe
+
+194
+00:14:36,000 --> 00:14:41,039
+this one has a bigger value, this one has less value, I need to give more importance to this or
+
+195
+00:14:41,039 --> 00:14:46,000
+to that. So what I would do is that I will normalize my vector. It's something that you always do when
+
+196
+00:14:46,000 --> 00:14:52,399
+you do machine learnings and all of those stuff, that is you normalize all your value, all of your
+
+197
+00:14:52,399 --> 00:15:01,039
+values inside of your features. And to normalize them, basically, you take the average, the
+
+198
+00:15:01,039 --> 00:15:05,759
+mean of all your values, you subtract the mean, so all your values, if they were all
+
+199
+00:15:05,759 --> 00:15:13,360
+from zero to 20, then you will switch, you will slide your window to be around zero.
+
+200
+00:15:14,319 --> 00:15:19,759
+And then you divide all the values by the standard deviations. So the goal is to have
+
+201
+00:15:19,759 --> 00:15:26,000
+for all of your feature to have a mean of zero and a standard deviation of one.
+
+202
+00:15:26,000 --> 00:15:30,919
+So basically everything now is in the same space, everything has the same
+
+203
+00:15:30,919 --> 00:15:34,759
+importance and when you try to do an Euclidean distance on the flat vector
+
+204
+00:15:34,759 --> 00:15:40,879
+like this, it would work. So this is what you do. You take the feature mean, the
+
+205
+00:15:40,879 --> 00:15:45,080
+feature standard deviations. I need to add a really small error here because I
+
+206
+00:15:45,080 --> 00:15:47,600
+I have a bunch of values that are zeros everywhere
+
+207
+00:15:47,600 --> 00:15:52,600
+because I've kept the y position of my trajectories,
+
+208
+00:15:52,639 --> 00:15:53,720
+they're all zeros.
+
+209
+00:15:53,720 --> 00:15:58,720
+So I keep the feature mean feature standard deviation.
+
+210
+00:16:00,560 --> 00:16:02,560
+So you take the features, remove the mean,
+
+211
+00:16:02,560 --> 00:16:04,280
+divide by the standard deviations
+
+212
+00:16:04,280 --> 00:16:07,600
+and that give you the normalized feature.
+
+213
+00:16:07,600 --> 00:16:10,879
+Now that I have this, I basically have something
+
+214
+00:16:10,879 --> 00:16:12,640
+in which I could do Euclidean distance
+
+215
+00:16:12,639 --> 00:16:19,240
+to compute the closest vector.
+
+216
+00:16:19,240 --> 00:16:20,720
+And we can start to have something
+
+217
+00:16:20,720 --> 00:16:22,679
+that Talou has to play back those animations.
+
+218
+00:16:22,679 --> 00:16:25,240
+So what I would do is that I would have a player.
+
+219
+00:16:25,240 --> 00:16:26,759
+And basically what the player does,
+
+220
+00:16:26,759 --> 00:16:31,159
+it stores the current frame I'm playing
+
+221
+00:16:31,159 --> 00:16:37,480
+and stores the current position and orientations
+
+222
+00:16:37,480 --> 00:16:42,480
+of every bones and also of the root of my character.
+
+223
+00:16:44,039 --> 00:16:46,320
+I don't bother with the rest.
+
+224
+00:16:46,320 --> 00:16:50,200
+And so when you say go to the next frame, what it does,
+
+225
+00:16:51,300 --> 00:16:56,300
+it basically here, you know, all my data in my database
+
+226
+00:16:57,740 --> 00:17:00,120
+is moving in space.
+
+227
+00:17:00,120 --> 00:17:03,360
+So what you have to do is compute the displacements.
+
+228
+00:17:03,360 --> 00:17:07,559
+So say that if I want to play frame 10,
+
+229
+00:17:07,559 --> 00:17:12,720
+I need to know how much it moved from frame 9 to frame 10.
+
+230
+00:17:12,720 --> 00:17:15,839
+And that's the offsets I want to add to my character.
+
+231
+00:17:15,839 --> 00:17:19,400
+So I want to compute how much displacement was
+
+232
+00:17:19,400 --> 00:17:21,839
+inside of animations and to add that to my character.
+
+233
+00:17:21,839 --> 00:17:24,680
+So I can put my character anywhere I want
+
+234
+00:17:24,680 --> 00:17:27,039
+and I can let him follow the animation.
+
+235
+00:17:27,039 --> 00:17:29,120
+So that's what this function does.
+
+236
+00:17:29,120 --> 00:17:31,039
+Takes the actual animations,
+
+237
+00:17:31,039 --> 00:17:32,960
+orientations of every bones.
+
+238
+00:17:32,960 --> 00:17:37,759
+but compute the offsets of the displacements only.
+
+239
+00:17:38,960 --> 00:17:43,799
+And we come back to this later also, so import this.
+
+240
+00:17:43,799 --> 00:17:47,880
+And now, if you want to play animations and map,
+
+241
+00:17:47,880 --> 00:17:49,680
+the only thing you have to do is,
+
+242
+00:17:49,680 --> 00:17:53,000
+what I was doing before, taking my pad inputs
+
+243
+00:17:53,000 --> 00:17:56,200
+and knowing what I want to do with my character.
+
+244
+00:17:57,200 --> 00:17:59,120
+And then I compute the future trajectory.
+
+245
+00:17:59,120 --> 00:18:01,960
+I compute the future position,
+
+246
+00:18:01,960 --> 00:18:04,360
+velocity and acceleration of my character.
+
+247
+00:18:04,360 --> 00:18:06,720
+I do the same for my orientation,
+
+248
+00:18:06,720 --> 00:18:10,000
+and then I compute the one in 10 frame in the future,
+
+249
+00:18:10,000 --> 00:18:12,559
+20 frame and 30 frame is the future positions
+
+250
+00:18:12,559 --> 00:18:14,360
+and orientation.
+
+251
+00:18:14,360 --> 00:18:17,920
+And I get all basically the same trajectory
+
+252
+00:18:17,920 --> 00:18:19,660
+I've computed before.
+
+253
+00:18:21,640 --> 00:18:25,200
+What I'm doing is that bringing back all that info
+
+254
+00:18:25,200 --> 00:18:28,440
+into local space of my character,
+
+255
+00:18:28,440 --> 00:18:31,759
+because you know right now my future positions
+
+256
+00:18:31,759 --> 00:18:35,879
+and my future trajectories are in a world space somewhere
+
+257
+00:18:35,879 --> 00:18:38,279
+where I want my character to be.
+
+258
+00:18:38,279 --> 00:18:41,039
+But I want to compute everything relative to my character.
+
+259
+00:18:41,039 --> 00:18:44,160
+All my data is relative to my character.
+
+260
+00:18:44,160 --> 00:18:47,640
+So convert that relative to my character.
+
+261
+00:18:47,640 --> 00:18:49,799
+And then I can build my query vector.
+
+262
+00:18:49,799 --> 00:18:51,920
+So it's the same.
+
+263
+00:18:51,920 --> 00:18:56,359
+It has the same size as the feature vector.
+
+264
+00:18:56,359 --> 00:19:00,160
+So it's 33 dimension.
+
+265
+00:19:00,160 --> 00:19:03,360
+And the easiest way and the most stable way to do it
+
+266
+00:19:03,360 --> 00:19:08,360
+in this case is to start from the frame I played.
+
+267
+00:19:09,800 --> 00:19:12,960
+So I take my feature normalized and I do a copy
+
+268
+00:19:12,960 --> 00:19:14,600
+of the frame that was played.
+
+269
+00:19:14,600 --> 00:19:18,720
+Why I'm doing this is because I'm using motion matching
+
+270
+00:19:18,720 --> 00:19:20,080
+to playback animation.
+
+271
+00:19:20,080 --> 00:19:25,080
+So I know that last frame I wanted to play that frame.
+
+272
+00:19:25,079 --> 00:19:34,079
+So that means that I know the feed position, the feed velocity and that kind of stuff of what I wanted to do.
+
+273
+00:19:34,079 --> 00:19:39,079
+That's the really important thing here. I know that I wanted to play this frame, no matter what happened.
+
+274
+00:19:39,079 --> 00:19:45,079
+That's the frame I wanted to play. So I expect the character to be in that state.
+
+275
+00:19:45,079 --> 00:19:53,079
+So I take the feature normalized as a starting point for my query vector.
+
+276
+00:19:53,079 --> 00:19:57,279
+And then I just change the future trajectory positions
+
+277
+00:19:57,279 --> 00:20:02,279
+and future trajectory direction.
+
+278
+00:20:02,279 --> 00:20:05,639
+And I do normalize those values the same way.
+
+279
+00:20:05,639 --> 00:20:07,759
+So I really use the same feature mean
+
+280
+00:20:07,759 --> 00:20:09,679
+and feature standard deviation that
+
+281
+00:20:09,679 --> 00:20:14,559
+was used to normalize the vector in the first place.
+
+282
+00:20:14,559 --> 00:20:18,199
+And that gives me the query vector.
+
+283
+00:20:18,199 --> 00:20:19,519
+Now that I have the query vector,
+
+284
+00:20:19,519 --> 00:20:24,519
+I could just ask which is the frame of animation
+
+285
+00:20:25,460 --> 00:20:29,639
+that minimize the error between my query vector
+
+286
+00:20:29,639 --> 00:20:32,799
+and the vectors I have in my feature vector.
+
+287
+00:20:32,799 --> 00:20:37,319
+And I will not use any acceleration libraries
+
+288
+00:20:37,319 --> 00:20:41,359
+or algorithm, I just brute force the search
+
+289
+00:20:41,359 --> 00:20:45,639
+because I have around 20,000 frames in this case.
+
+290
+00:20:45,639 --> 00:20:47,799
+I can brute force that fairly quickly
+
+291
+00:20:47,799 --> 00:20:53,519
+Because the only thing you really need to do is compute, as I said, an Euclidean distance.
+
+292
+00:20:53,519 --> 00:21:01,119
+So I take my feature vectors minus my query vector square root and sum the square.
+
+293
+00:21:01,119 --> 00:21:06,799
+I don't even need to do the square roots if I only keep the square distance.
+
+294
+00:21:06,799 --> 00:21:09,000
+It's all fine also.
+
+295
+00:21:09,000 --> 00:21:19,640
+an arc sort in that big array. So it will tell me which row has the lowest value and that will
+
+296
+00:21:19,640 --> 00:21:24,680
+give me the best frame. So I pick the best frame. That's the one I want to play. That's the one that
+
+297
+00:21:24,680 --> 00:21:31,720
+has the smallest error. That's the best score, let's say. Now, the only thing I would do is,
+
+298
+00:21:31,720 --> 00:21:37,640
+and I would just always pick the best one. The first thing I'm doing is something that happens
+
+299
+00:21:37,640 --> 00:21:47,400
+a lot when you're doing motion matching that it might find that the best frame is the frame that
+
+300
+00:21:47,400 --> 00:21:52,759
+was just right before you and then you restart to loop and only play a really small piece of
+
+301
+00:21:52,759 --> 00:22:01,000
+animation. So just to avoid that going backward one frame I just make sure that it doesn't pick any
+
+302
+00:22:01,800 --> 00:22:06,840
+I will go in the order of the one it shows and make sure that you don't pick any of the frames that
+
+303
+00:22:06,839 --> 00:22:14,599
+were in my case less than five frames in the past and that would be way enough for him to never
+
+304
+00:22:14,599 --> 00:22:21,000
+go back in that weird loop and the other part I'm doing is the opposite I'm making sure that the
+
+305
+00:22:21,000 --> 00:22:27,879
+frame it picks it's not at the end of one of my animations so I'll just ban him to pick anything
+
+306
+00:22:27,879 --> 00:22:34,919
+from the frame range minus 30 so it doesn't it cannot play any cannot pick something that is 30
+
+307
+00:22:34,920 --> 00:22:40,519
+frames before the end of the animation. So basically the last second of the animation is gone.
+
+308
+00:22:41,320 --> 00:22:48,200
+That's what I'm doing here all the time because my takes are really big. So if I discard one second
+
+309
+00:22:48,200 --> 00:22:54,279
+of each of those, it's not a big deal. And that gives you the best frame of animations. And so I
+
+310
+00:22:54,279 --> 00:23:00,039
+can set to the system. Now it's time to play that frames. And what I do is I tell him to play the
+
+311
+00:23:00,039 --> 00:23:07,000
+next frame why is because I don't have any delta time I'm playing at 30 frame per second in my system
+
+312
+00:23:07,000 --> 00:23:15,960
+here so this feature query vector pick the best matching animation now I need to play the animation
+
+313
+00:23:15,960 --> 00:23:22,839
+so I tell him go play the next frame of the one you matched and that's why if you have the query
+
+314
+00:23:22,839 --> 00:23:29,639
+vector now if I re-picked the same feature normalized and nothing changed in my input.
+
+315
+00:23:30,839 --> 00:23:35,720
+I have really high, nearly 100% chance that it would pick
+
+316
+00:23:38,119 --> 00:23:42,119
+the correct frame. It will go back to the next frame and so it would play the next frame. This
+
+317
+00:23:42,119 --> 00:23:46,119
+one will re-pick the same frame, that one will go back and play the next frame and so on and so on.
+
+318
+00:23:46,120 --> 00:23:52,520
+So, that's one of the ways to stabilize that kind of stuff also.
+
+319
+00:23:52,520 --> 00:23:56,520
+Just making sure that every frame it picks the next frame.
+
+320
+00:23:56,520 --> 00:24:01,920
+There is also the way of saying that you don't want to play, that you don't want to compute
+
+321
+00:24:01,920 --> 00:24:05,160
+the search database every frame.
+
+322
+00:24:05,160 --> 00:24:10,600
+If your input hasn't changed, your trajectory was correctly computed.
+
+323
+00:24:10,600 --> 00:24:15,600
+I mean, for a bunch of frames, you know that it will just say play the next frame.
+
+324
+00:24:15,600 --> 00:24:17,320
+You don't need to do that search every time.
+
+325
+00:24:17,320 --> 00:24:20,560
+You could say, if the input doesn't change,
+
+326
+00:24:20,560 --> 00:24:24,720
+recompute the search to the database every X-frames.
+
+327
+00:24:24,720 --> 00:24:25,760
+I haven't gone that far.
+
+328
+00:24:25,760 --> 00:24:27,360
+I'm just recomputing every frame.
+
+329
+00:24:27,360 --> 00:24:31,120
+So, and then we play the animations
+
+330
+00:24:31,120 --> 00:24:33,280
+and we could see what happens.
+
+331
+00:24:33,280 --> 00:24:34,120
+So,
+
+332
+00:24:34,120 --> 00:24:35,200
+da, da, da, da.
+
+333
+00:24:41,640 --> 00:24:44,440
+In idle, of course, I don't have any data for idle.
+
+334
+00:24:44,440 --> 00:24:45,779
+So there he goes nuts.
+
+335
+00:24:45,779 --> 00:24:48,059
+But as soon as you go motions, you
+
+336
+00:24:48,059 --> 00:24:53,539
+could see that he start to pick the animations he prefers.
+
+337
+00:24:53,539 --> 00:24:56,299
+And we can see every time you pick
+
+338
+00:24:56,299 --> 00:24:57,700
+the different animations right now.
+
+339
+00:24:57,700 --> 00:24:58,460
+It pops, it pops.
+
+340
+00:24:58,460 --> 00:25:03,900
+But it does map, you see, align the position,
+
+341
+00:25:03,900 --> 00:25:05,700
+the future position there.
+
+342
+00:25:05,700 --> 00:25:09,380
+The yellow is what I'm computing.
+
+343
+00:25:09,380 --> 00:25:13,660
+And the black is the best animation
+
+344
+00:25:13,660 --> 00:25:16,940
+is found to match my request.
+
+345
+00:25:16,940 --> 00:25:24,820
+And it follows different orientations if we want.
+
+346
+00:25:24,820 --> 00:25:34,140
+You can switch and you get a bunch of animations.
+
+347
+00:25:34,140 --> 00:25:36,020
+Now, of course, it pops all the time.
+
+348
+00:25:36,020 --> 00:25:38,140
+So the first thing that we want to do
+
+349
+00:25:38,140 --> 00:25:40,660
+is to make sure that all that popping disappear
+
+350
+00:25:40,660 --> 00:25:43,180
+and that we can have something smooth.
+
+351
+00:25:43,180 --> 00:25:46,940
+And that's what I have here when I activate the inertialize.
+
+352
+00:25:47,940 --> 00:25:52,940
+So your initializations is also an algorithm
+
+353
+00:25:53,380 --> 00:25:57,900
+that has been quite popular lately.
+
+354
+00:25:58,740 --> 00:26:01,140
+It's basically the way of saying that
+
+355
+00:26:01,140 --> 00:26:04,180
+instead of trying to blend animations together,
+
+356
+00:26:04,180 --> 00:26:09,180
+We will tell that we have a stream of motion,
+
+357
+00:26:10,779 --> 00:26:11,920
+which is what we have here.
+
+358
+00:26:11,920 --> 00:26:14,019
+And then every time we have a big discontinuity,
+
+359
+00:26:14,019 --> 00:26:16,560
+so every time you pick the different animations,
+
+360
+00:26:16,560 --> 00:26:21,560
+you compute the offsets, the amount of error
+
+361
+00:26:21,660 --> 00:26:24,700
+that you have between the old animations,
+
+362
+00:26:24,700 --> 00:26:27,940
+the old frame, and the new frame of animations.
+
+363
+00:26:27,940 --> 00:26:32,940
+That give you an error, and then you will try to,
+
+364
+00:26:34,180 --> 00:26:40,100
+So you will add that error on top of your current frame, and then you will slowly
+
+365
+00:26:40,100 --> 00:26:44,500
+dampen down the amount of error correction you do.
+
+366
+00:26:44,500 --> 00:26:49,580
+So basically, you have a discontinuity, you compute the offsets between the discontinuity
+
+367
+00:26:49,580 --> 00:26:57,860
+and the old animations, and then you slow down, you slowly remove the amount of error
+
+368
+00:26:57,860 --> 00:26:59,779
+you had between the two.
+
+369
+00:26:59,779 --> 00:27:10,500
+way the initializations work it's what we have here. In this case thanks to Daniel Alden again
+
+370
+00:27:10,500 --> 00:27:21,619
+and the way he developed the the spring we could use the spring to also reduce the error using
+
+371
+00:27:21,619 --> 00:27:29,700
+a spring. So basically you said how much error I have right now and then I need in 0.2 seconds to
+
+372
+00:27:29,779 --> 00:27:37,539
+reduce that error to zero and using a spring it would also take into account what was the
+
+373
+00:27:37,539 --> 00:27:43,139
+velocities and angular velocity of your character so you're making sure that if you had a motion
+
+374
+00:27:43,139 --> 00:27:49,619
+that was doing this you know it will keep the accelerations and it will not just stop and go
+
+375
+00:27:49,619 --> 00:27:56,899
+down it will just keep that same motion thanks to the fact that the damper would take into account
+
+376
+00:27:56,900 --> 00:28:05,700
+the velocities of each bone. So that's why we had computed the actual bone velocities and bone
+
+377
+00:28:05,700 --> 00:28:14,660
+angular velocities of our animation. It's to be plugged into the initialize. So if you character
+
+378
+00:28:14,660 --> 00:28:20,740
+moves in one direction, it keeps the same motions and they start to blend without any abrupt change.
+
+379
+00:28:20,740 --> 00:28:24,579
+and that's because the spring use again the position and velocities.
+
+380
+00:28:25,539 --> 00:28:31,620
+So in this case the positions becomes the amount of error between the two pose and the velocities
+
+381
+00:28:31,620 --> 00:28:38,019
+is the direction in which the bones was going. So was it going in the right direction to remove
+
+382
+00:28:38,019 --> 00:28:42,099
+that error? Was it going the wrong directions to remove that error and that kind of stuff?
+
+383
+00:28:42,100 --> 00:28:53,220
+that damper works properly to reduce the amount of error to zeros and keep the the velocities.
+
+384
+00:28:54,180 --> 00:29:00,020
+And so we initialize this every time we have a discontinuity. So basically every time we don't
+
+385
+00:29:00,020 --> 00:29:09,140
+play the next frame we're expecting, we compute the amount of error that led to and then every frame
+
+386
+00:29:09,140 --> 00:29:12,820
+we just let the spring remove the arrow slowly.
+
+387
+00:29:16,780 --> 00:29:19,020
+And that gives us what we have here.
+
+388
+00:29:20,900 --> 00:29:24,259
+Now, you could play with the velocities
+
+389
+00:29:24,259 --> 00:29:27,980
+and how much, how quickly you want to change the values
+
+390
+00:29:27,980 --> 00:29:29,100
+and that kind of stuff.
+
+391
+00:29:29,100 --> 00:29:31,460
+For instance, right now it's fairly,
+
+392
+00:29:33,060 --> 00:29:37,460
+the accelerations is kind of human when you accelerate,
+
+393
+00:29:37,460 --> 00:29:40,880
+but it slowly stops.
+
+394
+00:29:41,799 --> 00:29:45,140
+I can, for instance, change the else time
+
+395
+00:29:45,140 --> 00:29:49,340
+when I'm releasing my pad, so it stops faster.
+
+396
+00:29:49,340 --> 00:29:52,440
+That's a fast stop, but everything else is still the same.
+
+397
+00:29:53,860 --> 00:29:55,579
+And finally, the last thing you could do
+
+398
+00:29:55,579 --> 00:29:57,299
+when you talk about motion matching,
+
+399
+00:29:57,299 --> 00:29:59,660
+but even in animation in general,
+
+400
+00:29:59,660 --> 00:30:00,900
+is that I have,
+
+401
+00:30:03,100 --> 00:30:05,420
+the red is what I'm computing,
+
+402
+00:30:05,420 --> 00:30:13,740
+What I want to compute, right, is the velocities I computed through my simulation.
+
+403
+00:30:13,740 --> 00:30:17,019
+And my character tries to follow that.
+
+404
+00:30:17,019 --> 00:30:23,580
+What happens is at this point you see I have a code versus animations, which are to zero,
+
+405
+00:30:23,580 --> 00:30:27,380
+which means that the animation plays.
+
+406
+00:30:27,380 --> 00:30:34,019
+And then when I finish playing the animations, I realign my simulations to where the character
+
+407
+00:30:34,019 --> 00:30:35,019
+is.
+
+408
+00:30:35,019 --> 00:30:38,220
+Right now, it means that even if I ask the animation to do,
+
+409
+00:30:38,220 --> 00:30:40,660
+if my simulations ask me to do something,
+
+410
+00:30:40,660 --> 00:30:42,460
+the animation is not doing it,
+
+411
+00:30:42,460 --> 00:30:44,180
+it's the animation that wins.
+
+412
+00:30:44,180 --> 00:30:46,619
+You could have the exact opposite,
+
+413
+00:30:46,619 --> 00:30:48,779
+which means that right now,
+
+414
+00:30:48,779 --> 00:30:52,299
+the red is what I'm computing with my spring,
+
+415
+00:30:52,299 --> 00:30:53,900
+and the animations try to address that,
+
+416
+00:30:53,900 --> 00:30:56,619
+and if it doesn't manage to match,
+
+417
+00:30:56,619 --> 00:30:59,440
+it slides and come back to exactly,
+
+418
+00:30:59,440 --> 00:31:02,180
+it realigns where my simulation is.
+
+419
+00:31:02,180 --> 00:31:04,980
+And you could blend between the two worlds.
+
+420
+00:31:04,980 --> 00:31:12,620
+In this case, I kind of match the velocities, accelerations.
+
+421
+00:31:12,620 --> 00:31:15,140
+There, it slides here.
+
+422
+00:31:15,140 --> 00:31:18,339
+But it kind of match what we want.
+
+423
+00:31:18,339 --> 00:31:20,460
+For instance, if I accelerate too much,
+
+424
+00:31:20,460 --> 00:31:22,940
+that does not exist inside of my database.
+
+425
+00:31:22,940 --> 00:31:25,500
+You could see that my character is sliding
+
+426
+00:31:25,500 --> 00:31:29,059
+like crazy trying to catch up my simulation.
+
+427
+00:31:29,059 --> 00:31:32,420
+And if I do the opposite, no matter what I'm asking the system,
+
+428
+00:31:32,420 --> 00:31:37,420
+it only does what it found inside the animation, right?
+
+429
+00:31:37,860 --> 00:31:41,860
+So I can go back to the proper values.
+
+430
+00:31:43,500 --> 00:31:46,539
+And you could do in between, for instance.
+
+431
+00:31:48,140 --> 00:31:52,380
+Now, what we've done so far is that's building the database,
+
+432
+00:31:53,259 --> 00:31:55,740
+building the feature vector, matching the feature vectors,
+
+433
+00:31:55,740 --> 00:32:00,620
+but we've given the same importance to everything.
+
+434
+00:32:00,620 --> 00:32:08,460
+I don't have a foot IK, so I'm not locking the foot on the ground right now, I'm just
+
+435
+00:32:08,460 --> 00:32:09,460
+playing animation.
+
+436
+00:32:09,460 --> 00:32:17,380
+So sometimes it does slide when it blends because of the initializations, but it's kind
+
+437
+00:32:17,380 --> 00:32:18,620
+of okay.
+
+438
+00:32:18,620 --> 00:32:25,460
+So everything now matches with the same score, everything has the same importance, all the
+
+439
+00:32:25,460 --> 00:32:28,100
+feature vectors have the exact same importance.
+
+440
+00:32:28,100 --> 00:32:39,140
+We might need or want to tweak a little what is more important inside our feature vector.
+
+441
+00:32:39,140 --> 00:32:42,020
+We might want to give more importance to some stuff.
+
+442
+00:32:42,020 --> 00:32:46,620
+So what we need to do is that we need to weight the feature vector.
+
+443
+00:32:46,620 --> 00:32:51,380
+Say all of my features might have a different weight.
+
+444
+00:32:51,380 --> 00:32:56,020
+So what we need to do is that to multiply every of the values by the weights we want
+
+445
+00:32:56,019 --> 00:33:01,019
+to associate them when we compute the Euclidean distance.
+
+446
+00:33:01,059 --> 00:33:03,579
+But what we can do instead is realizing
+
+447
+00:33:03,579 --> 00:33:06,139
+that if we have the weights here
+
+448
+00:33:06,139 --> 00:33:11,139
+when we were computing the normalized feature vector,
+
+449
+00:33:11,259 --> 00:33:14,059
+we can move our weights down here
+
+450
+00:33:14,059 --> 00:33:19,059
+and divide our standard deviations by the weights.
+
+451
+00:33:19,139 --> 00:33:21,059
+And if we do this, basically it means
+
+452
+00:33:21,059 --> 00:33:23,220
+that now we have standard deviations
+
+453
+00:33:23,220 --> 00:33:26,779
+that take into account the weighted importance
+
+454
+00:33:26,779 --> 00:33:28,299
+we want to give to everything.
+
+455
+00:33:30,660 --> 00:33:34,380
+And that means that nothing changed mathematically after.
+
+456
+00:33:34,380 --> 00:33:37,579
+So if we just basically scale the standard deviations,
+
+457
+00:33:39,100 --> 00:33:42,140
+the Euclidean distance, all the algorithm to do the search
+
+458
+00:33:42,140 --> 00:33:44,539
+stays the same, except that now it takes
+
+459
+00:33:44,539 --> 00:33:46,259
+into account the weights.
+
+460
+00:33:46,259 --> 00:33:49,819
+So what I can do is this, I can have a weight saying
+
+461
+00:33:49,819 --> 00:33:52,420
+that my hips velocity is important
+
+462
+00:33:52,420 --> 00:33:55,660
+because I want to have some continuity inside of my motion.
+
+463
+00:33:55,660 --> 00:33:57,860
+My feet position might not be that important,
+
+464
+00:33:57,860 --> 00:34:01,580
+especially if I have a foot locking system.
+
+465
+00:34:01,580 --> 00:34:02,820
+But the velocity is important,
+
+466
+00:34:02,820 --> 00:34:04,900
+so I need to make sure that I don't pick animations
+
+467
+00:34:04,900 --> 00:34:09,019
+that have the feet that doesn't go in the right positions.
+
+468
+00:34:09,019 --> 00:34:12,460
+And I can give some importance to future trajectories,
+
+469
+00:34:12,460 --> 00:34:15,900
+but more importance to future orientation.
+
+470
+00:34:15,900 --> 00:34:20,900
+And I give it discount factor for the features every time.
+
+471
+00:34:22,420 --> 00:34:31,619
+And then what we have now is that I divide my future standard deviations by the weights
+
+472
+00:34:31,619 --> 00:34:38,539
+and I renormalize and if I do this now, all the weights are encoded in that one and encoded
+
+473
+00:34:38,539 --> 00:34:43,019
+by that one so I don't have to change anything here, I can keep playing, except that now
+
+474
+00:34:43,019 --> 00:34:49,659
+it uses the weights, giving more importance to the future orientation than positions,
+
+475
+00:34:49,659 --> 00:34:59,420
+more importance to feed velocities than feed positions and you can play with those as you want.
+
+476
+00:34:59,420 --> 00:35:15,139
+We get a bunch of different values.
+
+477
+00:35:15,139 --> 00:35:22,980
+Now that's in a nutshell, exactly motion matching, at least when you want to do motion matching
+
+478
+00:35:22,980 --> 00:35:26,539
+for locomotion.
+
+479
+00:35:26,539 --> 00:35:32,300
+But there is another point that I want to talk and that I will do in a different video
+
+480
+00:35:32,300 --> 00:35:40,340
+which is the link between what motion matching is compared to reinforcement learning.
+
+481
+00:35:40,340 --> 00:35:47,699
+Really in a nutshell, what we could see is that we have our current pools and trajectories
+
+482
+00:35:47,699 --> 00:35:50,099
+and velocities and future trajectory.
+
+483
+00:35:50,099 --> 00:35:54,099
+So this is a Markov decision process.
+
+484
+00:35:54,099 --> 00:35:58,980
+There is no difference from this process to anything else.
+
+485
+00:35:58,980 --> 00:36:05,380
+And on top of this, if you've followed the reinforcement learning, the way I've discarded
+
+486
+00:36:05,380 --> 00:36:16,179
+the future values should ring a bell on how Bellman equations and reinforcement learning
+
+487
+00:36:16,179 --> 00:36:17,179
+works.
+
+488
+00:36:17,179 --> 00:36:19,539
+It's exactly the same way it's used here.
+
+489
+00:36:19,539 --> 00:36:22,139
+That's what reinforcement learning would have done.
+
+490
+00:36:22,139 --> 00:36:28,659
+So that would be for another video when I will dig a little deeper between the relations
+
+491
+00:36:28,659 --> 00:36:34,739
+with motion matching and reinforcement learning and why I wasn't sure if I had to put this
+
+492
+00:36:34,739 --> 00:36:43,699
+video inside of the reinforcement learning series, but the next one will probably be.
+
+493
+00:36:43,699 --> 00:36:46,460
+I hope you liked it and see you next time.

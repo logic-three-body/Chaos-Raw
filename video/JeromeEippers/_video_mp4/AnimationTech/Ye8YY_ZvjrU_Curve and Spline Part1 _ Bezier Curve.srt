@@ -1,0 +1,863 @@
+1
+00:00:00,000 --> 00:00:04,000
+Hi, we will be talking about curves and splines.
+
+2
+00:00:04,000 --> 00:00:08,000
+Basically, because when we are working with animations,
+
+3
+00:00:08,000 --> 00:00:12,000
+they will have often the time when you will want to encode your animation.
+
+4
+00:00:12,000 --> 00:00:16,000
+And somehow, if you have keyframes, you want to be able to have
+
+5
+00:00:16,000 --> 00:00:20,000
+an interpretation between those keyframes. Or you might
+
+6
+00:00:20,000 --> 00:00:24,000
+have an object that has to follow a certain path.
+
+7
+00:00:24,000 --> 00:00:28,000
+So, mathematically, we will be using curves.
+
+8
+00:00:28,000 --> 00:00:33,759
+types of curves and so I wanted to have those videos to show you the mathematical background
+
+9
+00:00:34,399 --> 00:00:40,079
+behind a few of them so when we'll be doing white papers I will be able to just copy the
+
+10
+00:00:40,079 --> 00:00:48,240
+code from this notebook and reuse them inside of our studies. When we talk about curve and spline
+
+11
+00:00:48,240 --> 00:00:55,280
+basically we have two types of curves we have the approximation curves and we have the interpolation
+
+12
+00:00:55,280 --> 00:01:01,280
+curves. Interpolation curves is the one you will want to use when you encode your animation data
+
+13
+00:01:01,920 --> 00:01:07,760
+as keyframes. You will want to make sure that actually your interpolation goes through all
+
+14
+00:01:07,760 --> 00:01:12,240
+the keyframes you set, and then you have in-betweens computed for you. That's the interpolation
+
+15
+00:01:12,240 --> 00:01:19,359
+curves. In that case, we will study the helmet curves, and we will have the cardinal spline as
+
+16
+00:01:19,359 --> 00:01:29,159
+And you have the approximation curves, which is the fact that you don't need your curve
+
+17
+00:01:29,159 --> 00:01:38,439
+to go through every points, but you need to follow the data points as close as possible.
+
+18
+00:01:38,439 --> 00:01:42,640
+And on the approximation curve, we will be using the Bezier curve, which is the most
+
+19
+00:01:42,640 --> 00:01:47,519
+known one. And as it extends, we will be studying the cubic
+
+20
+00:01:47,519 --> 00:01:54,920
+B's plane. So as a first one, we will be studying the basic
+
+21
+00:01:54,920 --> 00:02:02,240
+curve. And what the basic curve is, is the most known one. In
+
+22
+00:02:02,240 --> 00:02:05,159
+the industry, when we talk about animations, usually is the
+
+23
+00:02:05,159 --> 00:02:09,360
+basic curve you encounter the first time. And we will be
+
+24
+00:02:09,360 --> 00:02:15,920
+studying the basic curve through the Castell-Geo algorithm and first before going in through the
+
+25
+00:02:15,920 --> 00:02:21,120
+mathematics and all that kind of stuff, what I would do is I will actually show you what it is
+
+26
+00:02:21,120 --> 00:02:30,880
+and how it works and then we could see what is the mathematical formula for it. So a basic curve
+
+27
+00:02:30,880 --> 00:02:38,000
+can be computed with any number of points. The only important part is that to know that the
+
+28
+00:02:38,000 --> 00:02:46,800
+the basic curve is parametrized by a t-value usually that goes between 0 and 1 and the
+
+29
+00:02:46,800 --> 00:02:53,599
+idea is that at time 0 you are at your the position of your first point and at t1 you
+
+30
+00:02:53,599 --> 00:03:03,479
+will be at the position of your last point. So if I draw the basic curve for the simple
+
+31
+00:03:03,479 --> 00:03:12,359
+case of a quadratic one. What you have is the we start at the first point, we end at the last
+
+32
+00:03:12,359 --> 00:03:18,519
+point and we have the curve that goes towards the the point in between. And how the Castel
+
+33
+00:03:18,519 --> 00:03:24,599
+Joaquin compute this it's basically by a bunch of linear interpolation. So what you do is that
+
+34
+00:03:24,599 --> 00:03:31,879
+you take the linear interpolation of the point one and two that give you that yellow one and you
+
+35
+00:03:31,879 --> 00:03:36,359
+you do the same with point 2 and 3 and I'll give you that red one and now that you have those two
+
+36
+00:03:36,359 --> 00:03:41,240
+points you again do the linear interpolation between those two points and that give you
+
+37
+00:03:42,280 --> 00:03:49,079
+the point on the Bezier curve and between zero and one it draws the entire Bezier curve this way
+
+38
+00:03:49,960 --> 00:03:56,039
+and it works with any degrees so in this case I've showed you with the quadratic one if I go
+
+39
+00:03:56,039 --> 00:04:03,000
+cubic so with the four points it is the same concept except that you have more steps of course
+
+40
+00:04:03,000 --> 00:04:08,280
+you do interpolation between the first and second the second and third the third and fourth
+
+41
+00:04:08,280 --> 00:04:15,639
+and so on and so on and you repeat every time and it works for any number of points as I said
+
+42
+00:04:17,159 --> 00:04:24,360
+and the mathematical formula for it is a recursive function basically says that
+
+43
+00:04:24,360 --> 00:04:28,199
+that a Bezier curve that has only one point
+
+44
+00:04:28,199 --> 00:04:31,040
+is equal to that point, that's it.
+
+45
+00:04:31,040 --> 00:04:34,759
+And any other Bezier curve that is defined with,
+
+46
+00:04:35,840 --> 00:04:39,240
+in this case, N point is just equal
+
+47
+00:04:39,240 --> 00:04:42,199
+to the linear interpolation with the Bezier curve
+
+48
+00:04:42,199 --> 00:04:45,879
+that goes from point zero to point N minus one
+
+49
+00:04:45,879 --> 00:04:50,680
+and the Bezier curve that goes from point one to point N.
+
+50
+00:04:50,680 --> 00:04:54,439
+So it's really a simple algorithm.
+
+51
+00:04:54,439 --> 00:04:56,040
+It's really stable mathematically.
+
+52
+00:04:56,040 --> 00:04:58,879
+So it's the one that's usually used
+
+53
+00:04:58,879 --> 00:05:00,519
+and presented the first time.
+
+54
+00:05:00,519 --> 00:05:04,240
+And you can see that's the actual entire algorithm.
+
+55
+00:05:04,240 --> 00:05:07,639
+Everything else is just to draw the graph here.
+
+56
+00:05:07,639 --> 00:05:11,960
+So take a list of points.
+
+57
+00:05:11,960 --> 00:05:14,720
+If there is only one point, you return it.
+
+58
+00:05:14,720 --> 00:05:16,480
+And if there is more than one,
+
+59
+00:05:16,480 --> 00:05:22,879
+you'd call back that function with the two different ranges and you do the linear interpolation
+
+60
+00:05:22,879 --> 00:05:32,480
+between them. That's it, that's the Castelgio algorithm. Now, the Castelgio algorithm is
+
+61
+00:05:32,480 --> 00:05:40,640
+well known and easy to use, but there is another way to compute a Bezier curve that you will
+
+62
+00:05:40,639 --> 00:05:46,639
+probably uncontrollable at some point and it's to go through the Bernstein polynomials.
+
+63
+00:05:49,519 --> 00:05:58,879
+So what are the Bernstein polynomials? It's a way of computing a bunch of functions depending
+
+64
+00:05:58,879 --> 00:06:06,399
+of the degrees you want to use. So a Bernstein polynomial of degree n is defined at this function
+
+65
+00:06:06,400 --> 00:06:13,760
+and basically is depending of the number on the the degree and the index and it's
+
+66
+00:06:13,760 --> 00:06:22,760
+also a function of t that goes between zero and one and as you can see k goes
+
+67
+00:06:22,760 --> 00:06:29,400
+from zero to n so if you do a bunch and polynomial of degree three you will have
+
+68
+00:06:29,400 --> 00:06:38,520
+four different base basically so let me show you what they are exactly so that's
+
+69
+00:06:38,520 --> 00:06:47,080
+the Bernstein basis just using that formula the binomial coefficients you
+
+70
+00:06:47,080 --> 00:06:55,280
+have here in front that brackets I'm using the comb functions from sci-pi and
+
+71
+00:06:55,920 --> 00:07:00,480
+And then if I just draw all of those,
+
+72
+00:07:00,480 --> 00:07:01,880
+so for instance, for a degree three,
+
+73
+00:07:01,880 --> 00:07:03,600
+I will go with degree one first.
+
+74
+00:07:03,600 --> 00:07:05,680
+You can see what happened.
+
+75
+00:07:05,680 --> 00:07:10,200
+A degree one, Bernstein will actually give you
+
+76
+00:07:10,200 --> 00:07:12,280
+two polynomial, you know,
+
+77
+00:07:12,280 --> 00:07:15,040
+and then you will have the first one
+
+78
+00:07:15,040 --> 00:07:17,600
+that starts at zero and value of one
+
+79
+00:07:17,600 --> 00:07:21,360
+and end at value zero at one,
+
+80
+00:07:21,360 --> 00:07:24,360
+and the second one is just the opposite.
+
+81
+00:07:25,280 --> 00:07:32,280
+And you could do as many of those and you could see that the first one already start at one and the last one always
+
+82
+00:07:32,560 --> 00:07:35,880
+End at one and in between you have those curves
+
+83
+00:07:36,240 --> 00:07:39,760
+the particularity of the Bernstein basis is that
+
+84
+00:07:40,480 --> 00:07:45,760
+At any point between zero and one if you sum all of your basis
+
+85
+00:07:45,760 --> 00:07:50,760
+You actually have one so you see the last one is the sum of my four
+
+86
+00:07:51,320 --> 00:07:54,320
+for my five different curves and
+
+87
+00:07:54,319 --> 00:08:02,120
+and it's equal to one. What the button bases are used usually for is for
+
+88
+00:08:02,120 --> 00:08:10,439
+approximation, basically without going too much in detail, because between zero
+
+89
+00:08:10,439 --> 00:08:14,039
+and one you can see you get a bunch of curves, so you could decide that you
+
+90
+00:08:14,039 --> 00:08:22,399
+could try to give a multiplier for all of those different curves to try to
+
+91
+00:08:22,400 --> 00:08:25,760
+to mimic any functions you receive as an input.
+
+92
+00:08:25,760 --> 00:08:28,600
+So what I have here is my green one
+
+93
+00:08:28,600 --> 00:08:30,680
+is the functions I tried to approximate
+
+94
+00:08:31,880 --> 00:08:35,040
+using the Bernstein basis.
+
+95
+00:08:35,040 --> 00:08:37,000
+And what I would do is that if I have degree one,
+
+96
+00:08:37,000 --> 00:08:42,000
+the best fit I can have is something is just a line.
+
+97
+00:08:42,680 --> 00:08:47,440
+But as soon as I start to get a bit more degrees,
+
+98
+00:08:47,440 --> 00:08:49,320
+I can actually get closer and closer
+
+99
+00:08:49,320 --> 00:08:53,600
+to the actual function I'm trying to approximate.
+
+100
+00:08:53,600 --> 00:08:55,760
+And now with a degree 13,
+
+101
+00:08:55,760 --> 00:08:57,720
+meaning with 14 coefficients,
+
+102
+00:08:57,720 --> 00:09:02,720
+I can approximate my curves the best as I can.
+
+103
+00:09:04,720 --> 00:09:09,720
+Now, that's usually where you will uncount the bone stain,
+
+104
+00:09:11,400 --> 00:09:15,600
+but in our case, it can also be used
+
+105
+00:09:15,600 --> 00:09:18,440
+to compute the Bezier curve.
+
+106
+00:09:18,440 --> 00:09:20,880
+and how you compute a Bayesian curve
+
+107
+00:09:20,880 --> 00:09:23,680
+thanks to the Bernstein polynomials.
+
+108
+00:09:24,760 --> 00:09:29,760
+You basically take all the Bernstein functions
+
+109
+00:09:29,920 --> 00:09:32,680
+for the degrees of the Bayesian curve you want to use.
+
+110
+00:09:32,680 --> 00:09:35,280
+So if I want to do a cubic Bayesian curve,
+
+111
+00:09:35,280 --> 00:09:36,900
+I will have four points,
+
+112
+00:09:36,900 --> 00:09:39,440
+meaning that I will have four different bases
+
+113
+00:09:39,440 --> 00:09:40,760
+for the Bernstein.
+
+114
+00:09:40,760 --> 00:09:43,800
+And I would just multiply my first point
+
+115
+00:09:43,800 --> 00:09:47,000
+with my first base, my second point,
+
+116
+00:09:47,000 --> 00:09:55,960
+second base, third point, my third base, 4.4 base and sum all of them and it will give me the
+
+117
+00:09:55,960 --> 00:10:04,279
+Bezier curve. So let me write my Bezier function this way. So I take the degrees and then I take
+
+118
+00:10:04,279 --> 00:10:12,200
+my burst and Bezes, multiply it by the points, do it for each points and sum the results. So that's
+
+119
+00:10:12,200 --> 00:10:19,840
+That's my function and you can see that if I just execute this function I will have the
+
+120
+00:10:19,840 --> 00:10:21,480
+same curves as the one I had before.
+
+121
+00:10:21,480 --> 00:10:25,640
+So it's my three points that my curves, four points curves and so on.
+
+122
+00:10:25,640 --> 00:10:32,160
+And it's equal to the shape I have here.
+
+123
+00:10:32,160 --> 00:10:38,879
+So that's the other way of computing the Bezier curve.
+
+124
+00:10:38,879 --> 00:10:45,100
+And to show you that we are actually computing exactly the same things, what I would do is
+
+125
+00:10:45,100 --> 00:10:52,700
+that I will use SimPy, which is the symbolic Mathematics library inside of Python.
+
+126
+00:10:52,700 --> 00:11:00,700
+And SimPy allow you to do math as in calculus, so you don't actually compute values.
+
+127
+00:11:00,700 --> 00:11:04,299
+You could use letters and keep those letters.
+
+128
+00:11:04,300 --> 00:11:13,900
+So what I would do is write the formula for a cubic Bezier using the Casteljeu algorithm.
+
+129
+00:11:13,900 --> 00:11:19,740
+So I do the linear interpolation for the first point, and so on, so on, and so forth, and
+
+130
+00:11:19,740 --> 00:11:25,020
+then I interpolate those two, those three, and then interpolate the final two.
+
+131
+00:11:25,020 --> 00:11:32,180
+I expand all the mathematics, and I try to rearrange them in a certain order to have
+
+132
+00:11:32,180 --> 00:11:36,460
+of P1, P2 and P3 explicitly defined in my function.
+
+133
+00:11:37,540 --> 00:11:41,660
+Now, I would do the same using the Bernstein formula,
+
+134
+00:11:41,660 --> 00:11:45,380
+so using the binomial and then the exponent
+
+135
+00:11:45,380 --> 00:11:48,020
+and the factors and multiply by the points.
+
+136
+00:11:48,020 --> 00:11:50,740
+So that's the entire Bernstein base,
+
+137
+00:11:50,740 --> 00:11:54,540
+multiply by the points and sum all those four.
+
+138
+00:11:54,540 --> 00:11:59,420
+And again, I expand and I try to refactorize
+
+139
+00:11:59,420 --> 00:12:01,460
+and collect the different values.
+
+140
+00:12:01,460 --> 00:12:04,780
+And if I do this, what I can see is that, of course,
+
+141
+00:12:04,780 --> 00:12:07,300
+it makes sense, you actually end up
+
+142
+00:12:07,300 --> 00:12:11,540
+with the exact same formula, which
+
+143
+00:12:11,540 --> 00:12:15,500
+is really proving that we were computing the same thing,
+
+144
+00:12:15,500 --> 00:12:19,340
+just using different means to reach them.
+
+145
+00:12:22,740 --> 00:12:25,259
+What I would do here quickly, but it
+
+146
+00:12:25,259 --> 00:12:26,740
+will be useful for later.
+
+147
+00:12:26,740 --> 00:12:29,700
+Don't worry, it doesn't make any sense at this point.
+
+148
+00:12:29,700 --> 00:12:34,700
+is to say that if what we want to do most of the time
+
+149
+00:12:34,700 --> 00:12:37,940
+is a cubic Bayesian, it also means
+
+150
+00:12:37,940 --> 00:12:41,060
+that I don't need to use the Bernstein formula
+
+151
+00:12:41,060 --> 00:12:44,820
+or I don't need to use the Castelgeo algorithm
+
+152
+00:12:44,820 --> 00:12:48,620
+because it's a cubic one and I've just computed exactly
+
+153
+00:12:48,620 --> 00:12:50,220
+what are the terms of that cubic.
+
+154
+00:12:50,220 --> 00:12:54,780
+It's always, it will always be those same values.
+
+155
+00:12:54,780 --> 00:12:57,379
+I don't need to go through the entire algorithm
+
+156
+00:12:57,379 --> 00:12:59,020
+to do linear interpolation and all that kind of stuff.
+
+157
+00:12:59,019 --> 00:13:06,620
+I could just use that formula and plug my P1, P2, P3, P4, meaning that I can actually turn this
+
+158
+00:13:08,059 --> 00:13:15,659
+into a matrix form and I will be useful because often at later stage we will be using matrix form
+
+159
+00:13:15,659 --> 00:13:21,340
+for a lot of different splines and different computations so at least let's get used to this
+
+160
+00:13:21,340 --> 00:13:32,540
+writing with the Bezier at this point. So what I do is I define a matrix and I
+
+161
+00:13:32,540 --> 00:13:37,860
+just reused the terms that I have for all of my points here. So the point
+
+162
+00:13:37,860 --> 00:13:45,900
+1 is minus t cubed 3t squared minus 3t plus 1. So I do my minus 1, 3, minus 3, 1
+
+163
+00:13:45,899 --> 00:13:53,340
+in the first column, 0.2 is 3 3 3 t cube minus 6 t square and so on and so on.
+
+164
+00:13:53,340 --> 00:14:00,779
+So I'll write them in column and now that I have that matrix I can have the
+
+165
+00:14:00,779 --> 00:14:07,419
+matrix for all the t's t cube t square t and 1 and I can also have the one for p1
+
+166
+00:14:07,419 --> 00:14:13,659
+p2 p3 p4 and basically what you do is that you write this as a matrix form
+
+167
+00:14:13,659 --> 00:14:22,379
+And just to prove to you that this is exactly the same computation at this one, but written
+
+168
+00:14:22,379 --> 00:14:28,699
+as a matrix, I could just execute the computation and you could see that you end up with the
+
+169
+00:14:28,699 --> 00:14:38,500
+exact same formula, right? One side note we could do about basic curve is what we call
+
+170
+00:14:38,500 --> 00:14:44,259
+the rational basic curve. I don't have any example here because it's more just to know
+
+171
+00:14:44,259 --> 00:14:49,980
+that it exists. Say if I need the mathematical formula at some point, I can grab and pick
+
+172
+00:14:49,980 --> 00:14:55,779
+it from here. But basically what rational basic curve is, is the fact that you could
+
+173
+00:14:55,779 --> 00:15:00,059
+say that you want to give more importance to a certain point that to another one. Say
+
+174
+00:15:00,059 --> 00:15:07,980
+you could say in the cubic one, the second point has two times more importance than the
+
+175
+00:15:07,980 --> 00:15:16,139
+third one and so you can give weights to each point to make the curves get closer to that point
+
+176
+00:15:17,659 --> 00:15:22,139
+relative to another one. So the formula is basically the same as the normal one.
+
+177
+00:15:23,259 --> 00:15:27,899
+You take your points and multiply with the Bernstein basis except that you also multiply it
+
+178
+00:15:27,899 --> 00:15:37,500
+by the weights. So each point has a weight and a Bernstein base and then you divide everything by
+
+179
+00:15:37,500 --> 00:15:44,539
+the sum of all the weights multiplied by the bandstand. So it's just to renormalize all
+
+180
+00:15:44,539 --> 00:15:49,419
+the weights to make sure that everything keeps a curve that goes between 0 and 1.
+
+181
+00:15:49,419 --> 00:15:52,539
+So you need to divide by the sum of all the weights you injected here.
+
+182
+00:15:53,179 --> 00:15:58,299
+And that's it, that's the formula. So basically it's the same as before except that you multiply
+
+183
+00:15:58,299 --> 00:16:03,659
+by the weights and then you re-divide by all the weights and you have the original Bezier curve.
+
+184
+00:16:03,659 --> 00:16:13,659
+And now that we have one Bayesian curve, usually what we want to do is to actually make a spline
+
+185
+00:16:13,659 --> 00:16:21,019
+with it, having several curves back-to-back so you could define a real shape and keep going and
+
+186
+00:16:21,019 --> 00:16:28,339
+keep working exactly as you do with keyframes. So what we will do is just having the system
+
+187
+00:16:28,340 --> 00:16:35,780
+to compute the Bezier you could see that at this time I know that I will be
+
+188
+00:16:35,780 --> 00:16:43,259
+using cubic Bezier so I've used the matrix notation to compute the Bezier
+
+189
+00:16:43,259 --> 00:16:48,700
+curve so I just do the matrix the multiply the point by the matrix and
+
+190
+00:16:48,700 --> 00:16:57,100
+then the times and that's it so and then when I want to compute the Bezier's
+
+191
+00:16:57,100 --> 00:17:03,720
+plan I would just take the first four points and do one base here with them
+
+192
+00:17:03,720 --> 00:17:08,339
+and then take the the next four points and do the base here with them and just
+
+193
+00:17:08,339 --> 00:17:15,900
+reusing the first and last base here the points so we can align them so
+
+194
+00:17:15,900 --> 00:17:23,099
+basically what you end up with is this so you'll have two base here of back to
+
+195
+00:17:23,099 --> 00:17:29,819
+back so that was my first second third and four and then my first second third and four points
+
+196
+00:17:29,819 --> 00:17:39,980
+and I'm sharing the points here in the three zeros for both Bezier. Now you've seen that what I've
+
+197
+00:17:39,980 --> 00:17:44,779
+done is I make the function for cubic Bezier and I said this will probably be the one we'll be using
+
+198
+00:17:44,779 --> 00:17:52,939
+most of the time is cubic and to be honest everything else in this mathematical introduction
+
+199
+00:17:52,940 --> 00:18:01,259
+will be about cubic spline, cubic anything, but it will be cubic every time. And so why
+
+200
+00:18:01,259 --> 00:18:10,620
+do we focus so much on the cubic? It's because if we were doing only linear interpolation between
+
+201
+00:18:10,620 --> 00:18:15,820
+all the points we have in our data, of course, the first thing we could do is line to a graph,
+
+202
+00:18:15,820 --> 00:18:20,220
+and that's not exactly how you would want to interpolate your animation, right?
+
+203
+00:18:20,220 --> 00:18:29,299
+If I go one degree higher and I go quadratic, what it means is the quadratic curve can actually
+
+204
+00:18:29,299 --> 00:18:37,620
+bend in one direction all the time and has to only bend in that one. So five of those four points
+
+205
+00:18:37,620 --> 00:18:45,259
+now I can have a nice curve that start at my first point reach the second and then keep going from
+
+206
+00:18:45,259 --> 00:18:52,460
+there with the same curvatures and go down but then here I'm blocked because either I would have to
+
+207
+00:18:53,180 --> 00:19:01,420
+go back up this direction and break my curve here or having a curvature in the opposite
+
+208
+00:19:01,420 --> 00:19:11,180
+direction and anyway I have a discontinuity here. So quadratic is not enough in our case here
+
+209
+00:19:11,180 --> 00:19:17,580
+and what we need to do is to go at least cubic because cubic allows you to have two curves
+
+210
+00:19:17,580 --> 00:19:23,660
+into your interpolations. So you can start with the one curvature and end with the opposite one
+
+211
+00:19:24,299 --> 00:19:30,779
+and you can see that as soon as you go cubic now I can have full continuity between all my lines
+
+212
+00:19:30,779 --> 00:19:36,539
+because I can curve up and then curve down curve down and curve up curve up and curve down so now
+
+213
+00:19:36,539 --> 00:19:44,539
+I'm able to interpolate my points and I don't need to go in a higher degrees because the cubic
+
+214
+00:19:44,539 --> 00:19:51,579
+is enough to actually curve both directions and that's it. I won't go further in the number of
+
+215
+00:19:51,579 --> 00:20:01,180
+degrees and that covers the cubic and the next time we will be going through a mid-curve and see
+
+216
+00:20:01,180 --> 00:20:03,860
+see why we do them.

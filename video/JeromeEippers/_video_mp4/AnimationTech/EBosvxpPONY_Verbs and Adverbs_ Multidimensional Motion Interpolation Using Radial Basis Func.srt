@@ -1,0 +1,1971 @@
+1
+00:00:00,000 --> 00:00:06,360
+You have a bunch of animation clips representing one specific action, but with different styles
+
+2
+00:00:06,360 --> 00:00:10,560
+or different moods, and you want to be able to blend those styles and moods doing those
+
+3
+00:00:10,560 --> 00:00:11,560
+actions.
+
+4
+00:00:11,560 --> 00:00:18,600
+Hi, I'm Jerome, and today we'll be looking at the verb and adverb multidimensional motion
+
+5
+00:00:18,600 --> 00:00:26,359
+blending using radial basis functions, a paper from 1999.
+
+6
+00:00:26,359 --> 00:00:33,519
+So what the paper says is that you will have your animations that will have actions and
+
+7
+00:00:33,519 --> 00:00:35,359
+they will call them verbs.
+
+8
+00:00:35,359 --> 00:00:39,519
+So you have the idle, walking, crouching and all that kind of stuff.
+
+9
+00:00:39,519 --> 00:00:45,120
+And then you will have adverbs on top of them representing the style or the mood so you
+
+10
+00:00:45,120 --> 00:00:50,960
+could be happy, sad, or even leaning left, leaning right, turning left, turning right.
+
+11
+00:00:50,960 --> 00:00:56,239
+All of those will be adverbs and you can have as many adverbs as you want and you will
+
+12
+00:00:56,240 --> 00:01:02,800
+to be able to blend all those animations together by just saying I want to have my walking verb
+
+13
+00:01:02,800 --> 00:01:11,599
+with a leaning right happy animations for instance. So how they would do this first thing I would do
+
+14
+00:01:11,599 --> 00:01:18,000
+is that I will import all the libraries I need and I will import my character I will extract the
+
+15
+00:01:18,000 --> 00:01:22,879
+skeleton you will see later why so basically I turn my skeleton into quaternions and positions
+
+16
+00:01:22,879 --> 00:01:29,759
+because that's what I will be working with, creating a little mesh that allow me to display
+
+17
+00:01:29,759 --> 00:01:35,519
+stuff on the ground. And then this is finally all the animations I want to use in my case.
+
+18
+00:01:36,479 --> 00:01:42,319
+So I will not have moods as happy, sad and aghast stuff. What I will have is walking
+
+19
+00:01:42,319 --> 00:01:47,199
+animations and I will have the walking with turning left, walking turning right, and two
+
+20
+00:01:47,199 --> 00:01:52,239
+different styles, one with small steps and one doing bigger steps. So that's the animations I
+
+21
+00:01:52,240 --> 00:01:56,240
+I would have in my case, and this is all the animations
+
+22
+00:01:56,240 --> 00:01:59,640
+I will be using as one verb.
+
+23
+00:01:59,640 --> 00:02:05,840
+So the verb is walking, and all of those are adverbs.
+
+24
+00:02:05,840 --> 00:02:08,879
+So it's all the turning lefts, all the examples for turnings,
+
+25
+00:02:08,879 --> 00:02:11,800
+all the examples for the type of steps.
+
+26
+00:02:11,800 --> 00:02:15,200
+So this is all the animations I want to use.
+
+27
+00:02:15,200 --> 00:02:18,160
+Now that I have all the animations I want to use,
+
+28
+00:02:18,160 --> 00:02:21,200
+and I know what the adverbs I will be using,
+
+29
+00:02:21,200 --> 00:02:26,440
+We can start to look at the paper to see exactly how it works.
+
+30
+00:02:26,440 --> 00:02:30,000
+And so for them, they said that you
+
+31
+00:02:30,000 --> 00:02:33,400
+will have a lot of different motions.
+
+32
+00:02:33,400 --> 00:02:38,040
+And then they represent the motions basically
+
+33
+00:02:38,040 --> 00:02:42,800
+as this one saying that you have a motion itself,
+
+34
+00:02:42,800 --> 00:02:45,920
+a set of degrees of freedom.
+
+35
+00:02:45,920 --> 00:02:48,640
+So for us, it will be the rotations
+
+36
+00:02:48,640 --> 00:02:50,720
+in translation of every bones.
+
+37
+00:02:50,719 --> 00:02:55,719
+For them, I think that because they talk about degrees of freedom as a really low level,
+
+38
+00:02:55,719 --> 00:03:01,800
+it's probably just the rotations as Euler angle, you know, one angle for the elbow,
+
+39
+00:03:01,800 --> 00:03:04,800
+three angles for the wrists and shoulders and that kind of stuff.
+
+40
+00:03:04,800 --> 00:03:07,280
+So they have the exact degrees of freedom.
+
+41
+00:03:07,800 --> 00:03:12,240
+I would be working in quaternions and I would stay inside of quaternions,
+
+42
+00:03:12,639 --> 00:03:17,240
+which means now that my degrees of freedom is basically the number of bones
+
+43
+00:03:17,240 --> 00:03:24,760
+I would have multiplied by seven because I have w x y z for each quaternions and x y z for each
+
+44
+00:03:24,760 --> 00:03:31,879
+translate. So a bit heavier, not what they had in their mind, but it would work just the same way
+
+45
+00:03:31,879 --> 00:03:39,240
+for us. So the way they encode the data when they do animations, they talk about the degrees of
+
+46
+00:03:39,240 --> 00:03:46,600
+freedom. For them, any animations is actually encoded inside of a uniform cubic B spline. So
+
+47
+00:03:46,599 --> 00:03:49,960
+So I recommend watching the uniform cubic B-spline videos
+
+48
+00:03:49,960 --> 00:03:52,840
+I did earlier.
+
+49
+00:03:52,840 --> 00:03:59,840
+So you have a number of control points for the entire animation,
+
+50
+00:03:59,840 --> 00:04:05,039
+and that's allowed you to get the animation back.
+
+51
+00:04:05,039 --> 00:04:08,759
+Now, what is really interesting in this case,
+
+52
+00:04:08,759 --> 00:04:11,519
+what I said is basically every animation's
+
+53
+00:04:11,519 --> 00:04:12,560
+inside of your ad-vab.
+
+54
+00:04:12,560 --> 00:04:15,000
+So you can see that my animations have different lengths
+
+55
+00:04:15,000 --> 00:04:18,180
+and different timing, but they will all be encoded
+
+56
+00:04:18,180 --> 00:04:20,660
+with the same number of control points.
+
+57
+00:04:20,660 --> 00:04:24,279
+So for the number of control points,
+
+58
+00:04:24,279 --> 00:04:27,259
+you decide empirically how many you want of them
+
+59
+00:04:27,259 --> 00:04:28,579
+for all of your animations,
+
+60
+00:04:28,579 --> 00:04:30,300
+and then you will use the same number.
+
+61
+00:04:30,300 --> 00:04:32,379
+So I will not encode my animation
+
+62
+00:04:32,379 --> 00:04:35,139
+as uniform cubic B-spline just yet,
+
+63
+00:04:35,139 --> 00:04:37,060
+because I have a lot of other stuff to do
+
+64
+00:04:37,060 --> 00:04:38,939
+before I will be able to do this.
+
+65
+00:04:38,939 --> 00:04:47,500
+First thing first, they do a time warping of the animations to get into what they call
+
+66
+00:04:47,500 --> 00:04:49,860
+the canonical form.
+
+67
+00:04:49,860 --> 00:04:55,300
+And basically the idea behind this is to realize that all of animations have different timings
+
+68
+00:04:55,300 --> 00:05:01,579
+and different lengths, and we want to re-encode them to be all of the same length.
+
+69
+00:05:01,579 --> 00:05:07,819
+So the generic timing for them will be instead of saying I have 30 frames or 60 frames of
+
+70
+00:05:07,819 --> 00:05:15,259
+animations, it just timing goes between 0 and 1 as a parametric functions. My animations goes
+
+71
+00:05:15,259 --> 00:05:23,819
+between 0 and 1 and that's it. So we will stretch and squash the timing, so we will basically do
+
+72
+00:05:23,819 --> 00:05:31,500
+time warps as in the paper, the time warping paper. And on top of this, we want to make sure that
+
+73
+00:05:31,500 --> 00:05:34,060
+everything inside of each animations
+
+74
+00:05:34,060 --> 00:05:36,939
+have the same timing reference.
+
+75
+00:05:36,939 --> 00:05:39,959
+So basically the beginning of the animations at time one,
+
+76
+00:05:39,959 --> 00:05:42,620
+the end of the animation is at time zero, sorry,
+
+77
+00:05:42,620 --> 00:05:44,620
+the end of the animations at time one.
+
+78
+00:05:44,620 --> 00:05:46,740
+And then in my case, because it's a working animation,
+
+79
+00:05:46,740 --> 00:05:49,139
+I can decide that I want to detect
+
+80
+00:05:49,139 --> 00:05:50,740
+when the foot hits the ground
+
+81
+00:05:50,740 --> 00:05:52,300
+and when it's lift the ground.
+
+82
+00:05:52,300 --> 00:05:57,300
+So all my animations start with the left foot going down.
+
+83
+00:05:57,300 --> 00:05:59,939
+left foot going down.
+
+84
+00:05:59,939 --> 00:06:02,900
+So I will have a time zero at the beginning of animations
+
+85
+00:06:02,900 --> 00:06:05,620
+and then when the left foot hits the ground
+
+86
+00:06:05,620 --> 00:06:08,740
+is time zero point two, for instance,
+
+87
+00:06:08,740 --> 00:06:13,740
+then the right legs go up, that's time zero point four
+
+88
+00:06:13,780 --> 00:06:16,379
+and then it goes down time point six
+
+89
+00:06:16,379 --> 00:06:19,180
+and then this one goes up time point eight
+
+90
+00:06:19,180 --> 00:06:20,939
+and then end of the animation is time one.
+
+91
+00:06:20,939 --> 00:06:23,620
+So we will compute the different timing
+
+92
+00:06:23,620 --> 00:06:26,180
+for all of our animations this way.
+
+93
+00:06:26,180 --> 00:06:29,660
+So what I do is this for the canonical form,
+
+94
+00:06:29,660 --> 00:06:32,920
+I've already pre-computed all the values.
+
+95
+00:06:32,920 --> 00:06:34,360
+So you can see my first animations,
+
+96
+00:06:34,360 --> 00:06:37,600
+the different timing I have inside of my real animation
+
+97
+00:06:37,600 --> 00:06:39,720
+is that at frame zero, it starts.
+
+98
+00:06:39,720 --> 00:06:41,680
+Then at frame seven, I get my first contact,
+
+99
+00:06:41,680 --> 00:06:43,840
+11, 23, 27, 32.
+
+100
+00:06:43,840 --> 00:06:46,120
+So I get all of those.
+
+101
+00:06:46,120 --> 00:06:47,800
+And basically to do this,
+
+102
+00:06:49,879 --> 00:06:53,759
+how they do it in the paper is all done by hands manually.
+
+103
+00:06:53,759 --> 00:06:55,159
+So it's a manual processor.
+
+104
+00:06:55,159 --> 00:06:58,079
+I had this little window that's allowed me
+
+105
+00:06:58,079 --> 00:06:59,279
+to create those information.
+
+106
+00:06:59,279 --> 00:07:01,599
+So you could see my animation zero,
+
+107
+00:07:01,599 --> 00:07:03,120
+the value is from zero seven.
+
+108
+00:07:03,120 --> 00:07:05,839
+So I know that frame at frame seven,
+
+109
+00:07:05,839 --> 00:07:08,680
+what I have is the contact of my right foot.
+
+110
+00:07:09,599 --> 00:07:13,839
+At frame 11 is when I decided that
+
+111
+00:07:13,839 --> 00:07:16,680
+when the contact from the left foot doesn't exist anymore,
+
+112
+00:07:16,680 --> 00:07:20,240
+then I will be frame 23.
+
+113
+00:07:20,240 --> 00:07:23,439
+That's when the contact will reopen.
+
+114
+00:07:23,439 --> 00:07:30,319
+there. 23, I get the contact, 27, I don't have the contact anymore and so on and so on.
+
+115
+00:07:30,319 --> 00:07:35,439
+And you do this for all of your animations. So it's a manual process. It is tricky to get
+
+116
+00:07:35,439 --> 00:07:41,759
+right and that's usually why the blending might be a bit off when you try to blend all the info
+
+117
+00:07:41,759 --> 00:07:47,279
+because contact will not be exactly the same on every animations. But it's a manual process,
+
+118
+00:07:47,279 --> 00:07:50,399
+you have to do it for every animations, but I have done it.
+
+119
+00:07:53,439 --> 00:07:57,719
+What I would do on top of this, because all those animations
+
+120
+00:07:57,719 --> 00:08:00,160
+come from motion captures, and I just
+
+121
+00:08:00,160 --> 00:08:02,040
+picked a clip into motion capture.
+
+122
+00:08:02,040 --> 00:08:03,839
+It's not an animation that done by hand,
+
+123
+00:08:03,839 --> 00:08:06,160
+which has nice cycles.
+
+124
+00:08:06,160 --> 00:08:09,639
+I need to make those animation loop properly
+
+125
+00:08:09,639 --> 00:08:11,560
+so I could be able to use those animations
+
+126
+00:08:11,560 --> 00:08:12,680
+because walking animations, I want
+
+127
+00:08:12,680 --> 00:08:15,240
+to be able to make the character walk after it.
+
+128
+00:08:15,240 --> 00:08:17,839
+So I will make the animation loop.
+
+129
+00:08:17,839 --> 00:08:22,079
+And to do this, basically, the only thing I do
+
+130
+00:08:22,079 --> 00:08:27,319
+is that I take the first frame and the last frame.
+
+131
+00:08:27,319 --> 00:08:29,680
+I take the difference between the two frames
+
+132
+00:08:29,680 --> 00:08:32,840
+when I'm here with the offsets.
+
+133
+00:08:32,840 --> 00:08:35,279
+And now that you know how much arrows basically you
+
+134
+00:08:35,279 --> 00:08:38,199
+have with the last frame to be exactly the same as the first
+
+135
+00:08:38,199 --> 00:08:42,199
+frame, you just propagate that error slowly
+
+136
+00:08:42,199 --> 00:08:44,279
+through time during your animation.
+
+137
+00:08:44,279 --> 00:08:48,319
+So if I have an animation that says I have 100 frames,
+
+138
+00:08:48,319 --> 00:08:50,720
+I would say that frame 0 is just my frame 0.
+
+139
+00:08:50,720 --> 00:08:54,399
+at frame one is frame one plus 1% of the error.
+
+140
+00:08:54,399 --> 00:08:57,200
+Frame two is frame two plus 2% of the error.
+
+141
+00:08:57,200 --> 00:09:00,680
+So on and then at the end is frame 100
+
+142
+00:09:00,680 --> 00:09:02,800
+with 100% of the error on top.
+
+143
+00:09:02,800 --> 00:09:04,840
+And so I get the exact same pose.
+
+144
+00:09:05,879 --> 00:09:10,879
+So you do this in the local space of all your bones.
+
+145
+00:09:12,480 --> 00:09:14,120
+And at the same time, if you just do this,
+
+146
+00:09:14,120 --> 00:09:17,639
+basically your feet will start to slide, unfortunately.
+
+147
+00:09:17,639 --> 00:09:20,879
+So what I do is that I also compute
+
+148
+00:09:20,879 --> 00:09:25,399
+where the foot would be at the end of the animations
+
+149
+00:09:25,399 --> 00:09:26,399
+after I corrected it.
+
+150
+00:09:26,399 --> 00:09:30,480
+So I get the first frame, I know where the positions are
+
+151
+00:09:30,480 --> 00:09:32,759
+and at the end, I modify that pose
+
+152
+00:09:32,759 --> 00:09:37,759
+and I compute where the foot would be.
+
+153
+00:09:37,759 --> 00:09:40,279
+And now that I know this, I basically make sure
+
+154
+00:09:40,279 --> 00:09:44,399
+that I will only change, apply that fixing,
+
+155
+00:09:44,399 --> 00:09:46,559
+that correction that I did on the entire animations.
+
+156
+00:09:46,560 --> 00:09:51,240
+I will only do it when the feet are going up and going down.
+
+157
+00:09:51,240 --> 00:09:55,880
+So it starts from where it was before doing any fixes.
+
+158
+00:09:55,880 --> 00:10:00,200
+And during the fly, it will reach directly
+
+159
+00:10:00,200 --> 00:10:03,520
+where it's supposed to be at the end of the corrections.
+
+160
+00:10:03,520 --> 00:10:05,920
+So that's the local offsets.
+
+161
+00:10:05,920 --> 00:10:11,160
+And then I get the stuff when I compute the global version
+
+162
+00:10:11,160 --> 00:10:13,160
+of the left foot and the right foot.
+
+163
+00:10:13,160 --> 00:10:16,440
+And I'm just using the timing because I know exactly
+
+164
+00:10:16,440 --> 00:10:21,440
+by the timings, I know when the feet are hitting the ground
+
+165
+00:10:21,440 --> 00:10:23,880
+so I can just use that information from the timing
+
+166
+00:10:23,880 --> 00:10:25,120
+I computed before.
+
+167
+00:10:25,120 --> 00:10:27,240
+This is why I'm doing the looping now basically.
+
+168
+00:10:27,240 --> 00:10:30,560
+And now I can just compute the looping animations
+
+169
+00:10:30,560 --> 00:10:32,280
+for all my animations.
+
+170
+00:10:32,280 --> 00:10:37,120
+And what I have is these animations.
+
+171
+00:10:37,120 --> 00:10:40,120
+So basically you won't see a lot of difference,
+
+172
+00:10:41,160 --> 00:10:44,680
+but if I go on spot, you see now that I have a looping
+
+173
+00:10:44,680 --> 00:10:47,400
+animations for all of those, and I do loop properly,
+
+174
+00:10:47,400 --> 00:10:49,440
+and everything is fine now.
+
+175
+00:10:49,440 --> 00:10:52,640
+Now I have my looping animations that works properly,
+
+176
+00:10:52,640 --> 00:10:57,360
+but what I need is to have them encoded as generic time,
+
+177
+00:10:57,360 --> 00:10:59,600
+say going between zero and one,
+
+178
+00:10:59,600 --> 00:11:03,320
+instead of having the number of frames as you wanted,
+
+179
+00:11:03,320 --> 00:11:04,920
+that's I had before.
+
+180
+00:11:04,920 --> 00:11:08,840
+And so what I will do is that I will warp my animations
+
+181
+00:11:08,840 --> 00:11:11,160
+using the timing I did
+
+182
+00:11:11,159 --> 00:11:16,159
+to make it, to warp it using the time warps basically.
+
+183
+00:11:18,759 --> 00:11:22,000
+And because I'm using data at this point,
+
+184
+00:11:22,000 --> 00:11:23,879
+I cannot just say between zero and one
+
+185
+00:11:23,879 --> 00:11:26,480
+and not having any informations.
+
+186
+00:11:26,480 --> 00:11:28,899
+The timing will be between zero and one,
+
+187
+00:11:28,899 --> 00:11:31,480
+but then I need to have the intermediate values
+
+188
+00:11:31,480 --> 00:11:34,360
+and decide how many intermediate values I want to have
+
+189
+00:11:34,360 --> 00:11:37,399
+in to encode my data to be able to work with.
+
+190
+00:11:37,399 --> 00:11:39,839
+And what I would do is I would say that I'd go
+
+191
+00:11:39,840 --> 00:11:43,680
+for 400 frames, which is a lot bigger
+
+192
+00:11:43,680 --> 00:11:44,879
+than my original animations.
+
+193
+00:11:44,879 --> 00:11:47,440
+My original animations were only 30 frames
+
+194
+00:11:47,440 --> 00:11:49,600
+or a maximum 60 frames.
+
+195
+00:11:49,600 --> 00:11:52,560
+So now I have an animation that will be
+
+196
+00:11:52,560 --> 00:11:56,360
+with a lot more data when I'm doing this,
+
+197
+00:11:56,360 --> 00:12:00,080
+but it's because the time what sometimes will slow down
+
+198
+00:12:00,080 --> 00:12:01,519
+a piece of the animations,
+
+199
+00:12:01,519 --> 00:12:04,240
+and sometimes it will accelerate a piece of the animations.
+
+200
+00:12:04,240 --> 00:12:06,960
+And I want to make sure that when it accelerates,
+
+201
+00:12:06,960 --> 00:12:09,360
+I actually have enough data in between,
+
+202
+00:12:09,360 --> 00:12:14,879
+I don't want to have only suddenly zero or two frames in between because it
+
+203
+00:12:14,879 --> 00:12:21,919
+means nothing in data when I would try to compute the cubic bezier so I grow my
+
+204
+00:12:21,919 --> 00:12:26,080
+animation so I know that I have something that will have enough data so
+
+205
+00:12:26,080 --> 00:12:33,759
+the warping is just this it takes every range that I have inside of my time
+
+206
+00:12:33,759 --> 00:12:38,879
+warping functions and it will just scale all those range properly and it does it
+
+207
+00:12:38,879 --> 00:12:45,759
+linearly. So the paper was actually doing the time warp linearly between all the values.
+
+208
+00:12:46,559 --> 00:12:52,480
+So I do the same, I will just stretch each piece of the animations linearly the same way.
+
+209
+00:12:53,120 --> 00:13:00,960
+And what I would do on top, so what I've done this for, see now my new animations will be
+
+210
+00:13:00,960 --> 00:13:08,720
+400 frames long. I have six values, so it means that I actually have 80 frames between each of
+
+211
+00:13:08,879 --> 00:13:16,240
+my ranges. So I compute the the quaternions, all the quaternions, all the positions.
+
+212
+00:13:17,519 --> 00:13:21,919
+I normalize my quaternions now because I did just linear interpolations without any stuff.
+
+213
+00:13:22,480 --> 00:13:30,080
+And what is important for me now here is because I'm not working in Euler angle
+
+214
+00:13:30,080 --> 00:13:34,320
+or any other representations, I'm actually working in quaternion space.
+
+215
+00:13:35,280 --> 00:13:40,320
+which means that when I would try to blend quaternions together, I need to make sure that
+
+216
+00:13:40,320 --> 00:13:48,160
+they are exactly in the same quadrant. You know that quaternions have a double cover,
+
+217
+00:13:48,160 --> 00:13:53,920
+meaning that the quaternion and the inverse of the quaternion represent the same 3D rotation.
+
+218
+00:13:55,280 --> 00:14:02,480
+So if, for instance, finally you try to blend together one quaternion and it's inverse,
+
+219
+00:14:02,480 --> 00:14:08,080
+the rotation between will probably do a 360 and that kind of stuff and I don't want this I want
+
+220
+00:14:08,080 --> 00:14:16,720
+to be able to just blend as if it was the closest values and the simplest way to do it is actually
+
+221
+00:14:16,720 --> 00:14:23,039
+to make sure that every quaternions you have inside your animation would be in the same quadrant
+
+222
+00:14:23,039 --> 00:14:30,480
+as the bind pose of your skeleton. So it has the advantage of saying that everything stays
+
+223
+00:14:30,480 --> 00:14:35,920
+around the bind pose of the animations, meaning that any values that you try to blend together will
+
+224
+00:14:35,920 --> 00:14:44,879
+always stay naturally inside of what the bone is supposed to do. So even if I have a value that
+
+225
+00:14:44,879 --> 00:14:49,920
+it might be negative or positive, something really close, it would always do the right
+
+226
+00:14:49,920 --> 00:14:54,159
+rotations. It would never try to do the opposite and go in the opposite directions,
+
+227
+00:14:54,159 --> 00:14:58,879
+because I've made every quaternion be
+
+228
+00:14:58,879 --> 00:15:02,000
+closest as possible as the bind pose, let's say.
+
+229
+00:15:02,000 --> 00:15:06,959
+So that's what I'm doing here. I'm checking that the angle between
+
+230
+00:15:06,959 --> 00:15:11,839
+my animations and the bind pose is in the same quadrant and if they're not
+
+231
+00:15:11,839 --> 00:15:16,079
+I'm just inverting those so all the quaternions are in the bind pose
+
+232
+00:15:16,079 --> 00:15:22,159
+quadrant. So now that I have done this, what I have
+
+233
+00:15:22,159 --> 00:15:26,639
+is all my animations now have exactly all the same length.
+
+234
+00:15:26,639 --> 00:15:29,399
+They are all 400 frames long.
+
+235
+00:15:29,399 --> 00:15:32,559
+That's supposed to be just the timing between zero and one.
+
+236
+00:15:32,559 --> 00:15:34,879
+And I can display those animations.
+
+237
+00:15:34,879 --> 00:15:37,919
+And then you could see that what happens is that now everything
+
+238
+00:15:37,919 --> 00:15:40,079
+is a lot slower.
+
+239
+00:15:40,079 --> 00:15:43,919
+But it slows down some steps and accelerates
+
+240
+00:15:43,919 --> 00:15:47,240
+just to make sure that if I post these animations,
+
+241
+00:15:47,240 --> 00:15:49,679
+I can pick any specific frame.
+
+242
+00:15:49,679 --> 00:15:50,959
+For instance, I'm passing.
+
+243
+00:15:50,960 --> 00:15:55,320
+So my left foot is passing the right foot.
+
+244
+00:15:55,320 --> 00:15:56,840
+And if I check any other animations,
+
+245
+00:15:56,840 --> 00:15:59,200
+I would be in the same at the same time
+
+246
+00:15:59,200 --> 00:16:04,320
+with exactly at the passing stage of any style.
+
+247
+00:16:04,320 --> 00:16:09,800
+So, and you could see for this one,
+
+248
+00:16:09,800 --> 00:16:11,320
+this one actually slows down
+
+249
+00:16:11,320 --> 00:16:13,680
+and then will really slow down at this time.
+
+250
+00:16:13,680 --> 00:16:16,900
+And then we'll have to reaccelerate quickly
+
+251
+00:16:16,900 --> 00:16:20,040
+because the timing of those animations is really different.
+
+252
+00:16:20,039 --> 00:16:22,599
+So that's what the time warp was used for,
+
+253
+00:16:22,599 --> 00:16:24,959
+so make sure that all the informations
+
+254
+00:16:24,959 --> 00:16:26,240
+hit at the same time.
+
+255
+00:16:29,879 --> 00:16:32,799
+And now that I have all my animations
+
+256
+00:16:32,799 --> 00:16:37,279
+into the canonical form,
+
+257
+00:16:38,159 --> 00:16:40,759
+so they all have the same length,
+
+258
+00:16:40,759 --> 00:16:43,799
+they all have the same frame,
+
+259
+00:16:43,799 --> 00:16:46,240
+all the frames presenting the same data,
+
+260
+00:16:46,240 --> 00:16:50,399
+I can actually turn them into a uniform cubic Bezier.
+
+261
+00:16:52,480 --> 00:16:56,519
+And to do this, I would just do the minimize functions
+
+262
+00:16:56,519 --> 00:17:01,519
+to find the best uniform cubic Bezier I can find
+
+263
+00:17:01,919 --> 00:17:06,279
+to cover the animation curves.
+
+264
+00:17:06,279 --> 00:17:08,400
+So I'm using the minimize functions
+
+265
+00:17:08,400 --> 00:17:12,799
+and I try to find out the minimum error.
+
+266
+00:17:12,799 --> 00:17:15,519
+And the number of control points you choose,
+
+267
+00:17:15,519 --> 00:17:18,639
+So the one that you decide how many control points
+
+268
+00:17:18,639 --> 00:17:22,039
+that controls one animations, it's something you choose.
+
+269
+00:17:22,039 --> 00:17:27,039
+And in this case, I will just pick 23 control points.
+
+270
+00:17:29,680 --> 00:17:32,799
+So I will actually now have 23 control points
+
+271
+00:17:32,799 --> 00:17:35,039
+for each of my curves when I do this.
+
+272
+00:17:35,039 --> 00:17:39,359
+So this is the functions to convert.
+
+273
+00:17:40,759 --> 00:17:44,079
+And this one actually is converting all the animations.
+
+274
+00:17:44,079 --> 00:17:46,519
+So what I will have is the quaternion and positions
+
+275
+00:17:47,639 --> 00:17:49,519
+for all my animations,
+
+276
+00:17:49,519 --> 00:17:52,859
+for the 23 control points for each bones
+
+277
+00:17:52,859 --> 00:17:55,240
+and then for each curves inside of those.
+
+278
+00:17:55,240 --> 00:17:58,919
+So the WXYZ and the XYZ of the positions.
+
+279
+00:17:58,919 --> 00:18:01,039
+So that's a lot of different curves
+
+280
+00:18:02,039 --> 00:18:03,879
+that I would be converting.
+
+281
+00:18:03,879 --> 00:18:05,000
+It would take a bit of time.
+
+282
+00:18:05,000 --> 00:18:07,759
+I'm coming back when it's done.
+
+283
+00:18:07,759 --> 00:18:12,759
+So now what we have is not an animations in terms of frames,
+
+284
+00:18:12,759 --> 00:18:17,400
+frames but just animation in terms of those control points. So the only thing I have in
+
+285
+00:18:17,400 --> 00:18:23,319
+the animations are those control points here and that's actually enough to rebuild the curve.
+
+286
+00:18:24,279 --> 00:18:33,559
+And you can see that the blue one is the reconstructed curves and the little dashed one
+
+287
+00:18:33,559 --> 00:18:39,799
+are the original data. So that's for one of the animations for the heaps and the quaternions
+
+288
+00:18:39,799 --> 00:18:48,599
+X values in this case, so that's the one I've picked to display this stuff, but it works
+
+289
+00:18:48,599 --> 00:18:52,039
+for all of the curves I have inside of the systems.
+
+290
+00:18:52,039 --> 00:19:01,279
+And I can show that we could actually render the animation using this.
+
+291
+00:19:01,279 --> 00:19:07,359
+So now I'm not replaying the animation itself, I'm playing the animations that was encoded
+
+292
+00:19:07,360 --> 00:19:09,440
+in uniform cubic B-spline.
+
+293
+00:19:09,440 --> 00:19:11,640
+And it plays at the right speed,
+
+294
+00:19:11,640 --> 00:19:16,640
+because on top of this I'm not only just computing,
+
+295
+00:19:17,920 --> 00:19:19,040
+recomputing the animation,
+
+296
+00:19:19,040 --> 00:19:21,680
+so you could see I get the B-spline functions
+
+297
+00:19:21,680 --> 00:19:26,680
+that allow me to take a specific set of control points
+
+298
+00:19:29,000 --> 00:19:30,680
+and rebuild the curves.
+
+299
+00:19:30,680 --> 00:19:33,440
+So that's the functions you have from the other video.
+
+300
+00:19:33,440 --> 00:19:35,840
+So I'm rebuilding all the quaternions
+
+301
+00:19:35,839 --> 00:19:38,359
+and all the positions.
+
+302
+00:19:38,359 --> 00:19:40,240
+And I'm going to renormalize my cotonians, of course,
+
+303
+00:19:40,240 --> 00:19:42,879
+because they are completely unnormalized.
+
+304
+00:19:42,879 --> 00:19:47,480
+Now, I did reconstruct curves separately,
+
+305
+00:19:47,480 --> 00:19:49,879
+so I need to renormalize my cotonians.
+
+306
+00:19:49,879 --> 00:19:53,480
+And on top of this, I'm converting back the generic time.
+
+307
+00:19:57,039 --> 00:19:59,439
+The delta time I want to play, because I
+
+308
+00:19:59,439 --> 00:20:04,079
+want to move to the next real frame in real time.
+
+309
+00:20:04,079 --> 00:20:08,359
+But then I need to find what it means inside of the generic time
+
+310
+00:20:08,359 --> 00:20:10,639
+to move those values.
+
+311
+00:20:10,639 --> 00:20:16,480
+So you need to say, OK, I'm moving one frame forward.
+
+312
+00:20:16,480 --> 00:20:19,720
+How many frames does that represent?
+
+313
+00:20:19,720 --> 00:20:22,240
+How many times does it represent in the generic time?
+
+314
+00:20:22,240 --> 00:20:24,960
+Is it 0.1, 0.2, and so on, and so on?
+
+315
+00:20:24,960 --> 00:20:27,159
+So you have to go through the timings,
+
+316
+00:20:27,159 --> 00:20:31,879
+find what were the different timings for the different time
+
+317
+00:20:31,880 --> 00:20:36,980
+and play at the right frames so this is what I'm doing here I'm finding back
+
+318
+00:20:36,980 --> 00:20:41,380
+inside the generic time what is my values and now that I have my generic
+
+319
+00:20:41,380 --> 00:20:46,340
+time I can just request that correct frames inside of my animations and that
+
+320
+00:20:46,340 --> 00:20:51,100
+gives me basically this and the quantity to play back any of the
+
+321
+00:20:51,100 --> 00:21:04,220
+animations using the cubic B-spline and we will finally be able to actually build our verb with
+
+322
+00:21:04,220 --> 00:21:10,940
+all of this. Now I have all my animations in the canonical form and encoded as a bunch of control
+
+323
+00:21:10,940 --> 00:21:19,980
+points for uniform cubic B-spline not animation data itself anymore and I can go through the verb
+
+324
+00:21:19,980 --> 00:21:26,940
+construction one and to build those you actually use that was the purpose of
+
+325
+00:21:26,940 --> 00:21:36,180
+this paper is to use the radial basis functions and for each degrees of freedom
+
+326
+00:21:36,180 --> 00:21:44,539
+so that's the value that you will have to to compute except they use b because
+
+327
+00:21:44,539 --> 00:21:51,819
+that's one of the control points of the uniform B spline. So for each of those control points now
+
+328
+00:21:51,819 --> 00:21:58,539
+what you will have to do is to compute radial basis functions and a linear approximation. I will
+
+329
+00:21:58,539 --> 00:22:04,940
+not go through the mathematics on how they compute all those informations because I've done the other
+
+330
+00:22:04,940 --> 00:22:10,539
+videos that represent the mathematics for it. Just watch that one and you will have heavy
+
+331
+00:22:10,539 --> 00:22:17,779
+introductions to how they computed that specific coefficients, but basically we
+
+332
+00:22:17,779 --> 00:22:21,619
+need to find the coefficients for the radial basis functions and the
+
+333
+00:22:21,619 --> 00:22:27,940
+coefficients for the linear approximations for every, basically for
+
+334
+00:22:27,940 --> 00:22:32,099
+every control point. So that will be for every degrees of freedom, for every
+
+335
+00:22:32,100 --> 00:22:39,740
+animations and for every control points of every curves.
+
+336
+00:22:39,740 --> 00:22:44,900
+That's a lot of different coefficients we have to compute.
+
+337
+00:22:44,900 --> 00:22:50,820
+And on top of it, they do it for every control points to be able to blend those control points
+
+338
+00:22:50,820 --> 00:22:51,820
+together.
+
+339
+00:22:51,820 --> 00:22:54,780
+But they do it also for the timing.
+
+340
+00:22:54,779 --> 00:23:04,220
+of our animations have time warps and we decided that the time warps was in this case always defined
+
+341
+00:23:04,220 --> 00:23:12,539
+by six different values because the you know the beginning the first the first foot on the ground
+
+342
+00:23:12,539 --> 00:23:23,019
+the second left ground left and so on so that's my six time values inside of a time warp and basically
+
+343
+00:23:23,019 --> 00:23:29,579
+we will do the same thing we will use that same radial basis functions but with the timing this
+
+344
+00:23:29,579 --> 00:23:37,180
+time we will have for every animations for every of those six values we will have a radial basis
+
+345
+00:23:37,180 --> 00:23:47,420
+function and that's what this class is doing it basically allows us to give a bunch of adverbs
+
+346
+00:23:47,420 --> 00:23:54,140
+with examples, build all the information we want and then fit a specific curve through it so we
+
+347
+00:23:54,140 --> 00:24:00,940
+will be able to fit any of our control points animations or we'll be able to fit the timings
+
+348
+00:24:00,940 --> 00:24:05,100
+and that kind of stuff and that returns the coefficients we want to use and then we could
+
+349
+00:24:05,100 --> 00:24:11,019
+actually interpolate using those coefficients so that's what this class is doing and what I would
+
+350
+00:24:11,019 --> 00:24:17,980
+do is just this I will now actually make real adverbs because so far I'm talking about the
+
+351
+00:24:17,980 --> 00:24:23,579
+motions that have different directions and examples but I haven't encoded what for me
+
+352
+00:24:23,579 --> 00:24:28,619
+that represents inside of the adverb space and that's what I would do here. I would create
+
+353
+00:24:28,619 --> 00:24:37,019
+the adverb space and basically for me it's to the adverb space. The first one is how much left or
+
+354
+00:24:37,019 --> 00:24:48,940
+right I have inside of that animations. And the second part is the style. For the angle,
+
+355
+00:24:49,660 --> 00:24:54,059
+I'm doing something fairly simple. I take the first frame and then I take the last frame and I
+
+356
+00:24:54,059 --> 00:25:00,139
+check what angle I have between those. And that gives me the advanced values at the angle,
+
+357
+00:25:00,139 --> 00:25:05,980
+the amount of rotations I had at the end of the animation. And the second one is the style.
+
+358
+00:25:05,980 --> 00:25:10,299
+and now I will encode it manually because I know which animations have which style.
+
+359
+00:25:10,299 --> 00:25:16,539
+So basically all the the seven first animations have the small steps one
+
+360
+00:25:16,539 --> 00:25:20,140
+and then the other animations have the biggest steps one the five one
+
+361
+00:25:21,660 --> 00:25:25,420
+I have the the second style so two style and the angle of rotations.
+
+362
+00:25:26,940 --> 00:25:32,940
+And so now that I have the adverbs I can actually create my radial basis functions
+
+363
+00:25:32,940 --> 00:25:39,620
+and then I will start to be able to fit to get all the coefficients I need. So
+
+364
+00:25:39,620 --> 00:25:43,940
+what I would do is that I will fit one by one because it would be easier to
+
+365
+00:25:43,940 --> 00:25:48,340
+just see exactly what I'm fitting than trying to fit a multi-dimensional
+
+366
+00:25:48,340 --> 00:25:54,019
+timings and all kind of stuff that I don't want to to fight against swizzling
+
+367
+00:25:54,019 --> 00:26:00,460
+the animations, the data and that kind of stuff. So I have the timing, the linear
+
+368
+00:26:00,460 --> 00:26:05,620
+Timing coefficients and the radial timing coefficients. It's basically the six values
+
+369
+00:26:05,620 --> 00:26:10,960
+I had inside of a timing and then I get the three values for the linear coefficients because that's
+
+370
+00:26:12,220 --> 00:26:14,700
+The adverbs size plus one
+
+371
+00:26:15,420 --> 00:26:19,019
+And then the 12 different values because I have 12 different
+
+372
+00:26:20,500 --> 00:26:25,180
+examples animations and I compute so the timing I fit the timing all of them
+
+373
+00:26:25,180 --> 00:26:29,039
+I do the same for every point cloud every
+
+374
+00:26:30,460 --> 00:26:37,420
+uniform-basic control points of any bones of all the degrees of freedom of each
+
+375
+00:26:37,420 --> 00:26:46,340
+bone. So basically, you know, my 23 points, every bones in the characters, the WXYZ
+
+376
+00:26:46,340 --> 00:26:52,019
+of the quaternions, XYZ of the positions, and then again the three, the three and
+
+377
+00:26:52,019 --> 00:26:59,620
+12 for the linear and radial. And now that I have all those coefficients, I
+
+378
+00:26:59,620 --> 00:27:01,620
+I will be able to use those coefficients
+
+379
+00:27:01,620 --> 00:27:03,540
+to actually play my animation
+
+380
+00:27:04,540 --> 00:27:07,120
+and blend the different values.
+
+381
+00:27:09,500 --> 00:27:14,500
+So one thing I haven't done inside of these implementations
+
+382
+00:27:14,540 --> 00:27:17,020
+is actually what they call the verb graph.
+
+383
+00:27:17,020 --> 00:27:22,020
+So basically what we have is the fact that
+
+384
+00:27:22,340 --> 00:27:25,860
+we have one action, which is the walking actions
+
+385
+00:27:25,860 --> 00:27:27,380
+and I have a bunch of adverbs.
+
+386
+00:27:27,380 --> 00:27:33,700
+say the verb is working, my adverbs is all my style and rotations, and then normally you will
+
+387
+00:27:33,700 --> 00:27:40,100
+build a graph of verbs, you will be able to do from idle, go to walk and then maybe crouch or
+
+388
+00:27:40,100 --> 00:27:45,780
+sit and that kind of stuff, and all of those verbs will have adverbs and all of those, and
+
+389
+00:27:45,780 --> 00:27:52,100
+basically you build a graph of verbs and you make transitions between the the different verbs.
+
+390
+00:27:52,100 --> 00:27:57,540
+I haven't done this part because we've done this when we we've done the motion
+
+391
+00:27:57,540 --> 00:28:01,060
+graph it's basically the same thing except that instead of a verb you have
+
+392
+00:28:01,060 --> 00:28:05,060
+a complete verb and adverbs but then you have transitions between those verbs
+
+393
+00:28:05,060 --> 00:28:10,140
+and you blend the results between the verbs so nothing really fancy in the
+
+394
+00:28:10,140 --> 00:28:16,620
+verb graph itself. What I'm more interesting in is how they evaluate
+
+395
+00:28:16,620 --> 00:28:27,220
+the adverbs and so this is how you what you have to compute. Now to compute
+
+396
+00:28:27,220 --> 00:28:30,780
+your animations when you have the different adverbs and you want to
+
+397
+00:28:30,780 --> 00:28:38,460
+blend them together the first thing is to interpolate all the timings you know
+
+398
+00:28:38,460 --> 00:28:43,420
+we've decided that each animations had a time warps and they all have different
+
+399
+00:28:43,420 --> 00:28:53,900
+time warps. And then we build the coefficients for the different time warps. So we would
+
+400
+00:28:53,900 --> 00:29:02,220
+blend together all those different time warps to find how we should normally time warp the
+
+401
+00:29:02,220 --> 00:29:12,539
+blended results. So now we have to compute the blended time warped, let's say.
+
+402
+00:29:13,740 --> 00:29:19,019
+And once you've done this, you could convert it into the generic time to know where you want to
+
+403
+00:29:19,019 --> 00:29:27,339
+pick inside of all our canonical form animations. And give us the T. Then for every degree of freedom,
+
+404
+00:29:27,340 --> 00:29:29,340
+for every control points,
+
+405
+00:29:29,340 --> 00:29:34,020
+we need to blend those control points together.
+
+406
+00:29:34,020 --> 00:29:37,220
+So all the first control points
+
+407
+00:29:37,220 --> 00:29:39,320
+of every degrees of freedom together,
+
+408
+00:29:39,320 --> 00:29:41,120
+all the second control points
+
+409
+00:29:41,120 --> 00:29:42,640
+of all the degrees of freedom together,
+
+410
+00:29:42,640 --> 00:29:44,460
+and so on, and so on.
+
+411
+00:29:44,460 --> 00:29:49,460
+So it's per frame, per control points,
+
+412
+00:29:51,380 --> 00:29:54,040
+per degrees of freedom.
+
+413
+00:29:54,039 --> 00:30:02,440
+And then once you've done this, we could actually evaluate the uniform cubic Bezier because
+
+414
+00:30:02,440 --> 00:30:06,519
+we've blended the control points of the cubic Bezier and then we could evaluate that cubic
+
+415
+00:30:06,519 --> 00:30:10,759
+Bezier and we have our animation.
+
+416
+00:30:10,759 --> 00:30:17,480
+If we had to compute all of that at every frame, that would be a lot of things to compute.
+
+417
+00:30:17,480 --> 00:30:25,200
+Instead, what we could see is that at any time when we try to evaluate the uniform cubic
+
+418
+00:30:25,200 --> 00:30:29,519
+B-spline, we don't need to evaluate every control point.
+
+419
+00:30:29,519 --> 00:30:34,819
+We're just interested in the four control points that are useful to be able to compute
+
+420
+00:30:34,819 --> 00:30:36,319
+our values.
+
+421
+00:30:36,319 --> 00:30:43,640
+That's what I'm showing here, it's how we could, you know, if my values can go between
+
+422
+00:30:43,640 --> 00:30:51,720
+0 and 1, which is my generic time. At any point, if I need to compute the values itself, I only
+
+423
+00:30:51,720 --> 00:30:58,120
+need to evaluate those four control points. I don't need to evaluate the 23 of them, just the four
+
+424
+00:30:58,120 --> 00:31:02,680
+relevant control points. And that's what I would do. I will only evaluate those fours.
+
+425
+00:31:05,160 --> 00:31:11,880
+And so finally, this is the full functions. Let's see what it does. And then we can go back to
+
+426
+00:31:11,880 --> 00:31:14,540
+to what was computing.
+
+427
+00:31:14,540 --> 00:31:19,540
+So I have my character, it can now blend
+
+428
+00:31:19,580 --> 00:31:21,540
+with different angles and you could see
+
+429
+00:31:21,540 --> 00:31:23,380
+how it does blend between them
+
+430
+00:31:23,380 --> 00:31:25,420
+and it can blend between different mood.
+
+431
+00:31:25,420 --> 00:31:28,260
+And of course I could probably do this when it plays
+
+432
+00:31:28,260 --> 00:31:29,460
+and that will be better.
+
+433
+00:31:29,460 --> 00:31:33,580
+So I can walk, I can make it rotate,
+
+434
+00:31:33,580 --> 00:31:35,900
+you can make it rotate in the opposite directions.
+
+435
+00:31:35,900 --> 00:31:39,260
+It blends with all the values I want.
+
+436
+00:31:39,259 --> 00:31:43,259
+And I can change, for instance, my mood also.
+
+437
+00:31:43,259 --> 00:31:47,140
+So the mood is just changing the type of steps
+
+438
+00:31:48,140 --> 00:31:51,160
+and you can change the type of steps
+
+439
+00:31:51,160 --> 00:31:52,740
+and also the directions.
+
+440
+00:31:52,740 --> 00:31:54,680
+So everything has been merged together
+
+441
+00:31:54,680 --> 00:31:56,579
+inside of a big systems.
+
+442
+00:31:56,579 --> 00:32:00,420
+Now, if you watched the video about the radial basis functions
+
+443
+00:32:00,420 --> 00:32:05,420
+and why it was doing linear and radial basis one,
+
+444
+00:32:05,420 --> 00:32:11,660
+and the radial basis one it was so it could do extrapolations on top of interpolation so for
+
+445
+00:32:11,660 --> 00:32:20,460
+instance I don't have any example that goes further than minus something in this angle
+
+446
+00:32:20,460 --> 00:32:26,220
+and I can try to force it to go further it does some kind of extrapolations and then we said it
+
+447
+00:32:26,220 --> 00:32:33,019
+can do some kind of extrapolation but it's not that fancy you could see that extrapolation
+
+448
+00:32:33,019 --> 00:32:36,859
+animation kind of does something when it's not perfect.
+
+449
+00:32:36,859 --> 00:32:41,500
+It has a lot of issues with the looping part of the animations, but then it's even sliding.
+
+450
+00:32:41,500 --> 00:32:46,019
+But if I'm staying into values I have, you can just interpolate those.
+
+451
+00:32:46,019 --> 00:32:47,019
+Same for the mood.
+
+452
+00:32:47,019 --> 00:32:52,579
+If I can blend between the two, but my mood has nothing that's allowing him to turn that
+
+453
+00:32:52,579 --> 00:32:53,579
+big.
+
+454
+00:32:53,579 --> 00:32:57,180
+So I will have big issues there during the looping.
+
+455
+00:32:57,180 --> 00:33:02,980
+But if I stay inside of values for which I had animations, it would work a bit better.
+
+456
+00:33:02,980 --> 00:33:09,099
+So I can go completely changing the mood completely and it all works smoothly
+
+457
+00:33:09,099 --> 00:33:14,299
+So as long I have data and I'm not trying to extrapolate too much it kind of work
+
+458
+00:33:14,299 --> 00:33:17,819
+I can force the the foot to be on the ground
+
+459
+00:33:18,940 --> 00:33:23,380
+Nothing fancy here. That's why it pops like crazy. I'm just watching the timing from
+
+460
+00:33:24,700 --> 00:33:28,380
+the generic time to know if it I'm between a flying or
+
+461
+00:33:29,740 --> 00:33:31,740
+stick to the ground stuff and I
+
+462
+00:33:31,740 --> 00:33:38,019
+I don't even smooth in and out those constraints, I just enforce them and stop them at once
+
+463
+00:33:38,019 --> 00:33:40,460
+and that's why it pops like crazy.
+
+464
+00:33:40,460 --> 00:33:44,980
+But basically, because my animation knows when I'm supposed to lock my feet, I'll be
+
+465
+00:33:44,980 --> 00:33:47,980
+able to do it.
+
+466
+00:33:47,980 --> 00:33:59,940
+And so how this works, basically again, it's all the same stuff, I'm saving a bunch of
+
+467
+00:33:59,940 --> 00:34:06,100
+information because I need the characters to be able to move along, but you compute the
+
+468
+00:34:06,100 --> 00:34:07,100
+times.
+
+469
+00:34:07,100 --> 00:34:13,179
+So as I said, you interpolate the six values of the timing, you interpolate them.
+
+470
+00:34:13,179 --> 00:34:19,579
+So I get the computed times, the computed time warps that is the blended versions of
+
+471
+00:34:19,579 --> 00:34:21,179
+all the time warps.
+
+472
+00:34:21,179 --> 00:34:28,980
+And then when I have this, I can go and compute the generic time, thanks to those blended
+
+473
+00:34:28,980 --> 00:34:36,740
+time warped. And now that I have the timing I want to have, I can pick the correct four control
+
+474
+00:34:36,740 --> 00:34:42,980
+points I need to compute. I can compute those four different control points using the radial
+
+475
+00:34:42,980 --> 00:34:48,900
+basis functions. I can actually blend together all the control points that need to be blended
+
+476
+00:34:48,900 --> 00:34:54,019
+together. And now that I have those blended control points, I can actually evaluate
+
+477
+00:34:54,019 --> 00:35:02,179
+my beast plane at the specific time I need to with those four control points
+
+478
+00:35:02,179 --> 00:35:07,219
+I'm the only computing one time now with the four control points and then I
+
+479
+00:35:07,219 --> 00:35:10,820
+normalize my cotonion and that's it and everything else is just to make sure
+
+480
+00:35:10,820 --> 00:35:17,059
+that I can keep playing animations and it's keep moving forward that's how this
+
+481
+00:35:17,059 --> 00:35:28,619
+is working. So that was the, look, foot. That was the verb and adverb paper. You
+
+482
+00:35:28,619 --> 00:35:33,980
+could see that it's a paper from 1999 and it basically has most of the
+
+483
+00:35:33,980 --> 00:35:38,779
+all the features we already have specifically implemented in this case
+
+484
+00:35:38,779 --> 00:35:43,500
+but if we take a game engine what you will have you will have your animation
+
+485
+00:35:43,500 --> 00:35:49,340
+graph, which says, well, working, joking, running, and how you transition between them.
+
+486
+00:35:50,699 --> 00:35:54,619
+And that's the verb in this case. And then you will have inside of all those actions,
+
+487
+00:35:54,619 --> 00:35:59,820
+you will probably have a blend tree. That's how you decide how you blend
+
+488
+00:36:00,539 --> 00:36:06,300
+leaning directions or blending animation, depending on the style. So it basically is the
+
+489
+00:36:06,300 --> 00:36:12,300
+same as the adverb, except that all of this was computed at once trying to blend a higher
+
+490
+00:36:12,300 --> 00:36:17,019
+dimension systems instead of just doing a simple blend between those.
+
+491
+00:36:17,019 --> 00:36:24,700
+So paper from 1999 which has most of the concepts we have in game engine today
+
+492
+00:36:24,700 --> 00:36:28,300
+although a bit more complex in the mathematics
+
+493
+00:36:28,300 --> 00:36:34,300
+behind it. I hope you enjoyed it and I'll see you next time.

@@ -1,0 +1,1043 @@
+1
+00:00:00,000 --> 00:00:05,879
+Hi, we've seen all the curves and splines I wanted to cover in this video series.
+
+2
+00:00:05,879 --> 00:00:11,320
+Now there is one thing I want to do with all those curves is that every time I showed you
+
+3
+00:00:11,320 --> 00:00:15,519
+the curves it was actually in a 2D curve.
+
+4
+00:00:15,519 --> 00:00:21,879
+So every point has x and y coordinate, x and y coordinate and then the parameterization
+
+5
+00:00:21,879 --> 00:00:26,160
+of the curve itself was a T that was moving inside of that 2D space.
+
+6
+00:00:26,160 --> 00:00:28,440
+It could have been a 3D space,
+
+7
+00:00:28,440 --> 00:00:32,439
+so it could have been a curve going through a 3D world,
+
+8
+00:00:32,439 --> 00:00:35,079
+would have been exactly the same mathematics.
+
+9
+00:00:35,079 --> 00:00:38,840
+Now, if we want to use those curves
+
+10
+00:00:38,840 --> 00:00:41,039
+to actually encode animation data,
+
+11
+00:00:41,039 --> 00:00:45,359
+what we have to do is go down to a one-dimensional curve.
+
+12
+00:00:45,359 --> 00:00:47,640
+And what I mean by that is that usually,
+
+13
+00:00:47,640 --> 00:00:51,320
+if you encode animation data, you will do keyframes.
+
+14
+00:00:51,320 --> 00:00:54,359
+So, you know, you have a timeline
+
+15
+00:00:54,359 --> 00:00:58,560
+and each few frames you give a value
+
+16
+00:00:58,560 --> 00:01:00,679
+and then you try to interpolate those values.
+
+17
+00:01:00,679 --> 00:01:03,799
+So that's how usually you see basic curves use,
+
+18
+00:01:03,799 --> 00:01:07,519
+the helmet curve use inside of Maya or that kind of stuff.
+
+19
+00:01:07,519 --> 00:01:10,759
+Now, the mathematic for those might be a bit different
+
+20
+00:01:10,759 --> 00:01:11,920
+than the 2D case.
+
+21
+00:01:11,920 --> 00:01:15,760
+So I will cover each case and show you what we can do
+
+22
+00:01:15,760 --> 00:01:18,439
+and how we can compute a 1D example
+
+23
+00:01:18,439 --> 00:01:20,280
+to actually have key frames data.
+
+24
+00:01:21,480 --> 00:01:23,680
+So if you go one dimensional spline,
+
+25
+00:01:23,680 --> 00:01:27,720
+The first thing we can do is go with the Amid Curve.
+
+26
+00:01:27,720 --> 00:01:30,400
+And a one-dimensional Amid Curve,
+
+27
+00:01:30,400 --> 00:01:34,560
+which actually means the bottom line
+
+28
+00:01:34,560 --> 00:01:38,160
+so that my X's will be actually my T,
+
+29
+00:01:38,160 --> 00:01:41,200
+so it will be the T that I usually go through the curves,
+
+30
+00:01:41,200 --> 00:01:43,240
+and I get the value as Y.
+
+31
+00:01:43,240 --> 00:01:46,560
+Now, the Amid Curves goes between zero and one,
+
+32
+00:01:46,560 --> 00:01:51,200
+and one thing I can do if it's only two keyframes.
+
+33
+00:01:51,200 --> 00:01:54,880
+So what I have here is my keyframes are separate
+
+34
+00:01:54,880 --> 00:01:56,359
+in key times and key values.
+
+35
+00:01:56,359 --> 00:01:58,200
+So my key times is four and 25,
+
+36
+00:01:58,200 --> 00:02:00,560
+my key values is four and two.
+
+37
+00:02:00,560 --> 00:02:03,960
+And so I get the tangent that was normally decided
+
+38
+00:02:03,960 --> 00:02:06,439
+for the curve.
+
+39
+00:02:06,439 --> 00:02:09,319
+And if I render this, basically what happened now
+
+40
+00:02:09,319 --> 00:02:12,319
+is that I have really my frames
+
+41
+00:02:12,319 --> 00:02:15,199
+and I've plotted the values that I would get
+
+42
+00:02:15,199 --> 00:02:18,840
+if I was requesting the value at each frame.
+
+43
+00:02:18,840 --> 00:02:23,840
+So I had the keyframe data at my frame four and 26.
+
+44
+00:02:25,240 --> 00:02:29,280
+Oh, it was four and 25, sorry, four and 25.
+
+45
+00:02:29,280 --> 00:02:30,480
+And then that's my curve
+
+46
+00:02:30,480 --> 00:02:33,120
+and you get everything here working properly.
+
+47
+00:02:33,120 --> 00:02:34,520
+To get this to work,
+
+48
+00:02:34,520 --> 00:02:38,000
+what I did actually is to assume
+
+49
+00:02:38,000 --> 00:02:43,000
+that the Armit curve would be a value of size of one.
+
+50
+00:02:44,400 --> 00:02:46,319
+And so I compute it as a size of one
+
+51
+00:02:46,319 --> 00:02:48,520
+and then I scale up the value.
+
+52
+00:02:48,520 --> 00:02:50,159
+so I can reach it.
+
+53
+00:02:50,159 --> 00:02:51,920
+The only thing you have to do is that
+
+54
+00:02:51,920 --> 00:02:55,040
+if you take your range and you actually scale it,
+
+55
+00:02:55,040 --> 00:02:57,360
+what happens, the tangent you had
+
+56
+00:02:57,360 --> 00:02:58,719
+would actually stays the same
+
+57
+00:02:58,719 --> 00:03:01,719
+and so the curve will start to get flat.
+
+58
+00:03:01,719 --> 00:03:03,480
+So the only thing you have to do is that
+
+59
+00:03:03,480 --> 00:03:06,320
+knowing that you scaled your range,
+
+60
+00:03:06,320 --> 00:03:08,280
+say that's my range here,
+
+61
+00:03:09,480 --> 00:03:11,560
+between the two, I use that range
+
+62
+00:03:11,560 --> 00:03:13,360
+to multiply my tangent.
+
+63
+00:03:13,360 --> 00:03:15,640
+So actually I compensate for the fact
+
+64
+00:03:15,640 --> 00:03:18,200
+that I will be stretching the curve I'm computing.
+
+65
+00:03:18,200 --> 00:03:22,080
+So that's how you could do it for one single army curve.
+
+66
+00:03:22,080 --> 00:03:23,580
+It's fairly easy to do.
+
+67
+00:03:23,580 --> 00:03:27,500
+Just remember that you basically stretch your functions.
+
+68
+00:03:27,500 --> 00:03:32,500
+So you actually have to stretch your tangent also.
+
+69
+00:03:34,920 --> 00:03:37,680
+If we go one step further
+
+70
+00:03:37,680 --> 00:03:40,280
+and we go toward the cardinal spline,
+
+71
+00:03:40,280 --> 00:03:43,560
+we will have to do that same kind of concept,
+
+72
+00:03:43,560 --> 00:03:45,960
+but there is a few tweak in there.
+
+73
+00:03:45,960 --> 00:03:53,439
+If I go uniform cardinal spline meaning that every key frame every key time will
+
+74
+00:03:53,439 --> 00:04:02,360
+be the same range between them so you know my key time here is 4, 8, 12, 16 so it's
+
+75
+00:04:02,360 --> 00:04:07,480
+on a regular grid. I could do the same trick as the one I did for the
+
+76
+00:04:07,480 --> 00:04:12,000
+Hermit curve. I can compute my cardinal spline and I can just stretch it. Now
+
+77
+00:04:12,000 --> 00:04:18,000
+Now, because the cardinal spline already computes the tensions and the curve, for me in this
+
+78
+00:04:18,000 --> 00:04:25,079
+case, I don't even need to bother about tension because when you go one dimension, basically
+
+79
+00:04:25,079 --> 00:04:28,480
+that tension factor is useless.
+
+80
+00:04:28,480 --> 00:04:36,959
+You cannot ask your cardinal spline to be linear or curved when you do one dimensional.
+
+81
+00:04:36,959 --> 00:04:45,859
+You can only tweak the y values and the t is assumed to be regular under the hood.
+
+82
+00:04:45,859 --> 00:04:48,859
+So the tension has no meaning.
+
+83
+00:04:48,859 --> 00:04:56,659
+And so if I do this, basically I compute the kernel spline as if it was just, you know,
+
+84
+00:04:56,659 --> 00:05:04,699
+a kernel spline that was going from one to four, just linear steps inside of my animation.
+
+85
+00:05:04,699 --> 00:05:07,860
+I compute the curves, and then I can stretch it
+
+86
+00:05:07,860 --> 00:05:10,740
+because the tension has already been computed,
+
+87
+00:05:10,740 --> 00:05:11,899
+the curves have already been computed.
+
+88
+00:05:11,899 --> 00:05:14,339
+I don't need to do anything else
+
+89
+00:05:14,339 --> 00:05:16,699
+than just stretching the end results.
+
+90
+00:05:17,620 --> 00:05:19,939
+Basically, actually, I'm not doing a stretch.
+
+91
+00:05:19,939 --> 00:05:23,219
+I'm just stepping through it as if it was a stretch.
+
+92
+00:05:23,219 --> 00:05:27,539
+So again, cardinal spline,
+
+93
+00:05:27,539 --> 00:05:30,819
+if you are regular inside of a cardinal spline,
+
+94
+00:05:30,819 --> 00:05:33,699
+then you can actually get the values for each frame
+
+95
+00:05:33,699 --> 00:05:36,740
+just by requesting the value properly.
+
+96
+00:05:38,819 --> 00:05:40,979
+Now if you go non-uniform cardinal spline,
+
+97
+00:05:40,979 --> 00:05:42,300
+then you try to do the same thing,
+
+98
+00:05:42,300 --> 00:05:45,740
+showing I take my entire cardinal spline
+
+99
+00:05:45,740 --> 00:05:48,899
+and then compute it and try to stretch it.
+
+100
+00:05:48,899 --> 00:05:53,740
+What will happen is basically this.
+
+101
+00:05:53,740 --> 00:05:56,259
+My curve will not go through the points
+
+102
+00:05:56,259 --> 00:05:59,459
+if it was really set up on the keyframes.
+
+103
+00:05:59,459 --> 00:06:02,180
+It would assume that actually my T is linear
+
+104
+00:06:02,180 --> 00:06:05,980
+And so my T will be, I assume that my frame is here
+
+105
+00:06:05,980 --> 00:06:07,300
+and my frame is there.
+
+106
+00:06:07,300 --> 00:06:11,379
+So I cannot just do a complete stretch
+
+107
+00:06:11,379 --> 00:06:12,780
+of the final result.
+
+108
+00:06:14,980 --> 00:06:19,980
+What I need to do instead is actually use the fact
+
+109
+00:06:20,019 --> 00:06:23,340
+that I can do the Amid curve and I can stretch Amid curve.
+
+110
+00:06:23,340 --> 00:06:26,600
+So I can reuse my functions that I had before,
+
+111
+00:06:26,600 --> 00:06:31,600
+which was the one that converts the Carnival splines
+
+112
+00:06:32,180 --> 00:06:39,019
+into a bunch of Hermit and so I could do that calling the cardinal spline having
+
+113
+00:06:39,019 --> 00:06:43,819
+the Hermit points and then for each range I can properly stretch them the same way
+
+114
+00:06:43,819 --> 00:06:49,100
+as I did it for the example of the Hermit just by restretching the the
+
+115
+00:06:49,100 --> 00:06:53,139
+tangents for each of the range I'm computing and now I have something that
+
+116
+00:06:53,139 --> 00:06:58,699
+looks correct with all my different tangents and I get the values that
+
+117
+00:06:58,699 --> 00:07:08,339
+actually on the curve every time when I requested a keyframe. Okay? The next one
+
+118
+00:07:08,339 --> 00:07:15,699
+is doing a basic curve. Again a basic curve of one dimensional might be a bit
+
+119
+00:07:15,699 --> 00:07:20,459
+weird but then we could do the uniform basic curve meaning that I will have you
+
+120
+00:07:20,459 --> 00:07:27,019
+know one basic curve is four points and so I have my four points properly
+
+121
+00:07:27,019 --> 00:07:35,259
+spaced on my timeline so I get again my 481216 to represent my points and if I
+
+122
+00:07:35,259 --> 00:07:39,859
+do this I can properly compute a Bezier curve that is actually a
+
+123
+00:07:39,859 --> 00:07:45,339
+one-dimensional so I get my my T's down here and I get my values that go there
+
+124
+00:07:45,339 --> 00:07:51,699
+now you might notice that when we go uniform Bezier curve it also means that
+
+125
+00:07:51,699 --> 00:07:59,939
+my keyframes are really you know my first keyframe is at time zero my second one is at time one third
+
+126
+00:07:59,939 --> 00:08:07,699
+my third one two third and my final one is at one remember when we did the conversion from
+
+127
+00:08:07,699 --> 00:08:13,939
+bezier curve to amit curve we had to divide the tension by three that's one of the hints that's
+
+128
+00:08:13,939 --> 00:08:21,620
+why we have to do it is because a uniform bezier curve basically has a split in four parts
+
+129
+00:08:21,699 --> 00:08:25,060
+So it's 0, 1, 3, 2, 3, and 1.
+
+130
+00:08:25,060 --> 00:08:30,979
+So it works if you really put all your points
+
+131
+00:08:30,979 --> 00:08:32,539
+along those values.
+
+132
+00:08:32,539 --> 00:08:36,299
+Now, if you were trying to do non-niform basic curves,
+
+133
+00:08:36,299 --> 00:08:38,419
+I would have the same issues as the cardinal.
+
+134
+00:08:38,419 --> 00:08:42,659
+It would just compute something that makes no sense.
+
+135
+00:08:42,659 --> 00:08:45,220
+So there is actually only one way
+
+136
+00:08:45,220 --> 00:08:51,419
+to do a basic curve that you could sample to get keyframes.
+
+137
+00:08:51,419 --> 00:08:54,959
+And that's how every animation package are doing it,
+
+138
+00:08:54,959 --> 00:08:58,539
+is that for this specific case,
+
+139
+00:08:58,539 --> 00:09:03,179
+you actually do a 2D base year curve.
+
+140
+00:09:03,179 --> 00:09:08,179
+So instead of having my time at the bottom and my value,
+
+141
+00:09:08,939 --> 00:09:11,620
+what you will have is a 2D base year curve
+
+142
+00:09:11,620 --> 00:09:14,059
+that will be time value together.
+
+143
+00:09:14,059 --> 00:09:17,000
+And then we have to find a way to sample that properly
+
+144
+00:09:17,000 --> 00:09:19,740
+to get the value we wanted for each frame.
+
+145
+00:09:19,740 --> 00:09:24,740
+And that's what we call usually the finding y given x.
+
+146
+00:09:25,180 --> 00:09:30,180
+I would first probably execute the example
+
+147
+00:09:31,340 --> 00:09:34,740
+and then we can explain what's happening
+
+148
+00:09:34,740 --> 00:09:36,980
+because it will be easier in this way.
+
+149
+00:09:36,980 --> 00:09:41,980
+So when we do a basic of the t values
+
+150
+00:09:42,580 --> 00:09:46,299
+that goes between them does not represent
+
+151
+00:09:46,299 --> 00:09:49,379
+a linear time in my timeline.
+
+152
+00:09:49,379 --> 00:09:55,700
+So the t value here is not continuous compared to all the keyframe I'm trying to reach.
+
+153
+00:09:55,700 --> 00:10:03,740
+So the thing we have to do is actually try to find the opposite, asking if I want to
+
+154
+00:10:03,740 --> 00:10:11,340
+be to a specific keyframe value, what would be the t parameters of my curve I need to
+
+155
+00:10:11,340 --> 00:10:15,460
+use for that curve to actually be on that spot.
+
+156
+00:10:15,460 --> 00:10:27,900
+And how we do this is by doing the mapping between t and the time, the real time.
+
+157
+00:10:27,900 --> 00:10:30,860
+So I get my t value that goes between 0 and 1.
+
+158
+00:10:30,860 --> 00:10:35,379
+And I get my real time that goes between 4 and 16.
+
+159
+00:10:35,379 --> 00:10:38,259
+So that's the time that comes here.
+
+160
+00:10:38,259 --> 00:10:39,820
+And I get the t down here.
+
+161
+00:10:39,820 --> 00:10:47,300
+And so what you have to do is say, if I wanted to be at frame 10 in my timing here, if I want
+
+162
+00:10:47,300 --> 00:10:52,780
+to be at frame 10, I need to be here and I need to be able to find the t value that
+
+163
+00:10:52,780 --> 00:11:00,960
+represents my frame 10 and see it's not 0.5 because this is not just a linear mapping.
+
+164
+00:11:00,960 --> 00:11:08,380
+And how you do this is basically realizing that this graph here, when we ask for what
+
+165
+00:11:08,379 --> 00:11:16,220
+the T there is the same as moving that graph up and down and then trying to find the roots.
+
+166
+00:11:16,220 --> 00:11:24,460
+So usually finding the roots mean finding where this curve will hit zero. That's how you find a
+
+167
+00:11:24,460 --> 00:11:30,539
+root. And so what you need to do is to say I want to take the entire curve that was drawn as usual.
+
+168
+00:11:30,539 --> 00:11:36,460
+I want to shift it down 10 frames because I'm looking for frame 10. And then as soon as I've
+
+169
+00:11:36,460 --> 00:11:38,379
+I've shifted down, I can find my root,
+
+170
+00:11:38,379 --> 00:11:40,940
+and I can know that it will be hitting here
+
+171
+00:11:40,940 --> 00:11:44,420
+nearly something 0.4 or something, right?
+
+172
+00:11:44,420 --> 00:11:47,220
+So that's what mathematically we do.
+
+173
+00:11:47,220 --> 00:11:49,100
+And that's what this function is doing.
+
+174
+00:11:49,100 --> 00:11:52,860
+It takes the time at which you actually want
+
+175
+00:11:54,740 --> 00:11:59,740
+to evaluate for t, and it computes the basic curve
+
+176
+00:12:00,240 --> 00:12:04,139
+with that little minus time I'm looking for.
+
+177
+00:12:04,139 --> 00:12:06,059
+And then it finds the roots.
+
+178
+00:12:06,059 --> 00:12:10,340
+I'm using the root function from NumPy.
+
+179
+00:12:10,340 --> 00:12:11,259
+It's a cubic function,
+
+180
+00:12:11,259 --> 00:12:13,939
+so you can have more than one root.
+
+181
+00:12:13,939 --> 00:12:16,059
+I know that I'm constraining the system,
+
+182
+00:12:16,059 --> 00:12:18,819
+so I can only have one root or zero
+
+183
+00:12:18,819 --> 00:12:20,340
+if I'm outside of my animation.
+
+184
+00:12:20,340 --> 00:12:23,179
+But if I'm inside of my animation,
+
+185
+00:12:23,179 --> 00:12:25,419
+I constrain the curve itself
+
+186
+00:12:25,419 --> 00:12:27,500
+to not give me more than one root,
+
+187
+00:12:27,500 --> 00:12:31,919
+so I can just return the first root that will be valid.
+
+188
+00:12:34,139 --> 00:12:39,179
+And to understand what's happening here and how we could we compute this it's basically because
+
+189
+00:12:40,819 --> 00:12:45,139
+If I do it with same pie again to go through the mathematics
+
+190
+00:12:47,379 --> 00:12:53,819
+If I start with the bezier function as usual, so that's the the bezier
+
+191
+00:12:54,299 --> 00:12:56,699
+Compute it with the Bernstein basis function
+
+192
+00:12:58,939 --> 00:13:02,860
+If I expand it all that's how you compute the entire
+
+193
+00:13:02,860 --> 00:13:10,539
+function now based on x0 x1 x2 x3 and so on and I know that the thing I want to
+
+194
+00:13:10,539 --> 00:13:18,980
+do is move it's basically taking the points you have here so I get my four
+
+195
+00:13:18,980 --> 00:13:22,620
+points here and to move this up and down what I will do is actually I would
+
+196
+00:13:22,620 --> 00:13:29,139
+shift the entire all the points here I would shift it on the side to actually
+
+197
+00:13:29,139 --> 00:13:33,500
+try to bring that 10 right here, right?
+
+198
+00:13:33,500 --> 00:13:38,419
+So what I'm doing now is I will keep the mathematics that
+
+199
+00:13:38,419 --> 00:13:40,179
+actually compute the Bayesian curve.
+
+200
+00:13:40,179 --> 00:13:43,100
+And I will say that I want to shift the entire Bayesian curve
+
+201
+00:13:43,100 --> 00:13:45,699
+using a substitute.
+
+202
+00:13:45,699 --> 00:13:52,500
+So I replace the x0 by x0 minus x1 is x1 minus x and so on.
+
+203
+00:13:52,500 --> 00:13:54,539
+And that gives you that massive functions
+
+204
+00:13:54,539 --> 00:14:01,019
+now, where every x0 is x0 minus x, x1 is x1 minus x and so on and so on and so on.
+
+205
+00:14:01,659 --> 00:14:11,419
+And if I try to ask him to factorize that and re rearrange it, you will see that every x
+
+206
+00:14:13,500 --> 00:14:19,419
+cancel each other except the last one. So you only have one minus x. So you could keep the
+
+207
+00:14:19,420 --> 00:14:26,620
+entire functions as is and just do a minus x at the end and that's the beauty of doing it this way
+
+208
+00:14:26,620 --> 00:14:32,220
+and that's what you have here basically when I find the roots I find the root for a cubic function
+
+209
+00:14:32,220 --> 00:14:43,340
+that is a b c d and it's just the d that has the minus x here so that's how we actually do it for
+
+210
+00:14:43,340 --> 00:14:49,260
+a basic curve it's a bit more involved a bit more complex but I tell you to have a 2d curve
+
+211
+00:14:49,420 --> 00:14:53,580
+and to sample it linearly through your time.
+
+212
+00:14:55,220 --> 00:14:57,380
+That's how it's completed usually.
+
+213
+00:14:57,380 --> 00:15:00,420
+And the final thing I want to show you
+
+214
+00:15:00,420 --> 00:15:04,820
+because it might be useful is good to be able
+
+215
+00:15:04,820 --> 00:15:07,140
+to represent your animation data
+
+216
+00:15:07,140 --> 00:15:09,940
+using one type of curves and that kind of stuff.
+
+217
+00:15:09,940 --> 00:15:12,300
+One thing we might need to do at some point
+
+218
+00:15:12,300 --> 00:15:13,980
+is actually encode your animation data.
+
+219
+00:15:13,980 --> 00:15:17,980
+So it might come from a really massive array
+
+220
+00:15:19,420 --> 00:15:26,300
+of data and you just want to fit a curve through it and encode a curve that represents your animation
+
+221
+00:15:26,300 --> 00:15:33,420
+data that has heavily as what you have as input. And so what I would do here is actually fit a
+
+222
+00:15:33,420 --> 00:15:44,860
+uniform cubic B spline using the minimize system from NumPy or SimPy. I don't remember
+
+223
+00:15:44,860 --> 00:15:54,940
+which then where the minimize come from it comes from let me see minimize come from sci-pi sorry
+
+224
+00:15:54,940 --> 00:16:06,460
+sci-pi optimize and so what i would have is basically a function and i will draw on the
+
+225
+00:16:06,460 --> 00:16:17,379
+the annual results, that would be easier. So I have a function that is my orange dots.
+
+226
+00:16:17,379 --> 00:16:23,700
+And that's the function that I would say I want to encode using cubic B spline. And
+
+227
+00:16:23,700 --> 00:16:29,900
+I get all the points I want to use, the number of points I want to use for my cubic B spline.
+
+228
+00:16:29,900 --> 00:16:34,100
+And that's where they will be placed. And I get the cubic B spline, which is the one
+
+229
+00:16:34,100 --> 00:16:41,139
+I've computed that's how my animation would be rendered if I was using it. So I'm fairly close
+
+230
+00:16:41,139 --> 00:16:50,259
+to my original data and how you do this kind of stuff is basically by having okay I have my
+
+231
+00:16:50,259 --> 00:16:57,460
+function itself which is now a really complex function that I compute and then I would say
+
+232
+00:16:57,460 --> 00:17:03,780
+how many points on that curve I would use to try to
+
+233
+00:17:04,900 --> 00:17:11,460
+encode my data and I said that I would take 20 points around it. I get my B-spline basis,
+
+234
+00:17:11,460 --> 00:17:17,940
+so again I'm using the formula for the matrix for the B-spline. I have my function to compute
+
+235
+00:17:17,940 --> 00:17:27,220
+my B-spline and what I would do is I would have a bunch of points. So that's how many
+
+236
+00:17:27,220 --> 00:17:34,340
+points I want to use on my B-spline. I would say I want to use seven points. And finally,
+
+237
+00:17:34,340 --> 00:17:41,140
+I get the real value of my function. So I sample my function, as I said, 20 times between every
+
+238
+00:17:41,140 --> 00:17:48,820
+points so that's my it's all the points on the time and that's the values of my complex function
+
+239
+00:17:48,820 --> 00:17:56,500
+for all those x's so I take 100 points on my x and I compute the y values for those so I have
+
+240
+00:17:56,500 --> 00:18:04,900
+an x y values for all of those points and I have an error function that would just be a square error
+
+241
+00:18:04,900 --> 00:18:12,180
+sum of squares. So I will get my points and inputs. So that's really the control points
+
+242
+00:18:12,180 --> 00:18:20,100
+of my b-spline. I compute my b-spline with it and then I do the sum of the squares error between
+
+243
+00:18:20,100 --> 00:18:27,220
+the two. So it's the usual functions you use to minimize an error. You have to start with
+
+244
+00:18:27,220 --> 00:18:32,500
+an initial guess. So my initial guess is to actually put my points on the curves,
+
+245
+00:18:32,500 --> 00:18:36,259
+to put my control points on the curves and then I call the minimize with my
+
+246
+00:18:36,259 --> 00:18:40,500
+error functions and my initial guess and the results itself will give me
+
+247
+00:18:40,500 --> 00:18:44,500
+where I want that x to be. So my result is here and I get my
+
+248
+00:18:44,500 --> 00:18:49,140
+optimal y value and then and now that I have the
+
+249
+00:18:49,140 --> 00:18:56,579
+optimal y values for all of my points I can draw my b-spline so I can
+
+250
+00:18:56,579 --> 00:19:00,180
+actually display it. That's how you get this kind of stuff. So
+
+251
+00:19:00,180 --> 00:19:07,460
+it's an optimal uniform cubic B-spline meaning that if I give 20 control points
+
+252
+00:19:07,460 --> 00:19:12,259
+they will all be spaced with the same space between them if you get only four
+
+253
+00:19:12,259 --> 00:19:16,740
+that kind of stuff it's a uniform one so you're gonna have more range and
+
+254
+00:19:16,740 --> 00:19:20,019
+more points in one range and less in the other range is really uniform
+
+255
+00:19:20,019 --> 00:19:23,380
+but that's how in a nutshell how you would do
+
+256
+00:19:23,380 --> 00:19:30,980
+fitting a curve and any type of spline. If you have a different type of spline that you
+
+257
+00:19:30,980 --> 00:19:35,540
+actually want to fit, it would be the same concept. You would use the minimize and try
+
+258
+00:19:35,540 --> 00:19:42,420
+to find the minimal error. That would be the simplest way to do it, thanks to SciPy.
+
+259
+00:19:42,420 --> 00:19:48,940
+And I hope this would make sense for later papers when I will start to use these kind
+
+260
+00:19:48,940 --> 00:19:54,620
+functions and we'll be able to come back to these videos if you ever need to dig a bit deeper into
+
+261
+00:19:54,620 --> 00:20:01,340
+the curves I'm using at some point. I hope you enjoyed it and see you next time!

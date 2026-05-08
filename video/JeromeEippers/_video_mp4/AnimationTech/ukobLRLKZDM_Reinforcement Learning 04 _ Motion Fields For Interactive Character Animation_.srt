@@ -1,0 +1,1367 @@
+1
+00:00:00,000 --> 00:00:03,800
+Today, we continue the reinforcement learning for animation.
+
+2
+00:00:03,800 --> 00:00:06,799
+And we will be looking at one of my favorite paper
+
+3
+00:00:06,799 --> 00:00:10,080
+because it influenced the community a lot
+
+4
+00:00:10,080 --> 00:00:14,519
+and probably led to the motion matching as we know it today.
+
+5
+00:00:14,519 --> 00:00:18,440
+But also because it's still a lot referenced on research
+
+6
+00:00:18,440 --> 00:00:21,600
+today because of its way of encoding the animation data
+
+7
+00:00:21,600 --> 00:00:24,120
+and using the animation data.
+
+8
+00:00:24,120 --> 00:00:25,359
+Hi, I'm Jerome.
+
+9
+00:00:25,359 --> 00:00:28,920
+And today's paper is Motion Field for Character Animation,
+
+10
+00:00:28,920 --> 00:00:36,920
+paper from 2010. So as usual, I will import all my libraries. I've done it before because I have
+
+11
+00:00:36,920 --> 00:00:43,160
+PyTorch this time, so it takes a bit of time. And then I will load my character. I will load
+
+12
+00:00:43,160 --> 00:00:50,040
+my little displacement mesh. And I will load a lot of animations, even if I'm not actually using
+
+13
+00:00:50,040 --> 00:00:58,200
+all of them, I'm taking a few steps in some of them. But I keep loading all of those. And
+
+14
+00:00:58,920 --> 00:01:07,879
+I will compute the contact to know when the foot is on the ground and I'll do it only by checking the speed of the toes
+
+15
+00:01:07,879 --> 00:01:11,640
+And that's it. And so that's here all the animation I have
+
+16
+00:01:13,320 --> 00:01:20,760
+So basically it's all from the LaFan again, so a lot of really long take of locomotions
+
+17
+00:01:21,760 --> 00:01:23,760
+of different style, but
+
+18
+00:01:24,680 --> 00:01:27,879
+I'll pick a few of those at the end
+
+19
+00:01:28,920 --> 00:01:37,799
+So, what the motion field does, it has four concepts that instead of using animations,
+
+20
+00:01:37,799 --> 00:01:42,000
+we will build a database of motion.
+
+21
+00:01:42,000 --> 00:01:48,560
+So the way that is composed is basically you have a pose, oops, that's not what I wanted
+
+22
+00:01:48,560 --> 00:01:49,560
+to do.
+
+23
+00:01:49,560 --> 00:01:51,599
+You have a pose.
+
+24
+00:01:51,600 --> 00:02:00,120
+And the pose only represents the position of the character in space and the orientation
+
+25
+00:02:00,120 --> 00:02:01,800
+of all his bones.
+
+26
+00:02:01,800 --> 00:02:07,520
+In my case, because I have a root and a hip, so I get the two positions and I get the orientation
+
+27
+00:02:07,520 --> 00:02:11,040
+of every bones.
+
+28
+00:02:11,040 --> 00:02:15,520
+And then we also, for all of those poses, you also compute the velocity by doing the
+
+29
+00:02:15,520 --> 00:02:16,520
+finite difference.
+
+30
+00:02:16,520 --> 00:02:20,600
+So you take the next frame and you remove your current frame.
+
+31
+00:02:20,600 --> 00:02:23,000
+And that's give you basically the delta
+
+32
+00:02:23,000 --> 00:02:24,840
+that will allow you to say, if I'm in this pose
+
+33
+00:02:24,840 --> 00:02:28,200
+and I add this delta, I will be in the next frame.
+
+34
+00:02:28,200 --> 00:02:33,200
+And for the motion field, motion state is basically this.
+
+35
+00:02:33,360 --> 00:02:35,640
+It's one pose and one velocity.
+
+36
+00:02:35,640 --> 00:02:38,560
+So if one really, if it's one pose
+
+37
+00:02:38,560 --> 00:02:41,640
+and how much delta you will lead to the next frame.
+
+38
+00:02:42,560 --> 00:02:45,160
+And that's how you will build the motion states.
+
+39
+00:02:45,159 --> 00:02:52,120
+will do this for all your frame of animations and you just stores pose and velocities as a big
+
+40
+00:02:52,840 --> 00:03:02,199
+database. So I will have functions to compute those. Because I will have all my data inside of a
+
+41
+00:03:02,199 --> 00:03:12,599
+big buffer, I will have a pose pack and unpack functions to easily take a buffer returns structures
+
+42
+00:03:12,599 --> 00:03:17,799
+as a root, hips and quaternions and then put that back into a buffer because it's a 4D buffers but
+
+43
+00:03:17,799 --> 00:03:22,840
+you know positions only three 3Ds the quaternions 4Ds and all kind of stuff so I didn't want to
+
+44
+00:03:22,840 --> 00:03:28,439
+deal too much with that so I just have functions that allow me to read and write inside of the
+
+45
+00:03:28,439 --> 00:03:37,479
+buffer basically easily. I get the functions that I need to add to a pose together so a pose in a
+
+46
+00:03:37,480 --> 00:03:42,520
+velocity but really there is no difference between velocities or pose in this case.
+
+47
+00:03:43,960 --> 00:03:48,520
+So it's just that add functions here and get the subtract function here.
+
+48
+00:03:49,560 --> 00:03:53,960
+So that's how you to add back the velocity to the positions.
+
+49
+00:03:53,960 --> 00:03:56,520
+You get the subtract, that's how you do the opposite of course.
+
+50
+00:03:57,720 --> 00:04:04,120
+Then I get the love to be able to love between two poses and I get the blending that's how you
+
+51
+00:04:04,120 --> 00:04:13,240
+to take x number of poses with the same number of weights and do the average sum of that pose.
+
+52
+00:04:14,439 --> 00:04:21,639
+So all that functions that I would need later in the paper to work properly. And then I will have
+
+53
+00:04:21,639 --> 00:04:27,079
+a function that will allow me to go back into a skeleton and display my results from a pose.
+
+54
+00:04:27,079 --> 00:04:37,639
+Now, I will build my database with those functions and with a bunch of walking animations
+
+55
+00:04:37,639 --> 00:04:43,759
+and a bunch of jogging animations, and I will just run this so I have all my states.
+
+56
+00:04:43,759 --> 00:04:50,519
+And you know, I pick all my positions into, pack all my positions in one buffer, pack
+
+57
+00:04:50,519 --> 00:04:58,120
+all my velocities in one buffer, then I get the y, it comes also later, is the next frame,
+
+58
+00:04:58,759 --> 00:05:05,399
+and I get the contacts, so all my contact informations. And see in total I have now
+
+59
+00:05:07,399 --> 00:05:17,799
+6400 pose states inside of my database, and that's basically 6000 frames of animations.
+
+60
+00:05:17,800 --> 00:05:26,280
+and I can display those so you can see all of the pose where we set into the
+
+61
+00:05:26,280 --> 00:05:35,759
+zero-zero position so they're all now relative to the identity so I will
+
+62
+00:05:35,759 --> 00:05:41,560
+start to be able to work with all of those states and then I can also
+
+63
+00:05:41,560 --> 00:05:47,240
+display what is the next frame you know so that's my pose plus the next frame
+
+64
+00:05:47,240 --> 00:05:52,040
+and so you can start to see that that's how we could still remember there is
+
+65
+00:05:52,040 --> 00:05:56,400
+emotions and that the velocities of the root, the velocity of the heaps, and all
+
+66
+00:05:56,400 --> 00:06:04,800
+of my orientations. So, but that's all the single states that are inside of my
+
+67
+00:06:04,800 --> 00:06:13,680
+motion field. Well, my database right now, not the motion field yet. Then what we
+
+68
+00:06:13,680 --> 00:06:21,720
+will need with this is to be able to compute the similarity matrix. So basically trying
+
+69
+00:06:21,720 --> 00:06:33,040
+to see how close every pose are from each other and then we will compute the similarity
+
+70
+00:06:33,040 --> 00:06:41,800
+weight. So you get the distance and then you get really the weights of how close the two
+
+71
+00:06:41,800 --> 00:06:49,480
+are. And I've used a little different functions that the one I've used in the paper. In the paper
+
+72
+00:06:49,480 --> 00:07:00,360
+they were only using the orientations of all the bones in the current pose and in the next pose
+
+73
+00:07:00,360 --> 00:07:05,400
+when they integrated the velocity with it. What I will do is that I will just take the
+
+74
+00:07:05,400 --> 00:07:09,960
+the character positions of all my bones and I will compute the velocity with the next frames.
+
+75
+00:07:09,960 --> 00:07:17,320
+So its matrix is a bit different but it works the same way.
+
+76
+00:07:17,320 --> 00:07:26,720
+So this functions allow me to receive basically a state and a velocity and to turn that into
+
+77
+00:07:26,720 --> 00:07:32,120
+one vector that I will start to be able to compute different waves.
+
+78
+00:07:32,120 --> 00:07:43,240
+So I will do this for every states inside of my database.
+
+79
+00:07:43,240 --> 00:07:46,439
+And then we compute a big matrix with a distance.
+
+80
+00:07:46,439 --> 00:07:51,160
+So it becomes a matrix of number of states,
+
+81
+00:07:51,160 --> 00:07:54,560
+number of positions, let's say, because that's
+
+82
+00:07:54,560 --> 00:07:56,480
+what this becomes.
+
+83
+00:07:56,480 --> 00:08:00,160
+It becomes for every bones.
+
+84
+00:08:00,160 --> 00:08:02,600
+I will have its position in character space,
+
+85
+00:08:02,600 --> 00:08:05,000
+and then I will have its velocity in character space.
+
+86
+00:08:05,000 --> 00:08:09,040
+So it's a bone count multiplied by two,
+
+87
+00:08:09,040 --> 00:08:12,160
+and x, y, z vector.
+
+88
+00:08:14,320 --> 00:08:17,360
+And I get a big matrix out of those.
+
+89
+00:08:17,360 --> 00:08:22,360
+And just to try to explain a little what you have now
+
+90
+00:08:25,800 --> 00:08:27,680
+because you have all those distance,
+
+91
+00:08:27,680 --> 00:08:34,200
+that you could start to compare all the distance between them while all the you
+
+92
+00:08:34,200 --> 00:08:39,799
+could compare the similarities of all the pose to each other and that's you
+
+93
+00:08:39,799 --> 00:08:45,060
+could start to think of that as a field that's basically what they would do
+
+94
+00:08:45,060 --> 00:08:50,240
+with a motion field so you could try to think of representing those differences
+
+95
+00:08:50,240 --> 00:08:54,639
+and that's what I would do here by just reducing the number of dimensions
+
+96
+00:08:54,639 --> 00:09:00,559
+because, you know, the dimensions I have now is, I don't remember how many bones I have, but it's
+
+97
+00:09:00,559 --> 00:09:08,720
+fairly big. And we're just telling, okay, try to see if there are similarities between all those
+
+98
+00:09:08,720 --> 00:09:15,519
+vectors and turn that into a 3D representation. And that's what the Yuma piloted me to do,
+
+99
+00:09:15,519 --> 00:09:23,120
+so we could have a kind of visualizations of the field. So what you have here, basically,
+
+100
+00:09:23,120 --> 00:09:33,639
+Every dot in this is one pose in the database, and you could see that the position they are
+
+101
+00:09:33,639 --> 00:09:40,399
+in space is the relations they have to each other, so probably all those around the move
+
+102
+00:09:40,399 --> 00:09:43,560
+in the same directions are in the same pose.
+
+103
+00:09:43,560 --> 00:09:49,919
+All the one here might be the jogging animations running forwards and that kind of stuff, so
+
+104
+00:09:49,919 --> 00:09:58,799
+one way of representing the motion field. It's just for helping. It has no true values on the
+
+105
+00:09:58,799 --> 00:10:05,839
+representation. It's just to be able to get your head around the fact that we build a motion field,
+
+106
+00:10:05,839 --> 00:10:12,639
+but it's a motion field in a really high dimension. So this one is just a projection of something
+
+107
+00:10:12,639 --> 00:10:21,600
+simpler to be able to visualize it. Now what we need is that for every pose that we will have
+
+108
+00:10:21,600 --> 00:10:28,080
+we need to be able to find which poses will be the closest to us. So what's the paper? Basically
+
+109
+00:10:28,080 --> 00:10:34,639
+what the paper is doing. So that's the similarity weight. That's how you compute the similarity
+
+110
+00:10:34,639 --> 00:10:42,159
+weight, my functions over there. And then when we will try to make an animation for those we need
+
+111
+00:10:42,159 --> 00:10:53,759
+to be able to find the nearest neighbor of our pose. So I will be in one pose with certain velocities
+
+112
+00:10:53,759 --> 00:11:00,079
+and I want to find the 15 pose that are closest to me. They do an approximative
+
+113
+00:11:02,079 --> 00:11:08,720
+nearest neighbor. I'll be lazy in my case because I don't have a lot of animations.
+
+114
+00:11:08,720 --> 00:11:19,040
+So what I would do is that I would just drop the entire matrix here in PyTorch and I would
+
+115
+00:11:19,040 --> 00:11:25,680
+just do a true search using the GPU. So basically I have a function that's allowed me to get,
+
+116
+00:11:28,560 --> 00:11:37,920
+you give him one vector and you ask him to return the k closest one.
+
+117
+00:11:38,720 --> 00:11:43,759
+And it runs on the GPU, so it can do it fairly quickly.
+
+118
+00:11:43,759 --> 00:11:45,399
+And the advantage of doing it in this way
+
+119
+00:11:45,399 --> 00:11:49,759
+is that I can query one vector, but I can also
+
+120
+00:11:49,759 --> 00:11:54,200
+query a batch at one point and request
+
+121
+00:11:54,200 --> 00:11:58,480
+to compute that for x number of vectors at the same time,
+
+122
+00:11:58,480 --> 00:12:00,639
+which would be nd a bit later.
+
+123
+00:12:03,879 --> 00:12:07,120
+Now, it's all good.
+
+124
+00:12:07,120 --> 00:12:14,080
+we have a database that is composed of all of our frames, we are able to find all the frames
+
+125
+00:12:14,080 --> 00:12:21,840
+that are the closest to us. How do we actually make an animation out of it? And that's how
+
+126
+00:12:21,840 --> 00:12:27,440
+you have the integration functions. And what the integration function does is this one,
+
+127
+00:12:27,440 --> 00:12:42,200
+it takes a state in which you are and it takes x number of action. And the actions is basically
+
+128
+00:12:42,200 --> 00:12:53,640
+the, in this case, the 15 different frames I will have found. And what you do is that you average
+
+129
+00:12:53,639 --> 00:13:00,000
+all the velocities of all the states you have with all the with the correct
+
+130
+00:13:00,000 --> 00:13:11,840
+weights and the weights come from you know the weights similarity weights. So you
+
+131
+00:13:11,840 --> 00:13:17,080
+average all the velocities and then you add those velocities to your state, to
+
+132
+00:13:17,080 --> 00:13:22,679
+your pose. So you're not adding the pose together you're only integrating the
+
+133
+00:13:22,680 --> 00:13:30,840
+velocities and you move your character towards that mixed velocities and then the reason why we
+
+134
+00:13:30,840 --> 00:13:37,720
+had that Y and remember the next frame is because now we need to compute the future velocities and
+
+135
+00:13:37,720 --> 00:13:44,040
+that we do the same. We take the the average of the future's velocities that becomes our velocity.
+
+136
+00:13:44,039 --> 00:13:53,759
+So, I will get the function to find key neighbors and the function to compute the new states
+
+137
+00:13:53,759 --> 00:13:58,879
+and I will come back to it because there is a little trick to do it after.
+
+138
+00:13:58,879 --> 00:14:02,839
+And what we have is this.
+
+139
+00:14:02,839 --> 00:14:12,679
+We have our character, I'll put it on spot so it doesn't go away, come back here.
+
+140
+00:14:12,680 --> 00:14:22,280
+it does, it basically wanders around the motion field. So for every pose, it finds the 15 closest
+
+141
+00:14:22,280 --> 00:14:27,960
+pose, compute the similarity weights and blend all those weights for the velocities and add that
+
+142
+00:14:27,960 --> 00:14:33,720
+velocity back to this one. If you do this, only this, what would happen is basically this. We
+
+143
+00:14:33,720 --> 00:14:40,360
+would move through the velocity field to the motion field, and at some point, hopefully we
+
+144
+00:14:40,360 --> 00:14:48,680
+we do it at some point. He might start to drift outside of the known data because
+
+145
+00:14:49,240 --> 00:14:55,399
+nothing forces him to stay in the motion field. You know, all the velocities have different weights
+
+146
+00:14:57,560 --> 00:15:05,240
+and I would love him to start to drift. That would be great. Let me force him back
+
+147
+00:15:05,240 --> 00:15:11,159
+from the beginning and hopefully I can get him to drift.
+
+148
+00:15:14,680 --> 00:15:21,639
+And so you see it starts to drift outside of the motion field because it probably reaches
+
+149
+00:15:21,639 --> 00:15:30,759
+points where they had no data in the field and the velocity pushed him outside of known velocities
+
+150
+00:15:30,759 --> 00:15:35,879
+and it starts to blend stuff together that really are not meant to be blend together.
+
+151
+00:15:36,519 --> 00:15:43,960
+What we do to fix this is that we will tag him with a small ratio saying okay you could blend
+
+152
+00:15:43,960 --> 00:15:54,919
+all the velocities you have. It's all fine but you will always add back 10% of the closest pose
+
+153
+00:15:54,920 --> 00:16:02,120
+you were to so basically you let him walk through the motion field but you always tug him towards
+
+154
+00:16:03,080 --> 00:16:09,480
+in the rear when you know that there is data and that's what the little 10 percent forces him to
+
+155
+00:16:09,480 --> 00:16:18,200
+go back into space of the motion field where there is actual data and then we could just to
+
+156
+00:16:18,200 --> 00:16:31,879
+represented. I would slow it down fairly. That does not work anymore. That was Y.
+
+157
+00:16:37,000 --> 00:16:47,879
+On the spot plot. And then you could display where all those frames of animations are inside of
+
+158
+00:16:47,879 --> 00:17:00,120
+the, oh that's me, that's because of me, where all those frame of dimensions are inside of the
+
+159
+00:17:01,240 --> 00:17:08,920
+motion field. So you could see where I am and why all the pose it picked and how much it blends
+
+160
+00:17:08,920 --> 00:17:15,079
+them. So that's a representation of what the motion field is, but as I said it's just a representation,
+
+161
+00:17:15,079 --> 00:17:20,599
+don't focus on this one too much, it's just to have an idea of what the field does and how it works.
+
+162
+00:17:22,359 --> 00:17:31,480
+And so, see that that ratio we have here is basically what was written here on how to compute
+
+163
+00:17:31,480 --> 00:17:38,199
+this. You actually have to compute the next frame and then compute how from where you are,
+
+164
+00:17:38,200 --> 00:17:46,240
+how you will what you will be needed to do to reach the frame you know and that's
+
+165
+00:17:46,240 --> 00:17:51,039
+give you one of the velocities and you integrate all those velocities back in.
+
+166
+00:17:51,039 --> 00:17:58,440
+So and that's what I'm doing here while computing the velocities to reach a
+
+167
+00:17:58,440 --> 00:18:05,920
+specific state and then computing the new states basically take the frames take take
+
+168
+00:18:05,920 --> 00:18:10,519
+the current frame, take all the indices
+
+169
+00:18:10,519 --> 00:18:13,600
+for all the next velocities, the weights,
+
+170
+00:18:13,600 --> 00:18:17,320
+and then you compute the velocities that
+
+171
+00:18:17,320 --> 00:18:20,560
+will allow you to go back in the known frames.
+
+172
+00:18:20,560 --> 00:18:22,200
+You blend all of that together, and that
+
+173
+00:18:22,200 --> 00:18:24,279
+give you the new pose.
+
+174
+00:18:24,279 --> 00:18:31,640
+And so that's how you could walk through the motion field.
+
+175
+00:18:31,640 --> 00:18:33,519
+Now, walking through the motion field itself
+
+176
+00:18:33,519 --> 00:18:38,519
+has no true interest except to make a character
+
+177
+00:18:39,839 --> 00:18:41,720
+walking definitely like that.
+
+178
+00:18:41,720 --> 00:18:44,480
+What you will want to do now is to be able to control this.
+
+179
+00:18:44,480 --> 00:18:48,579
+So being able to take our pad and make sure that we can move.
+
+180
+00:18:49,720 --> 00:18:53,240
+And the way we will do this is basically by saying,
+
+181
+00:18:53,240 --> 00:18:58,240
+okay, I've picked 15 different states that I can play.
+
+182
+00:18:58,240 --> 00:19:07,599
+that I can play. I have a similarity weight to know how to blend them. But if I want to get
+
+183
+00:19:07,599 --> 00:19:14,000
+control, what I could do is that I can give more importance to one of those states. And that's
+
+184
+00:19:14,000 --> 00:19:20,000
+what we will do. We compute the similarity weights for all the frames as we did before.
+
+185
+00:19:20,000 --> 00:19:27,319
+and then we replace the value of that similarity weights by so that's all
+
+186
+00:19:27,319 --> 00:19:32,680
+normalized but then we replace the value by a one for the action we want to pick
+
+187
+00:19:32,680 --> 00:19:40,240
+and then we renormalize so basically if I go here right now I'll let him do
+
+188
+00:19:40,240 --> 00:19:43,880
+whatever he wants but I could say now actually I want to play that one that
+
+189
+00:19:43,880 --> 00:19:47,440
+one is more important for me but then this one is more important and so on and
+
+190
+00:19:47,440 --> 00:19:55,200
+and so on. And you can see that the only thing I do is I replace the known value by a one
+
+191
+00:19:55,200 --> 00:20:06,720
+and I renormalize the entire weight. So I tell you to tug a bit more the direction
+
+192
+00:20:06,720 --> 00:20:15,160
+which of the 15 posts you want to pick, but not by forcing it too much. It's still using
+
+193
+00:20:15,160 --> 00:20:22,040
+the similarity weights to blend all of those together and then what we will have is this.
+
+194
+00:20:26,600 --> 00:20:30,680
+So the only thing I would do here is that I try to make the character walk
+
+195
+00:20:30,680 --> 00:20:37,640
+in the directions I want him to walk. So I will have a function that giving two different vectors,
+
+196
+00:20:37,640 --> 00:20:46,920
+it returns me the signed angle distance. I know the angle and I know the direction and the angle
+
+197
+00:20:46,920 --> 00:20:52,520
+compared to where I want to go. So that's what this function does. And my reward function
+
+198
+00:20:54,200 --> 00:21:01,560
+for my system would just be that it has the desired direction I want to walk towards.
+
+199
+00:21:01,559 --> 00:21:07,200
+it gets my current state and my next states. I'm not even using the current
+
+200
+00:21:07,200 --> 00:21:15,119
+states to be honest. And I'm just checking if basically the velocities of my
+
+201
+00:21:15,119 --> 00:21:21,240
+next states will lead me towards the orientation I want to use. So I would get
+
+202
+00:21:21,240 --> 00:21:26,359
+the difference between the orientation and my desired direction and the reward
+
+203
+00:21:26,360 --> 00:21:33,320
+is just a negative of the minus abstract. So the reward is more the penalty. If you're walking
+
+204
+00:21:33,320 --> 00:21:38,920
+exactly in the direction I want you to walk you get a score of zero and as soon as you deviate
+
+205
+00:21:39,640 --> 00:21:48,440
+you get a negative reward and that negativity is bigger if the bigger the error is.
+
+206
+00:21:48,440 --> 00:21:56,620
+and so I get my my pad and what you do is so the same thing you take the 15
+
+207
+00:21:56,620 --> 00:22:05,660
+possible weights you treat them as different actions compute the different
+
+208
+00:22:05,660 --> 00:22:11,299
+weights for them compute the next states it will give you and then compute the
+
+209
+00:22:11,299 --> 00:22:16,740
+reward for it and store that reward and then you pick pick the best one that's
+
+210
+00:22:16,740 --> 00:22:18,299
+That's it.
+
+211
+00:22:18,299 --> 00:22:22,539
+So I'll put him on spot also, otherwise he'll start to run.
+
+212
+00:22:22,539 --> 00:22:24,740
+So what you could see now, you get the directions.
+
+213
+00:22:24,740 --> 00:22:27,180
+And in green, you get the one he picked
+
+214
+00:22:27,180 --> 00:22:29,339
+as being the best action he could choose.
+
+215
+00:22:29,339 --> 00:22:34,339
+And I can start to control and see if I can walk
+
+216
+00:22:34,339 --> 00:22:35,740
+in a specific direction.
+
+217
+00:22:35,740 --> 00:22:40,980
+It might see here, for instance, a stack in the 15 pose
+
+218
+00:22:40,980 --> 00:22:46,220
+that forces him to keep running and turning.
+
+219
+00:22:46,220 --> 00:22:49,860
+might be able to solve that at some point,
+
+220
+00:22:49,860 --> 00:22:52,740
+but it has the greedy algorithm.
+
+221
+00:22:52,740 --> 00:22:54,900
+Sometimes it can turn fairly quickly,
+
+222
+00:22:54,900 --> 00:22:59,299
+but it gets stuck and doesn't manage to leave that way.
+
+223
+00:22:59,299 --> 00:23:02,660
+It states, yeah, I managed to make it turn
+
+224
+00:23:02,660 --> 00:23:03,660
+in the opposite way.
+
+225
+00:23:03,660 --> 00:23:06,900
+So greedy algorithm kind of work,
+
+226
+00:23:06,900 --> 00:23:11,900
+but of course we know it's far from being the optimal way
+
+227
+00:23:12,259 --> 00:23:15,180
+of picking your next frame of animation.
+
+228
+00:23:15,180 --> 00:23:19,940
+So we need to be able to use value functions
+
+229
+00:23:19,940 --> 00:23:23,940
+and Bellman equation to go to the next system.
+
+230
+00:23:26,580 --> 00:23:29,519
+So we'll use the Markov decision process control.
+
+231
+00:23:30,740 --> 00:23:32,779
+And what we really have in this case,
+
+232
+00:23:34,980 --> 00:23:37,539
+here with the reinforcement learning part
+
+233
+00:23:37,539 --> 00:23:40,759
+is that we basically have,
+
+234
+00:23:40,759 --> 00:23:45,759
+We have a continuous state space,
+
+235
+00:23:46,960 --> 00:23:51,960
+because my character here can truly be in any position.
+
+236
+00:23:54,599 --> 00:23:56,680
+So that's a continuous state space.
+
+237
+00:23:57,879 --> 00:24:00,680
+And what we have is also,
+
+238
+00:24:00,680 --> 00:24:02,480
+because we are on that field,
+
+239
+00:24:02,480 --> 00:24:07,480
+we have a continuous value function also.
+
+240
+00:24:07,480 --> 00:24:23,160
+So, we need to find a way to store that value function and what we will be doing in this
+
+241
+00:24:23,160 --> 00:24:27,360
+case is using what we already have.
+
+242
+00:24:27,360 --> 00:24:29,839
+We already have the motion field.
+
+243
+00:24:29,839 --> 00:24:36,000
+So, basically, what happens is that we have, inside of that field, we have the states that
+
+244
+00:24:36,000 --> 00:24:42,160
+all the frames we know. And then we will compute the value functions for each of those states.
+
+245
+00:24:42,160 --> 00:24:49,599
+So we get the value functions per one value function per goal, of course. So that one will be
+
+246
+00:24:52,640 --> 00:24:57,200
+discretized, but we will blend them together, but it will be discretized in a number of buckets
+
+247
+00:24:57,200 --> 00:25:04,000
+for all the directions we want to cover, let's say. And then we will compute those values for
+
+248
+00:25:04,000 --> 00:25:18,519
+every state in our motion field and then when we want to request the value for
+
+249
+00:25:18,519 --> 00:25:23,119
+that motion field we will for the value functions we will also use the motion
+
+250
+00:25:23,119 --> 00:25:32,839
+field to returns a blended values so if you request that's what they've done
+
+251
+00:25:32,840 --> 00:25:44,440
+here. You get the next states, the three you have here maybe, and then you will ask the motion
+
+252
+00:25:44,440 --> 00:25:53,960
+field itself again to find all the closest value and then to blend them back to give you the value
+
+253
+00:25:53,960 --> 00:26:01,400
+functions again. And so it means that what we've done to find the closest pose and blend all the
+
+254
+00:26:01,400 --> 00:26:06,519
+values with a similarity weight will be reused to also compute the value functions itself.
+
+255
+00:26:07,800 --> 00:26:16,200
+The value functions we will query at a certain state. We'll find the 15 closest values to that one
+
+256
+00:26:17,480 --> 00:26:22,360
+and then we will use the similarity weights to blend all the values functions that we had
+
+257
+00:26:22,360 --> 00:26:32,760
+into one value functions. And for the training of that value function,
+
+258
+00:26:33,400 --> 00:26:42,280
+what we'll do is that we will do fit value iteration. Why? Because we only work on the
+
+259
+00:26:42,280 --> 00:26:49,960
+states we know. So what will happen is that we will compute the next states of every
+
+260
+00:26:49,960 --> 00:26:56,920
+states we have and that's it we'll stop there we don't do explorations and all
+
+261
+00:26:56,920 --> 00:27:02,039
+like I said like like we were doing in other papers before we pre-compute all
+
+262
+00:27:02,039 --> 00:27:08,200
+the states and all the next states and all the actions we can take and we
+
+263
+00:27:08,200 --> 00:27:12,240
+compute the score and then we iterate through that until we have the
+
+264
+00:27:12,240 --> 00:27:18,039
+value functions that converge so what I would do is that I will pre-compute
+
+265
+00:27:18,039 --> 00:27:30,559
+first for all of my states the the 15 actions they can pick and and where for
+
+266
+00:27:30,559 --> 00:27:34,720
+those 15 actions I will compute also what if what happened if I picked action
+
+267
+00:27:34,720 --> 00:27:39,079
+one action two action three action four and so on and I will compute the position
+
+268
+00:27:39,079 --> 00:27:46,319
+position positions where those 15 will be and from those I will compute the
+
+269
+00:27:46,319 --> 00:27:54,059
+15 closest states that can be used to compute the value functions so that's
+
+270
+00:27:54,059 --> 00:27:59,939
+why you pre-compute this is because for every for every action you pick now you
+
+271
+00:27:59,939 --> 00:28:07,819
+you take the 15 closest poses you blend towards those 15 poses and for those
+
+272
+00:28:07,819 --> 00:28:14,779
+15s you retake 15 times the closest values so we will pre-compute this to
+
+273
+00:28:14,779 --> 00:28:21,639
+win sometimes and I will even I will just store it because it takes me 10
+
+274
+00:28:21,639 --> 00:28:31,759
+minutes to compute all of those and now that I have all those states you know I
+
+275
+00:28:31,759 --> 00:28:39,359
+have to have everything from here to the next frame and all the stuff I can
+
+276
+00:28:39,360 --> 00:28:47,600
+blend, I can start to compute the value functions. And I would do it with PyTorch, because, you
+
+277
+00:28:47,600 --> 00:28:52,560
+know, everything is pre-computed, it's one big buffer, everything can be done in parallel.
+
+278
+00:28:52,560 --> 00:28:59,280
+So let's do that on the GPU, so I can win a lot of time there computing that value functions.
+
+279
+00:28:59,280 --> 00:29:05,920
+And how I would do this is basically, I have my value functions that just a bunch of zeros to
+
+280
+00:29:05,920 --> 00:29:19,519
+start with. I'll put to the on the GPU my deltas of how much each of my frames will rotate.
+
+281
+00:29:22,640 --> 00:29:31,360
+I get the indices of the next frame to look at the the value functions and I get the weights.
+
+282
+00:29:31,360 --> 00:29:43,000
+I can compute in one go the offset of orientations that would happen for all of my states at once.
+
+283
+00:29:43,000 --> 00:29:55,800
+Yeah, I have a bunch of walking animations and a bunch of jogging animations, so I just have a flag
+
+284
+00:29:55,799 --> 00:30:09,559
+to know if I'm walking or jogging. And then you compute what will be the next orientations
+
+285
+00:30:09,559 --> 00:30:17,559
+for all the states for each actions and for each offsets in which I wanted to look at.
+
+286
+00:30:17,559 --> 00:30:26,279
+E compute the rewards and basically the reward is the same as before as the negativity of the
+
+287
+00:30:26,279 --> 00:30:32,759
+absolute next orientation and I'm also adding a score depending if I'm walking or jogging
+
+288
+00:30:35,559 --> 00:30:41,000
+because I only want to have one value function that makes me walking and one value function
+
+289
+00:30:41,000 --> 00:30:50,839
+that will make me jog. And then basically that's where the blending happens. So
+
+290
+00:30:56,599 --> 00:31:04,279
+how to say, you get a 2D blending in this case. What happens is that you first you will blend
+
+291
+00:31:04,279 --> 00:31:11,879
+the 15 values, you have to blend them with the weights. And then the orientations in what you
+
+292
+00:31:11,879 --> 00:31:20,960
+want to work. I've said that I've split the values in X numbers. And then you will just say, okay,
+
+293
+00:31:20,960 --> 00:31:27,839
+if my value is here right in the middle, I just need to do a linear blend between those two values.
+
+294
+00:31:27,840 --> 00:31:35,320
+And so that's what this part is doing. It is checking where you're landing in the orientation
+
+295
+00:31:35,320 --> 00:31:45,080
+and you just give you the range of the two values you have to blend and which blend factor
+
+296
+00:31:45,080 --> 00:31:54,160
+you have to blend them. So that's what this is computing. All of that is pre-computed once
+
+297
+00:31:54,160 --> 00:32:01,840
+into one find a bunch of big buffers and then at every iterations now every epoch you basically
+
+298
+00:32:03,440 --> 00:32:10,960
+take all the the the next value functions you gather we're using all those indices all the
+
+299
+00:32:10,960 --> 00:32:17,759
+values together you blend them you compute the next one and then you get the usual value functions
+
+300
+00:32:17,759 --> 00:32:28,240
+you know your Q is the reward plus the expected next reward and your best value is the maximum
+
+301
+00:32:29,599 --> 00:32:35,119
+of all the possible functions you have. Then I compute the Bellman residual to see
+
+302
+00:32:36,799 --> 00:32:44,400
+how much the current value functions compare to the expected value functions is
+
+303
+00:32:44,400 --> 00:32:48,400
+And that's how you to see if you are actually converging.
+
+304
+00:32:48,400 --> 00:32:53,640
+And then when you finish, I put that back on the CPU and I compute that twice.
+
+305
+00:32:53,640 --> 00:32:55,240
+So I will have two value functions.
+
+306
+00:32:55,240 --> 00:32:59,120
+I got a value functions for the walking and one value function for the jogging.
+
+307
+00:32:59,120 --> 00:33:02,840
+So basically, that's what this score will be.
+
+308
+00:33:02,840 --> 00:33:10,160
+It will be, it will give you an advantage of walking when asked you to walk and an advantage
+
+309
+00:33:10,160 --> 00:33:14,280
+of jogging when asked you to jog.
+
+310
+00:33:14,279 --> 00:33:23,160
+compute those two so I get 308 epoch to try to get that stabilized and I get the gamma of 0.99
+
+311
+00:33:25,160 --> 00:33:37,960
+and we could see now the convergence of the on the jogging one so that's the amount of difference
+
+312
+00:33:37,960 --> 00:33:46,840
+I had in the value functions and the expected next values.
+
+313
+00:33:46,840 --> 00:33:53,920
+And so what you have now with this value function is basically that.
+
+314
+00:33:53,920 --> 00:33:58,799
+We could start to use it as we use it usually.
+
+315
+00:33:58,799 --> 00:34:03,120
+So what I have is I only have one button to decide if I want to use the value functions
+
+316
+00:34:03,120 --> 00:34:05,640
+for walking or the value functions for jogging.
+
+317
+00:34:05,640 --> 00:34:15,200
+I got the direction in which I want to walk I compute my 15 closest neighbors
+
+318
+00:34:15,200 --> 00:34:24,840
+again then for all of them I compute the next pose and what I would do is that I
+
+319
+00:34:24,840 --> 00:34:31,800
+will store the query inside of what I call a batch query because I will store
+
+320
+00:34:31,800 --> 00:34:42,600
+for the 15 of them, I will store the positions where that would lead me and I
+
+321
+00:34:42,600 --> 00:34:47,440
+will store the batch data prime also so how much basically score that will give
+
+322
+00:34:47,440 --> 00:34:56,039
+me and then I can re-request the next indices and next weights but for the
+
+323
+00:34:56,039 --> 00:35:03,599
+batch now. That's why I said it was useful in PyTorch to be able to say I want to query
+
+324
+00:35:03,599 --> 00:35:09,079
+the system for one query or I can query it for a batch of queries. This is what's allowed
+
+325
+00:35:09,079 --> 00:35:16,759
+me to query the 15 different positions at once. And once you have this, what I could
+
+326
+00:35:16,760 --> 00:35:27,720
+do now is compute the future reward for each of those 15 different poses and I get the future reward
+
+327
+00:35:29,320 --> 00:35:33,960
+and then I use that future reward to know which one of the value I want to use.
+
+328
+00:35:35,720 --> 00:35:42,760
+Then I also use the contact of my foot and I've been lazy in this one, I only checking if the
+
+329
+00:35:42,760 --> 00:35:48,360
+toes are in contact or not and if they are in contact I lock them in positions and if they're not
+
+330
+00:35:48,360 --> 00:36:00,040
+I'll let them go and blend them back to their default positions for the animation slowly
+
+331
+00:36:00,040 --> 00:36:05,080
+that's it and I don't know anything more fancy on the the foot contact and so on
+
+332
+00:36:05,079 --> 00:36:10,000
+And that gives you this, the motion field.
+
+333
+00:36:10,000 --> 00:36:12,519
+So I will not put them on spot this time.
+
+334
+00:36:13,519 --> 00:36:17,119
+Given some room and here we go.
+
+335
+00:36:17,119 --> 00:36:22,119
+Now to be honest, I had to cheat and slow down a lot
+
+336
+00:36:24,039 --> 00:36:29,039
+the rendering and to speed it up again in a post.
+
+337
+00:36:29,759 --> 00:36:32,900
+And that's only because I guess it's my PyTorch
+
+338
+00:36:32,900 --> 00:36:39,340
+PyTorch implementations, calling PyTorch twice a frame probably forces the entire system
+
+339
+00:36:39,340 --> 00:36:49,900
+to go to synchronize the CPU and GPU and drop my frame rates pretty badly.
+
+340
+00:36:49,900 --> 00:36:59,900
+So this is speeded up and that's only speeded up because of my PyTorch implementations.
+
+341
+00:36:59,900 --> 00:37:06,700
+was the motion field and as I said is one of my favorite paper always wanted to implement that one
+
+342
+00:37:06,700 --> 00:37:13,980
+finally had the chance to look at it which was really great I hope you liked it and see you next time

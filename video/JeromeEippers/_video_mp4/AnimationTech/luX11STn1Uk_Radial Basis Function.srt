@@ -1,0 +1,1135 @@
+1
+00:00:00,000 --> 00:00:06,160
+Hi today we'll be looking at the radial basis function. Basically what the radial basis function
+
+2
+00:00:06,160 --> 00:00:12,000
+is is a way to interpolate your data when you have sparse data and you want to have a smooth
+
+3
+00:00:12,000 --> 00:00:17,120
+interpretation between those. Let's see how it is done mathematically because it will be used
+
+4
+00:00:17,120 --> 00:00:24,560
+in several papers when we try to analyze them. So the first thing I will do is again import all
+
+5
+00:00:24,560 --> 00:00:26,360
+all the libraries I would need,
+
+6
+00:00:26,360 --> 00:00:30,640
+so I will be able to display what I'm doing.
+
+7
+00:00:30,640 --> 00:00:34,640
+And why do we call that radial basis functions?
+
+8
+00:00:34,640 --> 00:00:38,760
+It's basically because we have a function
+
+9
+00:00:38,760 --> 00:00:42,240
+that only depends on the distance between
+
+10
+00:00:42,240 --> 00:00:44,480
+the point I'm trying to interpolate
+
+11
+00:00:44,480 --> 00:00:47,040
+and all the points I have inside of my data.
+
+12
+00:00:47,040 --> 00:00:50,359
+So I will have examples, a bunch of examples,
+
+13
+00:00:50,359 --> 00:00:52,920
+and I try to interpolate in betweens.
+
+14
+00:00:52,920 --> 00:00:55,399
+And the only thing that I'm interested in
+
+15
+00:00:55,399 --> 00:00:59,000
+is the distance between the point I have
+
+16
+00:00:59,000 --> 00:01:02,920
+and all my examples to try to find the interpolated values.
+
+17
+00:01:02,920 --> 00:01:06,680
+So that's why we said that it's a radial functions.
+
+18
+00:01:07,840 --> 00:01:09,439
+And it's only depending on the distance.
+
+19
+00:01:09,439 --> 00:01:11,719
+So the points I'm looking at
+
+20
+00:01:13,159 --> 00:01:15,280
+compared to all the points I have.
+
+21
+00:01:16,320 --> 00:01:18,879
+And then we will go through a kernel.
+
+22
+00:01:18,879 --> 00:01:21,320
+So instead of just having the linear distance,
+
+23
+00:01:21,320 --> 00:01:25,160
+you could pass that through any type of function.
+
+24
+00:01:25,160 --> 00:01:26,560
+There is a lot of different kernels.
+
+25
+00:01:26,560 --> 00:01:31,560
+And one of the most used is the Gaussian kernel
+
+26
+00:01:31,560 --> 00:01:34,440
+that I would call phi in this case.
+
+27
+00:01:34,440 --> 00:01:40,640
+And the Gaussian is basically the exponential of minus epsilon
+
+28
+00:01:40,640 --> 00:01:43,560
+r squared r being the distance itself.
+
+29
+00:01:43,560 --> 00:01:49,440
+And epsilon is how much I want to make that bell curve short
+
+30
+00:01:49,440 --> 00:01:50,840
+or big.
+
+31
+00:01:50,840 --> 00:01:52,159
+Before going through all the maths,
+
+32
+00:01:52,159 --> 00:01:57,060
+I will just show you basically what I'm talking about.
+
+33
+00:01:57,060 --> 00:02:00,200
+So I get the Gaussian, so that's the ghost,
+
+34
+00:02:00,200 --> 00:02:03,980
+see the exponential functions as we have here.
+
+35
+00:02:03,980 --> 00:02:07,240
+And I will basically call one example function,
+
+36
+00:02:07,240 --> 00:02:09,800
+so I would know what are the functions
+
+37
+00:02:09,800 --> 00:02:14,800
+and I will just pick a few points around that function
+
+38
+00:02:16,120 --> 00:02:19,480
+and I will display the function.
+
+39
+00:02:19,479 --> 00:02:23,159
+So basically, what I have is this.
+
+40
+00:02:23,159 --> 00:02:25,799
+And I have a ground truth, and the ground truth
+
+41
+00:02:25,799 --> 00:02:29,120
+is my red dots.
+
+42
+00:02:29,120 --> 00:02:35,679
+And then I get a bunch of points that I have,
+
+43
+00:02:35,679 --> 00:02:36,879
+for which I have the values.
+
+44
+00:02:36,879 --> 00:02:41,039
+So that would be the points I would have truly measured
+
+45
+00:02:41,039 --> 00:02:43,319
+something in the real world.
+
+46
+00:02:43,319 --> 00:02:45,879
+And I need to be able to interpolate, basically,
+
+47
+00:02:45,879 --> 00:02:52,879
+to re-draw that red curve without knowing what was the function before, just by knowing
+
+48
+00:02:52,879 --> 00:02:54,319
+the points I have here.
+
+49
+00:02:54,319 --> 00:02:59,680
+So that's the point of the radial basis functions interpolations.
+
+50
+00:02:59,680 --> 00:03:04,800
+And how we will do this, as I said, it's going through the Gaussians.
+
+51
+00:03:04,800 --> 00:03:14,280
+Basically the function is here, so the function to find any x value will be the sum of all
+
+52
+00:03:14,280 --> 00:03:20,199
+the distances I will have between my points and all the examples I have multiplied by
+
+53
+00:03:20,199 --> 00:03:27,960
+weights. And then we'll have to do some stuff. So let's see what happens if I just try to
+
+54
+00:03:27,960 --> 00:03:35,360
+do that sum. So to represent what I have here, I've kept all the points that I had in my
+
+55
+00:03:35,360 --> 00:03:42,560
+function. So that's all the points I had here. I have all those points. And then I will draw
+
+56
+00:03:42,560 --> 00:03:47,560
+one Gaussian through each of the points so you can see that I get the blue one
+
+57
+00:03:47,560 --> 00:03:52,560
+right there it's at the bottom then the second one is that yellow and you get the
+
+58
+00:03:52,560 --> 00:03:56,840
+bell curve you know that goes here with the the correct points and then the
+
+59
+00:03:56,840 --> 00:04:01,680
+green one the red one and the purple one and what we do is that we sum all of
+
+60
+00:04:01,680 --> 00:04:07,480
+them to try to find the approximation the interpretation we want and if I
+
+61
+00:04:07,480 --> 00:04:12,400
+sum all of those of course what I have is this big function that's completely
+
+62
+00:04:12,400 --> 00:04:19,079
+over shooting what I'm trying to interpolate. And what I could do is I can change the Gaussian
+
+63
+00:04:19,079 --> 00:04:32,000
+curve itself to make it really a small bell curve. And so the approximation, the interpolation
+
+64
+00:04:32,000 --> 00:04:38,360
+here is closer, it doesn't add to be that big, but then you know that now we dip around
+
+65
+00:04:38,360 --> 00:04:44,280
+here we go down which is not what we want. So depending on the value of the Gaussian you have
+
+66
+00:04:44,920 --> 00:04:54,680
+you get an interpolation that is really smooth or really precise but tends to go down and not
+
+67
+00:04:54,680 --> 00:05:00,600
+working properly. So the purpose of the radial basis functions now is to actually
+
+68
+00:05:00,600 --> 00:05:08,280
+solve this, so the interpolation will go through all the points. And to do this, what
+
+69
+00:05:08,280 --> 00:05:14,680
+we have, that I haven't used yet, is to say that we had a weight that we could use for
+
+70
+00:05:14,680 --> 00:05:21,520
+each point. So basically, for the first point I have one weight, for the second point I
+
+71
+00:05:21,520 --> 00:05:25,320
+have a second weight, third weight, fourth weight and fifth weight. So I get a weight
+
+72
+00:05:25,319 --> 00:05:31,079
+for each of those so I can add them together but multiply them by the weights and now we
+
+73
+00:05:31,079 --> 00:05:36,399
+have to find the weights that make sure that we will go through all the points.
+
+74
+00:05:36,399 --> 00:05:43,879
+And how to do this, basically what we do is that we will turn this into a system of equation
+
+75
+00:05:43,879 --> 00:05:50,560
+because what we could say is that I know that for my first point, for instance, so if I
+
+76
+00:05:50,560 --> 00:05:57,800
+I go 0.1 minus 0.1, I know the value where it would be.
+
+77
+00:05:57,800 --> 00:05:59,879
+So I know that that would be the value 1.
+
+78
+00:05:59,879 --> 00:06:04,720
+And for my 0.2 minus 0.2, it has to be at the value of 0.2,
+
+79
+00:06:04,720 --> 00:06:05,720
+and so on and so on.
+
+80
+00:06:05,720 --> 00:06:16,879
+So I know what the weight should be for each of the points
+
+81
+00:06:16,879 --> 00:06:17,959
+that I know.
+
+82
+00:06:17,959 --> 00:06:19,879
+So basically what I would do is just this.
+
+83
+00:06:19,879 --> 00:06:24,199
+I will compute the distance between every point,
+
+84
+00:06:24,199 --> 00:06:29,920
+so between all the points i minus all the points j.
+
+85
+00:06:29,920 --> 00:06:34,040
+So basically, I do for every point,
+
+86
+00:06:34,040 --> 00:06:36,079
+I do the weights for every point.
+
+87
+00:06:36,079 --> 00:06:38,439
+And that gives me a system of equations.
+
+88
+00:06:38,439 --> 00:06:43,199
+So I get the first point minus the first point,
+
+89
+00:06:43,199 --> 00:06:45,839
+the first point minus the second point, and so on, and so on.
+
+90
+00:06:45,839 --> 00:06:49,120
+Multiply by the first weight, and so on, and so on.
+
+91
+00:06:49,120 --> 00:06:52,280
+That gives me my first value.
+
+92
+00:06:52,280 --> 00:06:55,040
+And that's the known values I have.
+
+93
+00:06:55,040 --> 00:06:57,759
+So because it's a system of equation,
+
+94
+00:06:57,759 --> 00:07:01,560
+now that it's actually a squared matrices here,
+
+95
+00:07:01,560 --> 00:07:03,079
+I can just solve this.
+
+96
+00:07:03,079 --> 00:07:06,759
+I can solve for w and I would know the w I want to use.
+
+97
+00:07:06,759 --> 00:07:09,600
+So let's see how we do this.
+
+98
+00:07:09,600 --> 00:07:11,800
+I will force my epsilon to be two.
+
+99
+00:07:11,800 --> 00:07:16,160
+So basically like this fairly smooth.
+
+100
+00:07:16,160 --> 00:07:22,640
+So I really force it to be two and then I compute my distance and as I said is
+
+101
+00:07:22,640 --> 00:07:28,440
+between each point and each point and the way I'm doing it is just subtracting
+
+102
+00:07:28,440 --> 00:07:34,720
+all the points but then I'm taking the advantage of the broadcast of NumPy to
+
+103
+00:07:34,720 --> 00:07:38,680
+make sure that it will build a big matrices with all the distance between
+
+104
+00:07:38,680 --> 00:07:40,639
+between all the points.
+
+105
+00:07:40,639 --> 00:07:44,280
+So compute all the distance,
+
+106
+00:07:44,280 --> 00:07:47,040
+and then I will just make those distances
+
+107
+00:07:47,040 --> 00:07:49,280
+go through my Gaussian functions
+
+108
+00:07:49,280 --> 00:07:51,680
+because that's the kernel I want to use,
+
+109
+00:07:51,680 --> 00:07:53,920
+and that will give me my phi.
+
+110
+00:07:53,920 --> 00:07:56,920
+So first is all the distance.
+
+111
+00:07:56,920 --> 00:08:00,199
+So of course you could see in the diagonal,
+
+112
+00:08:00,199 --> 00:08:02,759
+the distance is zero because that's the point one
+
+113
+00:08:02,759 --> 00:08:04,280
+with the point one, the point two with point two
+
+114
+00:08:04,280 --> 00:08:05,560
+and so on and so on.
+
+115
+00:08:05,560 --> 00:08:11,240
+And then it's a big symmetric matrix.
+
+116
+00:08:11,240 --> 00:08:15,040
+But basically, you get the distance between 0.1 and 2,
+
+117
+00:08:15,040 --> 00:08:17,879
+0.1 and 3, and so on and so on.
+
+118
+00:08:17,879 --> 00:08:19,920
+And then when I go through the Gaussian,
+
+119
+00:08:19,920 --> 00:08:25,240
+now what I have is the value when
+
+120
+00:08:25,240 --> 00:08:26,319
+I go through the Gaussians.
+
+121
+00:08:26,319 --> 00:08:28,040
+And now, of course, in diagonal, I
+
+122
+00:08:28,040 --> 00:08:32,440
+get 1's because at 0.1, I want to be at 0.1.
+
+123
+00:08:32,440 --> 00:08:34,240
+At 0.2, I want to be at 0.2.
+
+124
+00:08:34,240 --> 00:08:35,519
+At 0.3, I want to be at 0.3.
+
+125
+00:08:35,519 --> 00:08:46,919
+and so on and I get the different sums of all the weights I want to use and now as I
+
+126
+00:08:46,919 --> 00:08:59,240
+said I get so that's really here that's this matrix and now I can solve for my weights
+
+127
+00:08:59,240 --> 00:09:06,759
+if I solve my weights, that's the values of all my weights now. So that's the weights for each of my
+
+128
+00:09:07,560 --> 00:09:14,440
+points. So I can use the function we had. Remember just the sum of all the distances
+
+129
+00:09:14,440 --> 00:09:19,159
+multiplied by the weights. What I will do is that instead of writing this as a sum,
+
+130
+00:09:19,159 --> 00:09:26,039
+I will write this as a matrix multiplication. It's exactly the same stuff. I'm multiplying
+
+131
+00:09:26,039 --> 00:09:34,799
+my points minus 0.1 with the weight 1, my points minus 0.2 with the weight 2 and so on and so on.
+
+132
+00:09:34,799 --> 00:09:43,360
+And if I do this basically what I have is that I compute the distance now I will pick randomly
+
+133
+00:09:43,360 --> 00:09:53,120
+the value 0.5 so that's the on the x-axis I want to know the value of 0.5 so I can 0.5
+
+134
+00:09:53,120 --> 00:10:00,019
+minus all my all my points. I can make that go through the Gaussian and then I
+
+135
+00:10:00,019 --> 00:10:06,659
+can do the multiplication, the matrix multiplication to get the values I will
+
+136
+00:10:06,659 --> 00:10:14,279
+have. I haven't displayed it yet but so that's the value for the point zero five
+
+137
+00:10:14,279 --> 00:10:20,320
+and the reason why I wrote this as a matrix form and not as a sum, it's
+
+138
+00:10:20,320 --> 00:10:24,080
+It's because, as usual, inside of NumPy,
+
+139
+00:10:24,080 --> 00:10:26,240
+I can compute more than one thing at once.
+
+140
+00:10:26,240 --> 00:10:27,400
+So what I would do is that,
+
+141
+00:10:27,400 --> 00:10:30,480
+instead of computing only one values
+
+142
+00:10:30,480 --> 00:10:32,920
+and having only one row here,
+
+143
+00:10:32,920 --> 00:10:35,840
+I can have as many rows as I want
+
+144
+00:10:35,840 --> 00:10:38,980
+and that gives me as many answer as I want.
+
+145
+00:10:38,980 --> 00:10:41,080
+So what I could do is I could actually
+
+146
+00:10:43,120 --> 00:10:47,560
+compute the distance between all the points I want to do
+
+147
+00:10:47,560 --> 00:10:51,680
+to draw my curves at once and get all the values
+
+148
+00:10:51,680 --> 00:10:53,440
+and that's what I do here.
+
+149
+00:10:53,440 --> 00:10:56,840
+And now it's time for me to display this.
+
+150
+00:10:56,840 --> 00:11:01,840
+And what I will have is again the red is the ground truth
+
+151
+00:11:02,520 --> 00:11:05,840
+and the green is the interpolated value.
+
+152
+00:11:05,840 --> 00:11:08,600
+So you could see the interpolation is fairly close.
+
+153
+00:11:08,600 --> 00:11:12,400
+And one thing that we have with radial basis functions
+
+154
+00:11:12,400 --> 00:11:16,160
+by default is that it's really good at interpolation.
+
+155
+00:11:16,159 --> 00:11:18,039
+it's really bad at extrapolation
+
+156
+00:11:18,039 --> 00:11:21,439
+because it has no clue that it should be going up here.
+
+157
+00:11:21,439 --> 00:11:23,079
+There's no data for him to know
+
+158
+00:11:23,079 --> 00:11:25,299
+that it should be going up and so on.
+
+159
+00:11:26,539 --> 00:11:29,600
+So really good interpolation, really bad at extrapolation.
+
+160
+00:11:29,600 --> 00:11:32,360
+They could see, so then my green curve
+
+161
+00:11:32,360 --> 00:11:35,959
+and then the values I've computed for the 0.5 is just here.
+
+162
+00:11:35,959 --> 00:11:40,959
+It's right on the green curve, of course.
+
+163
+00:11:43,839 --> 00:11:45,799
+And that's basically what you do
+
+164
+00:11:45,800 --> 00:11:49,480
+When you hear about radial basis function interpolation,
+
+165
+00:11:49,480 --> 00:11:50,440
+that's it.
+
+166
+00:11:50,440 --> 00:11:52,640
+That's how you compute it.
+
+167
+00:11:52,640 --> 00:11:56,400
+Of course, your weights can be in multidimensional.
+
+168
+00:11:56,400 --> 00:12:01,000
+It doesn't need to be just, like in this case, one dimension.
+
+169
+00:12:01,000 --> 00:12:04,440
+But it's the same principle.
+
+170
+00:12:04,440 --> 00:12:07,800
+Another thing that I wanted to talk about
+
+171
+00:12:07,800 --> 00:12:11,080
+is the polynomial augmentation.
+
+172
+00:12:11,080 --> 00:12:16,080
+because sometime here I get something fairly smooth
+
+173
+00:12:17,440 --> 00:12:20,520
+and we could guess already just by seeing
+
+174
+00:12:20,520 --> 00:12:23,120
+where the curve would be.
+
+175
+00:12:23,120 --> 00:12:26,160
+So it's really good interpolating this kind of stuff.
+
+176
+00:12:26,160 --> 00:12:28,759
+But then I can easily find a function
+
+177
+00:12:28,759 --> 00:12:32,840
+that will not have a proper Gaussian
+
+178
+00:12:32,840 --> 00:12:36,879
+and radial basis function interpolation.
+
+179
+00:12:36,879 --> 00:12:41,879
+What I had is, I wrote a different example.
+
+180
+00:12:44,080 --> 00:12:48,679
+And I've picked a bunch of points on that functions.
+
+181
+00:12:48,679 --> 00:12:51,960
+And then what I've done is all the step we had before,
+
+182
+00:12:51,960 --> 00:12:55,679
+I computed the distance solve for my w's
+
+183
+00:12:55,679 --> 00:13:00,159
+and then try to interpolate using my weights.
+
+184
+00:13:00,159 --> 00:13:03,440
+And you could see that what I have is that red interpolation
+
+185
+00:13:03,440 --> 00:13:06,920
+and it just dips to zero.
+
+186
+00:13:06,920 --> 00:13:11,240
+There is no way for him to do the interpolation
+
+187
+00:13:11,240 --> 00:13:14,280
+because the data is way too sparse
+
+188
+00:13:14,280 --> 00:13:16,400
+and it's missing information, let's say,
+
+189
+00:13:16,400 --> 00:13:18,440
+to be able to do a proper interpolation.
+
+190
+00:13:20,440 --> 00:13:23,640
+What I can see visually here and I could guess,
+
+191
+00:13:23,640 --> 00:13:28,640
+and I actually mainly know because of the function I wrote,
+
+192
+00:13:28,680 --> 00:13:31,680
+is this is probably a quadratic.
+
+193
+00:13:31,680 --> 00:13:37,080
+And I can actually try to tell the interpolation
+
+194
+00:13:37,080 --> 00:13:40,040
+that on top of all my Gaussians, I
+
+195
+00:13:40,040 --> 00:13:41,880
+want him to make sure that he tries
+
+196
+00:13:41,880 --> 00:13:47,160
+to find a quadratic function to do that interpolation.
+
+197
+00:13:47,160 --> 00:13:50,640
+So that's what we could do, and we
+
+198
+00:13:50,640 --> 00:13:55,240
+could grow the system that we had before with just
+
+199
+00:13:55,240 --> 00:14:00,760
+the matrix of phi and weights.
+
+200
+00:14:00,759 --> 00:14:02,840
+Grow it with a bunch of constraints,
+
+201
+00:14:02,840 --> 00:14:07,480
+and those constraints will be tried to find a polynomial.
+
+202
+00:14:07,480 --> 00:14:09,200
+And to do this, what we do is that we
+
+203
+00:14:09,200 --> 00:14:12,120
+add a second term to the functions,
+
+204
+00:14:12,120 --> 00:14:13,799
+and the second term is to say that we
+
+205
+00:14:13,799 --> 00:14:19,399
+have a polynomial basis and a bunch of coefficients
+
+206
+00:14:19,399 --> 00:14:21,919
+for those polynomials.
+
+207
+00:14:21,919 --> 00:14:27,639
+Then I could choose the type of polynomial I'm trying to solve,
+
+208
+00:14:27,639 --> 00:14:30,439
+because what I can see here that it's probably
+
+209
+00:14:30,440 --> 00:14:35,080
+quadratic and I know it's a quadratic I will tell him as a constraint I want you
+
+210
+00:14:35,080 --> 00:14:42,400
+to find a quadratic polynomial so I will build a bunch of polynomial basis of
+
+211
+00:14:42,400 --> 00:14:48,280
+degree 2 which gives me this matrix so basically what it says it says that I
+
+212
+00:14:48,280 --> 00:14:55,640
+have a matrix with first row is always 1 and then I get the values for x and
+
+213
+00:14:55,639 --> 00:15:00,639
+and then I get the value for x squared so I will have minus 2 and then 4
+
+214
+00:15:00,639 --> 00:15:04,120
+then I do a second row it will be for x2
+
+215
+00:15:04,120 --> 00:15:07,439
+which is a bit bigger, I don't remember what the values are but
+
+216
+00:15:07,439 --> 00:15:12,799
+you see it will be also minus 150 and then
+
+217
+00:15:12,799 --> 00:15:17,360
+squared and so on and so on so you do it for as many degrees you have and for
+
+218
+00:15:17,360 --> 00:15:19,039
+all the x's you have
+
+219
+00:15:19,039 --> 00:15:22,679
+so basically what I have in my case is this P
+
+220
+00:15:22,680 --> 00:15:35,780
+I get, from all the points I had here, minus 2, minus 1.8, minus 1.7, 1.802, then it turns
+
+221
+00:15:35,780 --> 00:15:42,400
+into this matrix and then it's 1, minus 2, 4, 1, minus 1.8, 3, 24, and so on and so on.
+
+222
+00:15:42,400 --> 00:15:44,560
+So that's the P I would have.
+
+223
+00:15:44,560 --> 00:15:53,320
+Now how do you combine the phi and the polynomial?
+
+224
+00:15:53,320 --> 00:15:55,360
+You turn it into a matrix form that
+
+225
+00:15:55,360 --> 00:15:56,840
+contains all those constraints.
+
+226
+00:15:56,840 --> 00:15:58,800
+And how you do it is basically you
+
+227
+00:15:58,800 --> 00:16:03,480
+will make a matrix that is a bit bigger.
+
+228
+00:16:03,480 --> 00:16:07,560
+And at the top corner, you get the same matrix
+
+229
+00:16:07,560 --> 00:16:10,120
+as the one we had before.
+
+230
+00:16:10,120 --> 00:16:15,120
+Then next to it, we put all the matrix for the P's.
+
+231
+00:16:17,860 --> 00:16:20,740
+Under the other one, we put the transpose
+
+232
+00:16:20,740 --> 00:16:23,139
+of all the matrix for the P's,
+
+233
+00:16:23,139 --> 00:16:27,060
+and then everything else stays just a bunch of zeros.
+
+234
+00:16:27,060 --> 00:16:29,620
+So that matrix, it's written as a matrix,
+
+235
+00:16:29,620 --> 00:16:31,139
+but really this one is a matrix,
+
+236
+00:16:31,139 --> 00:16:32,620
+that one is a matrix and so on.
+
+237
+00:16:32,620 --> 00:16:35,940
+So you have to make in your head
+
+238
+00:16:35,940 --> 00:16:37,940
+that it's just a matrix that is bigger.
+
+239
+00:16:37,940 --> 00:16:46,940
+And then where we had just the weights, now we have the weights and then we have the coefficients we want to find for the polynomials.
+
+240
+00:16:46,940 --> 00:16:54,940
+So basically what it means, it means that for all of the values I have here, all the different values,
+
+241
+00:16:54,940 --> 00:17:01,940
+I will try to find for all the x and x, for all the ones, the x and the x squares,
+
+242
+00:17:01,940 --> 00:17:07,740
+I will try to find the same coefficients because they're the only ones, so I will need to find
+
+243
+00:17:07,740 --> 00:17:14,740
+the coefficients for all the different polynomials that make sure that this looks like a polynomial.
+
+244
+00:17:14,740 --> 00:17:21,259
+And on the solutions there, we have the f, so the values we know, and then under it a
+
+245
+00:17:21,259 --> 00:17:30,940
+bunch of zeros because basically we want to solve for a plus bx plus cx squared equals
+
+246
+00:17:30,940 --> 00:17:39,940
+zeroes. That's what you try to do. So we solve for the vector w and c. Let's do it this.
+
+247
+00:17:39,940 --> 00:17:46,940
+So I get my extended phi now. So basically see it the same. I started with the distance
+
+248
+00:17:46,940 --> 00:17:51,980
+and the Gaussian, and then I created a new matrix that is bigger with a much of zeroes
+
+249
+00:17:51,980 --> 00:18:00,940
+and I've just injected in the right corners the data for phi, p and p transpose.
+
+250
+00:18:01,660 --> 00:18:10,460
+And now I can do, I can solve the w's. So I get a bunch of w's here. And what you do is that if
+
+251
+00:18:10,460 --> 00:18:19,099
+I reuse that same concept now to interpolate, so for each values I want to look and also build
+
+252
+00:18:19,100 --> 00:18:24,780
+the extended phi and interpolates using the extended phi then I only take the values that
+
+253
+00:18:24,780 --> 00:18:31,180
+I'm interested no so not all the zeros I will have at the end only the the extended values
+
+254
+00:18:31,180 --> 00:18:38,460
+what I have is this interpolations and then if I render I get this so that's interpolations if it
+
+255
+00:18:38,460 --> 00:18:50,860
+find. So it did find a perfect polynomial to interpolate the points I have here.
+
+256
+00:18:53,579 --> 00:18:58,620
+That's in the theory, that's what I wanted to show you, how you do it before starting to
+
+257
+00:18:59,819 --> 00:19:05,500
+make things a bit more messy. Because what you've done here is basically
+
+258
+00:19:05,500 --> 00:19:14,980
+actually did a little. What happened is that I've created a perfect function, I've sampled
+
+259
+00:19:14,980 --> 00:19:21,900
+that function, and I gave that function to the system. What happened really if you check
+
+260
+00:19:21,900 --> 00:19:28,700
+the values that this one prints, it's a bit maybe abstract to read, but basically it was
+
+261
+00:19:28,700 --> 00:19:37,400
+the weights for all the different Gaussian and then actually you could see that they're
+
+262
+00:19:37,400 --> 00:19:45,200
+all zeros because they're all exponent minus 16 so basically they're all zeros and what
+
+263
+00:19:45,200 --> 00:20:07,559
+found for the coefficient of my polynomial is 0.7 minus 0.15 and 0.35, which are exactly
+
+264
+00:20:07,559 --> 00:20:12,700
+the values I have. Of course it had no choice to actually find the perfect value for it
+
+265
+00:20:12,700 --> 00:20:17,740
+because I gave him the perfect point so he had to find the polynomial because I gave him all the
+
+266
+00:20:17,740 --> 00:20:23,980
+information to find the polynomial and everything else all the Gaussian and all the radial basis
+
+267
+00:20:23,980 --> 00:20:29,660
+functions are useless for in this case so what I would do is that I would make sure that I actually
+
+268
+00:20:29,660 --> 00:20:37,980
+have a bit of noise in the data I will give him so it's not a perfect polynomial that I give him
+
+269
+00:20:37,980 --> 00:20:42,620
+and I don't ask him to solve for perfect polynomial so what I would do is that I would keep the same
+
+270
+00:20:42,620 --> 00:20:50,980
+axis sample all those axes and then I will make I will offset them to say
+
+271
+00:20:50,980 --> 00:20:57,220
+well I'm actually I'm not exactly looking at those values it's something a bit
+
+272
+00:20:57,220 --> 00:21:06,860
+random it's not exactly I've been a bit random here and probably look a bit
+
+273
+00:21:06,860 --> 00:21:12,420
+weird especially this one we'll see so now I have something a bit
+
+274
+00:21:12,420 --> 00:21:18,980
+different what I should have is of course my piece that is values I get my standard
+
+275
+00:21:19,620 --> 00:21:29,460
+and then I will get my weights now I could see that I do have actual weights for my radial basis
+
+276
+00:21:29,460 --> 00:21:36,500
+functions and I have weights for the polynomial that are not exactly or not at all the polynomial
+
+277
+00:21:36,500 --> 00:21:46,420
+had at the beginning. And if I do the interpolation, I will get something. That is still a radial
+
+278
+00:21:46,420 --> 00:21:53,539
+basis function with the added constraint that we kind of know that extrapolation is a polynomial,
+
+279
+00:21:53,539 --> 00:22:02,339
+a quadratic polynomial. I have a kind of a quadratic polynomial in the middle, so it doesn't
+
+280
+00:22:02,339 --> 00:22:11,299
+just drop with no reason. It has the polynomial as here and it did its best guess as what the
+
+281
+00:22:11,299 --> 00:22:18,500
+polynomial and the radial basis functions together should give me as a result for interpolations.
+
+282
+00:22:18,500 --> 00:22:27,859
+So that's what radial basis functions with extended polynomial is giving you. So I hope
+
+283
+00:22:27,860 --> 00:22:32,420
+you enjoyed this one and I'll see you next time when we will start to use
+
+284
+00:22:32,420 --> 00:22:37,700
+radial basis functions in animation papers. See ya!

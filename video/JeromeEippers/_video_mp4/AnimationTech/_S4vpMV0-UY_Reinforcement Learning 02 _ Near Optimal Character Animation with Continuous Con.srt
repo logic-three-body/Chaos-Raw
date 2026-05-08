@@ -1,0 +1,2127 @@
+1
+00:00:00,000 --> 00:00:05,600
+We continue the series about reinforcement learning in animation and last time we've
+
+2
+00:00:05,600 --> 00:00:10,320
+seen how we could have a discrete state space and a discrete value function.
+
+3
+00:00:10,320 --> 00:00:14,599
+This time we will see how we could have a continuous state space.
+
+4
+00:00:14,599 --> 00:00:20,440
+Hi, I'm Jerome and today's paper is the new optimal character animation with continuous
+
+5
+00:00:20,440 --> 00:00:23,920
+control, a paper from 2007.
+
+6
+00:00:23,920 --> 00:00:29,039
+As usual for that paper, what I would do is import all the libraries I need and then
+
+7
+00:00:29,039 --> 00:00:35,600
+Then I will import my character, I will import different measures that I will display, and
+
+8
+00:00:35,600 --> 00:00:37,399
+the targets and that kind of stuff.
+
+9
+00:00:37,399 --> 00:00:43,159
+And this time, it's a bit different instead of importing just an animation coming from
+
+10
+00:00:43,159 --> 00:00:44,159
+LaFanne.
+
+11
+00:00:44,159 --> 00:00:52,679
+I already pre-sliced the animation because the way this paper works, it expects to have
+
+12
+00:00:52,679 --> 00:00:56,799
+a bunch of clips of animations that are represented this way.
+
+13
+00:00:56,800 --> 00:01:03,040
+So you start at the crossing phase, then you get the contact, then you get the next crossing
+
+14
+00:01:03,040 --> 00:01:07,280
+and then the next contact and the last crossing.
+
+15
+00:01:07,280 --> 00:01:10,520
+And that is considered for them as one clip.
+
+16
+00:01:10,520 --> 00:01:18,359
+You get the clip in, it goes from the first crossing to the middle crossing, and then
+
+17
+00:01:18,359 --> 00:01:20,840
+the clip out is the other part.
+
+18
+00:01:20,840 --> 00:01:23,640
+So I will need to have that information.
+
+19
+00:01:23,640 --> 00:01:29,400
+So what I've done is that I've already picked a few animations that are needed and I've
+
+20
+00:01:29,400 --> 00:01:35,239
+already set up the proper timing of when is the crossing, when is the contact and all
+
+21
+00:01:35,239 --> 00:01:36,239
+that kind of stuff.
+
+22
+00:01:36,239 --> 00:01:42,439
+So for instance, I've loaded all of those and if I display the first animation I have,
+
+23
+00:01:42,439 --> 00:01:50,840
+it is this one and that's the animation I will be using and slicing as clips, but I've
+
+24
+00:01:50,840 --> 00:01:57,159
+already pre-processed all the informations of when those contacts happen, right?
+
+25
+00:01:57,159 --> 00:02:02,439
+So what I need to do is to build the motion model the same way as they've done it here,
+
+26
+00:02:02,439 --> 00:02:09,400
+really splitting the clips with knowing if it's the left foot starts, when is the contact and so on.
+
+27
+00:02:09,400 --> 00:02:15,319
+And so what I have is this, I get a bunch of clips, all the informations were already in,
+
+28
+00:02:15,319 --> 00:02:19,879
+so I know how many clips I have that start with the left foot, I know how many clips I have that
+
+29
+00:02:19,879 --> 00:02:21,319
+I start with the right foot.
+
+30
+00:02:21,319 --> 00:02:22,719
+That's all the clip count I have.
+
+31
+00:02:22,719 --> 00:02:25,840
+So I have 36 foot steps basically.
+
+32
+00:02:25,840 --> 00:02:30,719
+And I will compute that as being a set of animations,
+
+33
+00:02:30,719 --> 00:02:32,120
+a set of clips.
+
+34
+00:02:32,120 --> 00:02:35,719
+So I get the cut onion and positions for each of my clips
+
+35
+00:02:35,719 --> 00:02:37,060
+and the different timing.
+
+36
+00:02:38,400 --> 00:02:42,680
+And so I have as many clip count as I have,
+
+37
+00:02:42,680 --> 00:02:45,919
+as many frames I have, the bone counts
+
+38
+00:02:45,919 --> 00:02:47,639
+and the cut onions and so on and so on.
+
+39
+00:02:47,640 --> 00:02:52,640
+So now clip Q, clip P will be a bunch of clips animations.
+
+40
+00:02:52,760 --> 00:02:56,000
+And so this is recomputing the route
+
+41
+00:02:57,480 --> 00:03:02,200
+to realign every time all the clips to start at zero zero.
+
+42
+00:03:02,200 --> 00:03:04,720
+And that's the function to compute those clips.
+
+43
+00:03:04,720 --> 00:03:08,520
+So really just taking the ranges that I've decided
+
+44
+00:03:09,600 --> 00:03:11,520
+and cutting all the animations, copy pasting
+
+45
+00:03:11,520 --> 00:03:14,280
+and realigning everything every time.
+
+46
+00:03:14,280 --> 00:03:15,960
+And that's what I'm doing.
+
+47
+00:03:15,960 --> 00:03:20,120
+hey, I now have inside of all my clips and formations,
+
+48
+00:03:20,120 --> 00:03:21,480
+I get all the different clips,
+
+49
+00:03:21,480 --> 00:03:23,920
+all the different timings for each of those clips.
+
+50
+00:03:26,920 --> 00:03:30,040
+Now, what is interesting in this model
+
+51
+00:03:30,040 --> 00:03:33,939
+is that they decided to work without any IK,
+
+52
+00:03:33,939 --> 00:03:36,280
+any post-process, so they need to make sure
+
+53
+00:03:36,280 --> 00:03:38,819
+that when you blend the clips together,
+
+54
+00:03:39,719 --> 00:03:42,080
+you don't need to post-process with the IKs.
+
+55
+00:03:42,080 --> 00:03:45,080
+And the way they've done it is they decided to say,
+
+56
+00:03:45,080 --> 00:03:50,080
+Basically, every time you try to blend an animation,
+
+57
+00:03:50,719 --> 00:03:52,960
+so that's a clip here, the A is a clip,
+
+58
+00:03:52,960 --> 00:03:55,080
+so you get the A in, A out.
+
+59
+00:03:55,080 --> 00:03:57,280
+You will have the contact points,
+
+60
+00:03:57,280 --> 00:04:01,760
+so that's where we decide that we have the contact.
+
+61
+00:04:01,760 --> 00:04:04,720
+And you basically align the two clips,
+
+62
+00:04:04,720 --> 00:04:08,360
+the two clips together at that contact time.
+
+63
+00:04:08,360 --> 00:04:09,840
+So that's what you do here.
+
+64
+00:04:09,840 --> 00:04:13,200
+If I need to blend between clip A to clip B,
+
+65
+00:04:13,200 --> 00:04:19,759
+First thing you do is that you move clip B so the foot that is in contact would not move
+
+66
+00:04:19,759 --> 00:04:24,879
+and you realign the entire animations relative to that. So every time you will blend basically
+
+67
+00:04:24,879 --> 00:04:31,200
+you're sure that the foot that is in contact with the ground would not slide because you moved the
+
+68
+00:04:31,200 --> 00:04:38,640
+entire animation relative to the contact positions. So what I would do is that I will compute all those
+
+69
+00:04:38,639 --> 00:04:44,000
+contact position depending on the timing so I know in my timings when is the contact and I
+
+70
+00:04:44,000 --> 00:04:50,000
+compute the positions of my foot every time I have a contact so that's what I'm doing here in
+
+71
+00:04:50,000 --> 00:04:56,560
+this function. The way I do it is I take the the ankle and the toe and I project that on the ground
+
+72
+00:04:56,560 --> 00:05:02,399
+and that represents the orientation of the position, the orientation of the foot and how I would want
+
+73
+00:05:02,400 --> 00:05:09,920
+to align everything together. So now if I want to display all the different clips I have, I can see
+
+74
+00:05:12,320 --> 00:05:17,600
+the different contact positions and I see the the clip motions that I have
+
+75
+00:05:17,600 --> 00:05:23,040
+and when I pass the animation I don't have any more animation. So that represents one clip
+
+76
+00:05:23,040 --> 00:05:29,280
+and I can go and then can pick any other clips. That's another steps. Let's see if I get something
+
+77
+00:05:29,280 --> 00:05:33,200
+a bit different. One other steps and all that kind of stuff.
+
+78
+00:05:36,240 --> 00:05:41,600
+And I get every time the contact with the two feet and so I will be able to blend that properly.
+
+79
+00:05:42,240 --> 00:05:49,040
+So what we do is that we see how we could actually blend the animations together and see how it
+
+80
+00:05:49,040 --> 00:05:55,760
+works. So what I have is I have a player again that's allowed me to keep playing animations
+
+81
+00:05:55,759 --> 00:06:02,639
+depending on the states I'm in and a clip itself is this information he knows the the clip idea I
+
+82
+00:06:02,639 --> 00:06:10,639
+have, he knows which frame I'm actually playing and then he will also know when I need to start
+
+83
+00:06:10,639 --> 00:06:18,959
+playing because if you see here for instance when I need to go from B to C because of the contact
+
+84
+00:06:18,959 --> 00:06:24,719
+happening only at the end only blend during this timing and that's me that I will only start to
+
+85
+00:06:24,720 --> 00:06:29,320
+to blend coming from this animation, this frame in, out.
+
+86
+00:06:29,320 --> 00:06:31,980
+But I might also,
+
+87
+00:06:31,980 --> 00:06:35,200
+is that an example why you don't start at the beginning?
+
+88
+00:06:35,200 --> 00:06:37,680
+But you might also not start at the beginning of in,
+
+89
+00:06:37,680 --> 00:06:39,880
+depending on how you align everything.
+
+90
+00:06:39,880 --> 00:06:44,320
+So that's struck me when I need to start
+
+91
+00:06:44,320 --> 00:06:45,540
+to play my animations.
+
+92
+00:06:48,720 --> 00:06:49,760
+I start to blend.
+
+93
+00:06:49,760 --> 00:06:51,480
+That's tell me when I need to start
+
+94
+00:06:51,480 --> 00:06:53,080
+to play the current animations.
+
+95
+00:06:53,079 --> 00:06:56,120
+that says how many time or how long is the blend.
+
+96
+00:06:56,120 --> 00:06:58,759
+So all of that is computed when I said,
+
+97
+00:06:58,759 --> 00:07:01,560
+I have a clip and I want you to align to another clip.
+
+98
+00:07:01,560 --> 00:07:04,680
+That's the align function, what it's doing.
+
+99
+00:07:04,680 --> 00:07:07,479
+And then I get the tick to say play one frame.
+
+100
+00:07:07,479 --> 00:07:10,959
+And the player itself will always have one current clip
+
+101
+00:07:10,959 --> 00:07:13,279
+that it's playing and he will have the informations
+
+102
+00:07:13,279 --> 00:07:15,560
+of the next clip that he wants to play.
+
+103
+00:07:15,560 --> 00:07:17,560
+He will make sure that he aligns them
+
+104
+00:07:17,560 --> 00:07:21,279
+and then check if it needs to play
+
+105
+00:07:21,280 --> 00:07:23,520
+or if it needs to blend and that kind of stuff.
+
+106
+00:07:23,520 --> 00:07:25,480
+So that's what the player would do.
+
+107
+00:07:25,480 --> 00:07:29,160
+When it ticks, it ticks both and do the blending
+
+108
+00:07:29,160 --> 00:07:31,160
+and everything that I need to do.
+
+109
+00:07:31,160 --> 00:07:36,160
+So if I put that in use, what I will have is this.
+
+110
+00:07:36,760 --> 00:07:39,960
+So I get the red skeleton is the current clip.
+
+111
+00:07:39,960 --> 00:07:43,480
+The green skeleton is what I will play after
+
+112
+00:07:43,480 --> 00:07:46,820
+and I could let it play basically anything.
+
+113
+00:07:46,820 --> 00:07:50,200
+So what I'm doing now is I just pick randomly
+
+114
+00:07:50,199 --> 00:07:55,199
+any clip to play, each choose,
+
+115
+00:07:55,459 --> 00:07:58,560
+which was the next clip to play.
+
+116
+00:07:58,560 --> 00:08:01,079
+You could see that you can always blend.
+
+117
+00:08:01,079 --> 00:08:03,959
+So some blends are terrible,
+
+118
+00:08:03,959 --> 00:08:05,599
+some blends are fairly good,
+
+119
+00:08:05,599 --> 00:08:09,279
+depending on how lucky you are when you pick your next clip.
+
+120
+00:08:09,279 --> 00:08:14,279
+But that's how the animations is perfectly able to blend.
+
+121
+00:08:15,279 --> 00:08:16,579
+Let's restart it.
+
+122
+00:08:17,599 --> 00:08:18,919
+Blend all those animations
+
+123
+00:08:18,920 --> 00:08:24,319
+and make sure that your foot is never sliding.
+
+124
+00:08:24,319 --> 00:08:28,560
+You don't need any post-IK solver or anything.
+
+125
+00:08:28,560 --> 00:08:31,920
+This is just playing animations and blending them together.
+
+126
+00:08:36,360 --> 00:08:40,000
+Now, we've seen how basically that's
+
+127
+00:08:40,000 --> 00:08:44,879
+how the motion database is done.
+
+128
+00:08:44,879 --> 00:08:46,639
+So it's a bunch of clips you could play.
+
+129
+00:08:46,639 --> 00:08:48,159
+You could connect those clips together.
+
+130
+00:08:48,159 --> 00:08:50,319
+you can blend them and it works properly.
+
+131
+00:08:50,319 --> 00:08:54,120
+Now we do need to decide how we want to control this
+
+132
+00:08:54,120 --> 00:08:58,919
+and how we will be able to interact with the character,
+
+133
+00:08:58,919 --> 00:09:01,079
+not picking any stuff randomly.
+
+134
+00:09:02,959 --> 00:09:07,959
+And so in the control part,
+
+135
+00:09:07,959 --> 00:09:12,959
+what we have, they have really big state space
+
+136
+00:09:14,079 --> 00:09:16,879
+with a lot of different values and that kind of stuff.
+
+137
+00:09:16,879 --> 00:09:22,559
+But basically what they say in the paper is that they regrouped everything here in the paper,
+
+138
+00:09:22,559 --> 00:09:29,759
+but they've never treated the state space as being that massive thing that can do everything.
+
+139
+00:09:29,759 --> 00:09:36,240
+They've just learned different controllers on different parts of the state space and that kind of stuff.
+
+140
+00:09:36,240 --> 00:09:37,960
+So that's what I would do also.
+
+141
+00:09:37,960 --> 00:09:44,720
+I would simplify the paper and treat only one case and work from there.
+
+142
+00:09:44,720 --> 00:09:50,720
+And the first thing I would do is because if I jump a bit in advance,
+
+143
+00:09:53,279 --> 00:10:00,399
+the traditional thing that you will have to make sure that is trying to see if the next animations
+
+144
+00:10:00,399 --> 00:10:08,560
+you want to play is coherent physically. So is the animation close together? Is the velocity
+
+145
+00:10:08,560 --> 00:10:14,480
+close? And that will be the cost of what they call the physics cost that you could see here.
+
+146
+00:10:14,720 --> 00:10:24,720
+So, that's the physics cost is how much, well, is how good is the transition going from clip A to clip B, is it good or bad.
+
+147
+00:10:24,720 --> 00:10:32,720
+So, that we could pre-compute because computing in every time will be losing resources.
+
+148
+00:10:32,720 --> 00:10:41,720
+What we could do is just compute in advance the cost of that transition for every possible transitions we can have.
+
+149
+00:10:41,720 --> 00:10:49,960
+have. So this is what I will compute here. Basically what I'm doing is I'm taking one clip,
+
+150
+00:10:52,120 --> 00:10:55,639
+I'm taking one clip, I realign that clip to when the contact happens,
+
+151
+00:10:56,519 --> 00:11:03,720
+and then I go through all the other clips and align all the other clips. And when I do this,
+
+152
+00:11:03,720 --> 00:11:10,680
+then I will start to compute the distances between every bones for all the frame during the blending.
+
+153
+00:11:10,680 --> 00:11:19,880
+So let's give me basically the cost, how close both clips are in the trajectories for every bones
+
+154
+00:11:19,880 --> 00:11:28,040
+during all the blends. So I pre-compute that cost and so that's what the physics cost will be
+
+155
+00:11:28,040 --> 00:11:35,880
+here and that's the interesting stuff to compute for the physics cost.
+
+156
+00:11:35,879 --> 00:11:41,879
+And I will let it pre-compute all of those informations for me.
+
+157
+00:11:41,879 --> 00:11:45,879
+It does it for the 36 clips with all the 36 possibilities.
+
+158
+00:11:45,879 --> 00:11:52,879
+And I will start to also pre-compute a bunch of other informations that are interesting in my case.
+
+159
+00:11:52,879 --> 00:12:00,879
+And it's to pre-compute what will be the next states as soon as I take one of the transitions.
+
+160
+00:12:00,879 --> 00:12:08,360
+So if you look at the control, what you could see is that you get the function from being
+
+161
+00:12:08,360 --> 00:12:18,059
+in one specific state and going into a different clips and how you do compute the new states.
+
+162
+00:12:18,059 --> 00:12:20,019
+So what is the states?
+
+163
+00:12:20,019 --> 00:12:24,360
+I will not go through all of those variables in my case.
+
+164
+00:12:24,360 --> 00:12:28,759
+I would only learn the one that I'm interested in.
+
+165
+00:12:28,759 --> 00:12:32,460
+And C basically is the clip I'm playing.
+
+166
+00:12:34,080 --> 00:12:38,460
+X and Z are the position of my character
+
+167
+00:12:38,460 --> 00:12:40,879
+on the ground plane.
+
+168
+00:12:40,879 --> 00:12:43,759
+And theta is the orientation of my character
+
+169
+00:12:43,759 --> 00:12:44,960
+on the ground plane.
+
+170
+00:12:44,960 --> 00:12:47,200
+And I will basically only work with those one.
+
+171
+00:12:47,200 --> 00:12:51,800
+And that will represent a state space for me.
+
+172
+00:12:51,800 --> 00:12:53,080
+That represents one state.
+
+173
+00:12:53,080 --> 00:12:56,400
+So the clip, the X position, the Z positions,
+
+174
+00:12:56,400 --> 00:12:58,200
+and the theta orientation.
+
+175
+00:12:58,200 --> 00:12:59,520
+That represents a state.
+
+176
+00:13:00,480 --> 00:13:03,920
+And then if you try to do a transition between X
+
+177
+00:13:03,920 --> 00:13:05,960
+and going to a different clip,
+
+178
+00:13:05,960 --> 00:13:07,920
+this is the formula that give you
+
+179
+00:13:07,920 --> 00:13:12,920
+to find the new states that will be,
+
+180
+00:13:14,120 --> 00:13:16,320
+so X prime will be the new states.
+
+181
+00:13:16,320 --> 00:13:19,879
+And the new states will be the new clip, C prime.
+
+182
+00:13:19,879 --> 00:13:22,879
+And then there will be X plus the cosine of theta
+
+183
+00:13:22,879 --> 00:13:27,460
+of delta x, delta minus sin theta of delta z.
+
+184
+00:13:27,460 --> 00:13:32,460
+And how do you compute delta x and delta z and delta theta?
+
+185
+00:13:34,019 --> 00:13:35,939
+It is the blending algorithm
+
+186
+00:13:35,939 --> 00:13:37,340
+that gives you that information.
+
+187
+00:13:37,340 --> 00:13:42,220
+So basically, all the stuff that compute
+
+188
+00:13:42,220 --> 00:13:45,939
+when I do clip A and align to clip B
+
+189
+00:13:45,939 --> 00:13:50,940
+and detect how much time I have to blend,
+
+190
+00:13:50,940 --> 00:13:53,860
+where is the contact and all that kind of stuff.
+
+191
+00:13:53,860 --> 00:13:57,820
+That's what gives me the delta x, the delta z
+
+192
+00:13:57,820 --> 00:13:59,860
+and the delta delta theta.
+
+193
+00:14:01,180 --> 00:14:03,780
+It's really depending on each clip
+
+194
+00:14:03,780 --> 00:14:05,900
+and how you blend the clips together.
+
+195
+00:14:05,900 --> 00:14:08,700
+So I can, at the same times,
+
+196
+00:14:08,700 --> 00:14:12,420
+I'm aligning everything to compute the physics cost.
+
+197
+00:14:12,420 --> 00:14:16,280
+I can use that information to compute the delta x
+
+198
+00:14:16,280 --> 00:14:20,100
+or much because I've realigned clip A
+
+199
+00:14:20,100 --> 00:14:25,100
+and then I could check where clip B arrive in X, Z, and theta.
+
+200
+00:14:25,860 --> 00:14:30,180
+And so I pre-compute delta X, delta Z, and delta theta.
+
+201
+00:14:30,180 --> 00:14:32,779
+So I have all the information I can use.
+
+202
+00:14:32,779 --> 00:14:35,899
+I get all the deltas, I get the physics costs.
+
+203
+00:14:35,899 --> 00:14:40,899
+I can start to check and work with all the clips.
+
+204
+00:14:42,139 --> 00:14:47,139
+Now, I would divide the physics costs by the mean.
+
+205
+00:14:47,139 --> 00:14:53,299
+by the mean. So I get something, I don't get massive numbers, I get something that stays
+
+206
+00:14:53,299 --> 00:15:00,899
+between zero and two, three depending. So it's all normalizing the physics costs.
+
+207
+00:15:00,899 --> 00:15:08,419
+And the last thing I would do, I would say that I know that I have a bunch of clips that
+
+208
+00:15:08,419 --> 00:15:11,740
+start with the left foot first, and I have a bunch of clips that start with the right
+
+209
+00:15:11,740 --> 00:15:18,779
+foot first and basically I make sure that the the cost of playing the wrong foot is extremely high
+
+210
+00:15:18,779 --> 00:15:27,740
+basically just making sure that I would never try to play a clip on the wrong foot and that's how
+
+211
+00:15:27,740 --> 00:15:37,419
+I'm doing it here it's just I make a really big cost of going into the wrong clip. The paper was
+
+212
+00:15:37,420 --> 00:15:43,660
+doing something different the paper was basically saying that every clips could blend with every clips
+
+213
+00:15:44,220 --> 00:15:50,300
+and if it's a clip with the left foot that want to play and blend toward another clip left foot
+
+214
+00:15:50,300 --> 00:16:00,300
+they were mirroring the clip. But I didn't want to make the video too complex because you need
+
+215
+00:16:00,300 --> 00:16:06,300
+to track which foot is in front. There is a lot of mathematics at the end where you will start to
+
+216
+00:16:06,300 --> 00:16:08,980
+You need to flip all the mathematics
+
+217
+00:16:08,980 --> 00:16:10,980
+because you are on the mirror and animations,
+
+218
+00:16:10,980 --> 00:16:12,180
+that kind of stuff.
+
+219
+00:16:12,180 --> 00:16:15,220
+And it was easy in my case to just say,
+
+220
+00:16:15,220 --> 00:16:16,900
+don't deal with the mirroring,
+
+221
+00:16:16,900 --> 00:16:19,380
+just make sure that we will never play the wrong animation.
+
+222
+00:16:19,380 --> 00:16:22,420
+So that's what I've decided to do here.
+
+223
+00:16:22,420 --> 00:16:25,660
+Just make sure that you don't go into the wrong clip.
+
+224
+00:16:27,220 --> 00:16:29,140
+So I've computed all the physics costs,
+
+225
+00:16:29,140 --> 00:16:31,540
+I've computed all my deltas.
+
+226
+00:16:31,540 --> 00:16:33,780
+I can now show what happens
+
+227
+00:16:36,300 --> 00:16:44,300
+If I just let the system always play the least expensive physics cost.
+
+228
+00:16:44,300 --> 00:16:52,300
+So now it will always play the animations and pick the minimum costs for physics.
+
+229
+00:16:52,300 --> 00:16:56,300
+And you could see now you get something fairly smooth.
+
+230
+00:16:57,300 --> 00:17:05,300
+So that's the optimal trajectory that the system can take by just checking the physics cost between all the clips.
+
+231
+00:17:06,299 --> 00:17:17,379
+And I do this just by saying that the next clip will be the minimum of the physics cost,
+
+232
+00:17:17,379 --> 00:17:21,180
+the one that has the least value.
+
+233
+00:17:21,180 --> 00:17:31,299
+Okay, so we know how to blend the animations, we have the physics cost and all the deltas,
+
+234
+00:17:31,299 --> 00:17:38,819
+we could start to play with all those real states and start to control them. So the transition
+
+235
+00:17:38,819 --> 00:17:49,379
+function which is this one in my case would be a bit different just because in the paper they've
+
+236
+00:17:49,379 --> 00:17:56,980
+took as a convention that the character when you try to put it on the path like this
+
+237
+00:17:56,980 --> 00:18:07,220
+They put the character as to say that they will be aligned toward x and it will walk
+
+238
+00:18:07,220 --> 00:18:16,140
+along the x-axis and in my case I'm used to work along z so my character is looking toward
+
+239
+00:18:16,140 --> 00:18:23,660
+the z-axis and is working along the z-axis so I had to switch a bunch of stuff to turn
+
+240
+00:18:23,660 --> 00:18:30,759
+all the mathematics to to move along z and not along x and so my formulas are
+
+241
+00:18:30,759 --> 00:18:36,279
+here this is how I compute so the same thing except I've changed a bunch of
+
+242
+00:18:36,279 --> 00:18:40,720
+stuff and so that's my transition function so what I have is I got my clip
+
+243
+00:18:40,720 --> 00:18:49,200
+ID I get x z and theta so clip ID x z theta that's my state that's x in the
+
+244
+00:18:49,200 --> 00:18:57,120
+formula here. That's x in the formula here. And the next clip ID is c prime. And that will return
+
+245
+00:18:58,000 --> 00:19:04,240
+the x prime. So it returned the next clip ID as x prime, z prime, and theta prime,
+
+246
+00:19:05,519 --> 00:19:14,160
+returning me the new state. How is the state represented? Basically, the character I would
+
+247
+00:19:14,160 --> 00:19:22,320
+always want it to walk along the z-axis. So a state is always represented relative to the
+
+248
+00:19:22,320 --> 00:19:29,519
+desired path I want to do. You can see that we never define the desired path in the informations.
+
+249
+00:19:29,519 --> 00:19:36,000
+The only thing we define is where my character is. It could be placed anywhere on the plane,
+
+250
+00:19:36,560 --> 00:19:41,920
+but that plane aims in the direction I want to walk. And basically
+
+251
+00:19:44,160 --> 00:19:54,160
+The theta represents how much your character is rotated relative to the desired path, so that's the theta.
+
+252
+00:19:54,160 --> 00:20:03,160
+And then your x and z is how offset you are compared to the center of that plane, basically.
+
+253
+00:20:06,160 --> 00:20:10,160
+And that's the state space, that's how it is represented in this case, right?
+
+254
+00:20:10,160 --> 00:20:16,240
+right? So I get my transitions to be able to transition. And now what I want to do is that I
+
+255
+00:20:16,240 --> 00:20:27,840
+will want to use, as a first pass, the simple policy I could have is to go through greedy policy.
+
+256
+00:20:27,840 --> 00:20:31,360
+And so what I will have is that I will have a direction cost. So
+
+257
+00:20:31,360 --> 00:20:36,360
+So how good am I walking in the direction I wanted?
+
+258
+00:20:39,640 --> 00:20:44,120
+And basically what we say is we know that we've,
+
+259
+00:20:44,120 --> 00:20:48,920
+we say that we always want to walk forward
+
+260
+00:20:48,920 --> 00:20:50,800
+and then we align everything relative
+
+261
+00:20:50,800 --> 00:20:52,800
+to where that forward is.
+
+262
+00:20:52,800 --> 00:20:54,400
+So what the direction cost will be
+
+263
+00:20:54,400 --> 00:20:58,480
+is that I'll take my X and Z.
+
+264
+00:21:01,360 --> 00:21:10,280
+which is my current positions, my x' z' that will be my future positions and
+
+265
+00:21:10,280 --> 00:21:13,720
+the only thing I make sure that I make sure that the motion itself, so that's
+
+266
+00:21:13,720 --> 00:21:21,440
+what you have going from here to here, the direction of the motion has to be
+
+267
+00:21:21,440 --> 00:21:26,640
+basically zero, the angle of that and that of that direction has to be aligned
+
+268
+00:21:26,640 --> 00:21:33,840
+to my z-axis, I want it to walk forward. That's what the direction cost is about.
+
+269
+00:21:33,840 --> 00:21:40,100
+What I would do is that because I would have animations that have a small step,
+
+270
+00:21:40,100 --> 00:21:49,200
+bigger steps, I'm also making sure that even if my motion is in the right
+
+271
+00:21:49,200 --> 00:21:56,360
+direction, I want to make sure that at least it does a step in the
+
+272
+00:21:56,360 --> 00:22:01,880
+right direction. So that's what I'm doing here. I check the z prime where I will be
+
+273
+00:22:03,320 --> 00:22:08,920
+and if that doesn't make me at least 10 centimeters steps, I multiply my cost by 3.
+
+274
+00:22:09,720 --> 00:22:14,280
+It's just to avoid that sometimes I will have really really really small steps but I'll
+
+275
+00:22:14,280 --> 00:22:19,160
+perfectly align. I will pick that one and say I will have something that start to work and then
+
+276
+00:22:19,160 --> 00:22:25,240
+make a really small steps. So that's where I would want the cost to be bigger. Say now I want
+
+277
+00:22:25,240 --> 00:22:30,440
+you to make sure that you move forward, not only that you make a really small step forward.
+
+278
+00:22:31,720 --> 00:22:37,000
+And what is the greedy policy? It just takes your states.
+
+279
+00:22:39,880 --> 00:22:46,279
+And what I would do is that I compute the transitions for all the possible different
+
+280
+00:22:48,120 --> 00:22:54,680
+transitions you could take. And from there, you start to compute, you try to find which
+
+281
+00:22:54,680 --> 00:23:02,360
+one has the least cost in total. And the different costs will be what we have here. You get the state
+
+282
+00:23:02,360 --> 00:23:11,320
+costs and you get the transition cost. The state cost, in my case, I would not use the second part.
+
+283
+00:23:11,320 --> 00:23:17,400
+I would only use the first part, which is the derivation. I want to make sure that I'm not in
+
+284
+00:23:17,400 --> 00:23:23,840
+in a state that deviates from where I would want to go.
+
+285
+00:23:23,840 --> 00:23:26,640
+So not only I want you to walk in the right directions,
+
+286
+00:23:26,640 --> 00:23:32,160
+but being offset, walking null in the right direction
+
+287
+00:23:32,160 --> 00:23:33,759
+will give you a penalty.
+
+288
+00:23:33,759 --> 00:23:37,040
+So that's what the deviation would give you.
+
+289
+00:23:37,040 --> 00:23:40,920
+It says, if you start to deviate from the trajectory,
+
+290
+00:23:40,920 --> 00:23:42,759
+your costs start to grow.
+
+291
+00:23:42,759 --> 00:23:47,040
+And that depends on how far you went.
+
+292
+00:23:47,039 --> 00:23:49,799
+You get the physics cost, so that's the one we pre-computed.
+
+293
+00:23:49,799 --> 00:23:52,839
+How well is the transition doing?
+
+294
+00:23:52,839 --> 00:23:54,359
+And then you get the direction cost,
+
+295
+00:23:54,359 --> 00:23:58,240
+is how good am I walking in the directions
+
+296
+00:23:58,240 --> 00:24:00,200
+I want you to walk.
+
+297
+00:24:00,200 --> 00:24:02,200
+And then you sum all of those costs,
+
+298
+00:24:02,200 --> 00:24:04,519
+and you pick the minimum cost possible.
+
+299
+00:24:04,519 --> 00:24:09,519
+So let's do the direction green.
+
+300
+00:24:10,960 --> 00:24:13,399
+Then I can take my gamepad.
+
+301
+00:24:13,400 --> 00:24:29,160
+And now I have this character, so the yellow arrow is where I ask the system to walk.
+
+302
+00:24:29,160 --> 00:24:35,080
+And so the greedy algorithm will just always check for the next clip and only for one clip.
+
+303
+00:24:35,080 --> 00:24:40,200
+It's like we had in a previous video, when you go for the greedy algorithm, you picked
+
+304
+00:24:40,200 --> 00:24:49,480
+only the what gives you the smallest error possible without taking the future into account.
+
+305
+00:24:50,680 --> 00:24:57,319
+And so it's not too bad but see there it just flipped and that's because
+
+306
+00:24:58,279 --> 00:25:02,840
+the physics cost probably I have a bunch of flipping animations that says the
+
+307
+00:25:02,839 --> 00:25:10,079
+the physics cost of not doing the full flip will be too high and so as soon as it starts
+
+308
+00:25:10,079 --> 00:25:17,480
+unfortunately to put the foot down into the flipping animations it has to keep doing the
+
+309
+00:25:17,480 --> 00:25:24,480
+flip and that's where I have in this case the Greedy Agony makes really bad choices
+
+310
+00:25:24,480 --> 00:25:32,039
+sometimes. It could keep going and do something fairly good as long as it doesn't pick that
+
+311
+00:25:32,039 --> 00:25:39,559
+wrong clip by mistake. But that's the greedy algorithm. And then you could choose how much
+
+312
+00:25:39,559 --> 00:25:44,759
+the physics matter, how much the direction matters, how much the deviation matters.
+
+313
+00:25:50,920 --> 00:25:57,079
+Now, of course, we've learned the greedy algorithm, but what is interesting now is to see
+
+314
+00:25:57,079 --> 00:26:06,039
+how to find the optimal policy. And to find the optimal policy what we have to do is again
+
+315
+00:26:06,919 --> 00:26:13,079
+try to figure out the cumulative cost of picking one clip relative to another one
+
+316
+00:26:13,079 --> 00:26:21,240
+and what you will be able to do in the future. And so what we have is that you try to minimize the
+
+317
+00:26:21,240 --> 00:26:25,160
+sum of all the future costs you will have.
+
+318
+00:26:25,160 --> 00:26:28,279
+And in this case, it could be written, of course,
+
+319
+00:26:28,279 --> 00:26:30,960
+as a recursive function again,
+
+320
+00:26:30,960 --> 00:26:35,960
+saying that my value function for x
+
+321
+00:26:36,599 --> 00:26:41,599
+will be equal to the cost of being in a specific state
+
+322
+00:26:42,480 --> 00:26:47,039
+plus the cost of picking a specific transition
+
+323
+00:26:47,039 --> 00:26:52,039
+plus the value functions of being into that next state.
+
+324
+00:26:53,079 --> 00:26:58,079
+Multiply by a factor to make sure that you can converge
+
+325
+00:26:59,079 --> 00:27:01,960
+and then you usually put that factor around 0.9,
+
+326
+00:27:01,960 --> 00:27:03,720
+0.95, something like that.
+
+327
+00:27:05,200 --> 00:27:10,200
+And finding the minimal, the best policy is basically,
+
+328
+00:27:10,200 --> 00:27:19,480
+the best policy is basically now you take the state cost and you take the
+
+329
+00:27:19,480 --> 00:27:29,319
+minimum of all the possible transitions you can take and basically it means
+
+330
+00:27:29,319 --> 00:27:38,340
+that the best policy possible is to find the minimum of the cost of the
+
+331
+00:27:38,340 --> 00:27:43,740
+transition cost plus the value functions. You could see that what happens is to
+
+332
+00:27:43,740 --> 00:27:51,780
+find the best policy, the state cost is not important anymore, only the value
+
+333
+00:27:51,780 --> 00:27:55,660
+functions and the transition cost is important. And that's because the state
+
+334
+00:27:55,660 --> 00:28:02,220
+cost itself now has been learned into the value functions. The value functions
+
+335
+00:28:02,220 --> 00:28:12,059
+depend on the state cost plus the future costs, which means that the policy to find the best
+
+336
+00:28:12,059 --> 00:28:18,779
+clip to play doesn't need to compute the state cost anymore. It's already integrated into the
+
+337
+00:28:18,779 --> 00:28:26,779
+value functions. And that's what you will try to learn. Last time we've done it with the Bellman
+
+338
+00:28:26,779 --> 00:28:31,819
+equations and recursive computations on the discrete value. We're not in a discrete world
+
+339
+00:28:31,819 --> 00:28:42,339
+animal, what we want to do will be to learn it on the continuous value functions.
+
+340
+00:28:42,339 --> 00:28:54,139
+And that's how you will do it instead of learning it step by step.
+
+341
+00:28:54,140 --> 00:29:02,460
+we'll have is we will have to approximate that and use a linear programming to solve the system.
+
+342
+00:29:02,460 --> 00:29:08,220
+So what we have to do is basically what I will want to do is that I will want to learn for
+
+343
+00:29:09,180 --> 00:29:14,300
+my value functions. I will try to maximize the value functions because it's a cost function.
+
+344
+00:29:14,300 --> 00:29:20,060
+So what I want to do is that I want to make sure that the cost will be as high as possible.
+
+345
+00:29:20,059 --> 00:29:30,740
+But we will set a bunch of constraints to that linear programming and the constraint will say
+
+346
+00:29:30,740 --> 00:29:39,500
+that my value function for a specific x needs to be smaller than the state cost for x plus the
+
+347
+00:29:39,500 --> 00:29:49,139
+transition cost plus the future cost. And so by doing so what happens is that you try to grow
+
+348
+00:29:49,140 --> 00:29:55,860
+the value functions as high as possible, but you limit the maximum size of it by the fact that
+
+349
+00:29:55,860 --> 00:30:00,420
+it always needs to be sure that all the different value functions between them
+
+350
+00:30:00,420 --> 00:30:06,980
+needs to be always smaller than the cost plus the next one. So that's because of this you've
+
+351
+00:30:06,980 --> 00:30:16,660
+basically turned that Bellman equation into a linear programming optimization and that's defined
+
+352
+00:30:16,660 --> 00:30:28,580
+the exact same properties as how we learned it in the last time. Now one of the issues is that
+
+353
+00:30:28,580 --> 00:30:38,820
+the value functions x here is continuous. So x can be any value of x, any value of theta,
+
+354
+00:30:38,819 --> 00:30:49,220
+So that value functions as a really enormous number of variable, of possible variable.
+
+355
+00:30:49,220 --> 00:30:53,939
+So we cannot learn it as is. We need to approximate the value functions.
+
+356
+00:30:54,899 --> 00:30:59,379
+And how we will approximate the value functions, we will basically go and says,
+
+357
+00:31:00,339 --> 00:31:06,099
+we would turn that value functions into a bunch of basis function.
+
+358
+00:31:06,100 --> 00:31:15,040
+because we know that the cost will be fairly smooth along all the values.
+
+359
+00:31:15,040 --> 00:31:26,000
+I mean if my state is at x value 1 and I'm in value 1.1 I'm fairly close to it
+
+360
+00:31:26,000 --> 00:31:30,920
+and I don't expect to pick an animation completely different because I'm so
+
+361
+00:31:30,920 --> 00:31:37,640
+close to it so all those value functions will be fairly smooth so I can approximate them with
+
+362
+00:31:38,360 --> 00:31:45,720
+basis functions and that's what we will do we will turn the value function of x into a bunch of
+
+363
+00:31:46,440 --> 00:31:53,640
+basis functions and the basis functions that will be multiplied by coefficients and what
+
+364
+00:31:53,640 --> 00:31:59,240
+we will have to learn now is the coefficients for all the basis functions and that's what we will
+
+365
+00:31:59,240 --> 00:32:08,599
+learn and keep iterating on it. So I get all my basis functions and so if I turn this problem
+
+366
+00:32:08,599 --> 00:32:18,680
+of maximizing vx with all those constraints, now those constraints become the value, the basis
+
+367
+00:32:18,680 --> 00:32:26,759
+functions of x multiplied by my coefficients needs to be smaller than the cost plus alpha the next
+
+368
+00:32:26,759 --> 00:32:35,559
+one. Now basically you could see that I have my basis functions on both sides. So it means that
+
+369
+00:32:35,559 --> 00:32:42,359
+I have to take the right hand side and put it on the left side. And so it gives me delta x minus
+
+370
+00:32:42,359 --> 00:32:49,400
+alpha delta x prime. It needs to be smaller than that the costs, which means that I could turn all
+
+371
+00:32:49,400 --> 00:32:59,759
+of this together and the alpha x minus phi x minus alpha phi x prime for the coefficients
+
+372
+00:32:59,759 --> 00:33:06,740
+and then I can learn the coefficients now for this one. That's how you actually turn
+
+373
+00:33:06,740 --> 00:33:15,480
+this problem into a linear problem you can learn. So what I would do is that I will have
+
+374
+00:33:15,480 --> 00:33:25,720
+my compute basis and the only thing I need to to track if I want to walk forward is how much
+
+375
+00:33:27,640 --> 00:33:35,319
+I've deviated from the trajectory and how is my character rotated that will impact where my clip
+
+376
+00:33:35,319 --> 00:33:42,839
+will go and that impact which animation I need to take so that's the the two bases I need to learn
+
+377
+00:33:42,840 --> 00:33:52,120
+And so I will compute those two bases that give me nine bases. It's all polynomial basis
+
+378
+00:33:52,120 --> 00:33:59,080
+functions. So what does it mean? It means that I have a polynomial for x. So it's one x x square.
+
+379
+00:33:59,080 --> 00:34:09,720
+I get a polynomial for theta, which is theta for one theta and theta square. And then because I have
+
+380
+00:34:09,720 --> 00:34:15,000
+two different polynomials to learn together. You basically need to do an
+
+381
+00:34:15,000 --> 00:34:20,880
+outer product, all of them. And so that's why you get 1 x x square theta theta x
+
+382
+00:34:20,880 --> 00:34:28,280
+theta x square theta square theta square theta square x theta square x square.
+
+383
+00:34:28,280 --> 00:34:37,960
+I'll give you all the nine bases that you're trying to learn at once. So it's
+
+384
+00:34:37,960 --> 00:34:39,559
+It's what they represent here.
+
+385
+00:34:39,559 --> 00:34:43,079
+They said that they have the polynomial.
+
+386
+00:34:43,079 --> 00:34:46,480
+So the simple polynomial they want to run,
+
+387
+00:34:46,480 --> 00:34:48,199
+that you want to learn.
+
+388
+00:34:48,199 --> 00:34:52,800
+And in the case of just having the task of walking forward,
+
+389
+00:34:52,800 --> 00:34:55,519
+that's what they said, that the polynomial of degree 2
+
+390
+00:34:55,519 --> 00:35:01,480
+for x and the polynomial of degree 2 for theta.
+
+391
+00:35:01,480 --> 00:35:04,480
+So you multiply together, that's
+
+392
+00:35:04,480 --> 00:35:08,679
+I mean, the other product to be able to learn all of those.
+
+393
+00:35:08,679 --> 00:35:12,119
+And my optimal policy now when I try to find
+
+394
+00:35:12,119 --> 00:35:14,719
+which one of the animation I have to play,
+
+395
+00:35:16,000 --> 00:35:17,920
+it's what they've defined here.
+
+396
+00:35:17,920 --> 00:35:20,400
+This says that if you remember,
+
+397
+00:35:20,400 --> 00:35:23,119
+it's this one, the arc min.
+
+398
+00:35:23,119 --> 00:35:27,599
+So what I do is that I take the transitions
+
+399
+00:35:27,599 --> 00:35:31,920
+and that gives me the physics costs
+
+400
+00:35:31,920 --> 00:35:33,280
+and I get the direction costs
+
+401
+00:35:33,280 --> 00:35:38,280
+because both of them are part of the cost of the transitions.
+
+402
+00:35:39,960 --> 00:35:41,280
+And that's it.
+
+403
+00:35:41,280 --> 00:35:45,480
+And then I compute the basis functions
+
+404
+00:35:45,480 --> 00:35:48,080
+of x prime and theta prime,
+
+405
+00:35:48,080 --> 00:35:50,760
+where I would be multiplied by coefficients
+
+406
+00:35:50,760 --> 00:35:55,760
+and I sum the two, so multiply by alpha.
+
+407
+00:35:56,200 --> 00:36:01,200
+So I get alpha plus my value functions evaluated at x prime.
+
+408
+00:36:03,280 --> 00:36:05,440
+And I'll take the argument of it.
+
+409
+00:36:05,440 --> 00:36:13,160
+And that's how you take the best clip to play.
+
+410
+00:36:13,160 --> 00:36:15,480
+So I get my compute basis.
+
+411
+00:36:15,480 --> 00:36:19,560
+I get my optimal policy.
+
+412
+00:36:19,560 --> 00:36:24,800
+And now, how you actually really learn this?
+
+413
+00:36:24,800 --> 00:36:28,400
+Normally, if you wanted to learn the value functions
+
+414
+00:36:28,400 --> 00:36:32,080
+and grow the value functions and do this,
+
+415
+00:36:32,079 --> 00:36:38,599
+One way to do it is to first, you take a bunch of samples
+
+416
+00:36:38,599 --> 00:36:41,960
+because, of course, it's a continuous value function.
+
+417
+00:36:41,960 --> 00:36:44,840
+So you can learn for all the different possibilities.
+
+418
+00:36:44,840 --> 00:36:49,599
+You choose a bunch of examples scattered
+
+419
+00:36:49,599 --> 00:36:54,159
+along all the state space.
+
+420
+00:36:54,159 --> 00:36:55,400
+So that's what I'm doing here.
+
+421
+00:36:55,400 --> 00:37:01,199
+I take a bunch of x positions between minus 2 and 2 meters.
+
+422
+00:37:01,200 --> 00:37:05,720
+and I take the sample theta minus, so on 360s
+
+423
+00:37:05,720 --> 00:37:06,960
+to rotate everything.
+
+424
+00:37:08,800 --> 00:37:10,720
+And I create a bunch of samples there.
+
+425
+00:37:10,720 --> 00:37:13,680
+So I get for each possible clip,
+
+426
+00:37:13,680 --> 00:37:17,240
+I will have the clip, the X somewhere
+
+427
+00:37:17,240 --> 00:37:22,240
+and a theta somewhere, and that give me a bunch of samples.
+
+428
+00:37:22,360 --> 00:37:23,880
+So that's what I have here.
+
+429
+00:37:23,880 --> 00:37:25,680
+All the samples I would decide to use.
+
+430
+00:37:25,680 --> 00:37:28,860
+So I have 900 different samples that I will learn from.
+
+431
+00:37:28,860 --> 00:37:36,660
+And if you wanted to do this, usually you could pre-compute all the possible transitions
+
+432
+00:37:36,660 --> 00:37:43,059
+between all the different states and put them all constraints at once and says, now try
+
+433
+00:37:43,059 --> 00:37:47,019
+to maximize your value functions with all of those.
+
+434
+00:37:47,019 --> 00:37:53,180
+Now it doesn't mean that in my case I will have a 900 by 900 constraint.
+
+435
+00:37:53,180 --> 00:37:55,660
+That's a big heavy to learn.
+
+436
+00:37:55,659 --> 00:38:01,699
+what the the paper decided to do is to do it iteratively so what you do is that
+
+437
+00:38:01,699 --> 00:38:13,259
+you start with a bunch of sets you start with a set of transition so
+
+438
+00:38:13,259 --> 00:38:17,579
+basically you start with the order coefficients at zero you go through all
+
+439
+00:38:17,579 --> 00:38:24,579
+your samples and you ask what will be the optimal transition to take
+
+440
+00:38:24,579 --> 00:38:31,340
+Basically, in that first case, that would be the greedy transition.
+
+441
+00:38:31,340 --> 00:38:35,380
+And that's the list of transitions you will have, that's the list of constraints you'll
+
+442
+00:38:35,380 --> 00:38:36,380
+create.
+
+443
+00:38:36,380 --> 00:38:38,659
+You learn the parameters and you reiterate.
+
+444
+00:38:38,659 --> 00:38:44,659
+You re-ask the system for all your samples, what will be now the best transition to take,
+
+445
+00:38:44,659 --> 00:38:48,619
+and it will be, of course, a set of different transitions.
+
+446
+00:38:48,619 --> 00:38:56,819
+So your L grows and you re-compute all the different constraints and you re-learn the
+
+447
+00:38:56,819 --> 00:39:02,940
+value functions and you iterate until you converged to something that will not add new
+
+448
+00:39:02,940 --> 00:39:06,579
+constraint, which is what I'm doing here.
+
+449
+00:39:06,579 --> 00:39:17,539
+So I will start by saying that the first thing is saying that I want to maximize the value
+
+450
+00:39:17,539 --> 00:39:18,539
+functions.
+
+451
+00:39:18,539 --> 00:39:25,099
+What I said is that take all the samples, compute the basis functions for all the samples
+
+452
+00:39:25,099 --> 00:39:29,980
+and that gives me my max Vx.
+
+453
+00:39:29,980 --> 00:39:31,739
+That's what I'm trying to maximize.
+
+454
+00:39:31,739 --> 00:39:41,980
+So you minimize it because you subtract it because by default linear programming we try
+
+455
+00:39:41,980 --> 00:39:42,980
+to minimize.
+
+456
+00:39:42,980 --> 00:39:47,619
+So if you try to maximize, you just need to flip the sign.
+
+457
+00:39:47,619 --> 00:39:50,420
+So that gives me the VX to try to maximize.
+
+458
+00:39:50,420 --> 00:39:55,420
+And then I go through all my samples that I've generated,
+
+459
+00:39:58,139 --> 00:39:59,900
+use the optimal policies
+
+460
+00:39:59,900 --> 00:40:01,779
+with all the coefficients I computed,
+
+461
+00:40:03,819 --> 00:40:07,579
+check which clip it would choose.
+
+462
+00:40:07,579 --> 00:40:09,980
+And if that transition does not exist already,
+
+463
+00:40:09,980 --> 00:40:12,739
+I'm adding that in the transition states.
+
+464
+00:40:12,739 --> 00:40:17,579
+And then that gives me all the transitions
+
+465
+00:40:17,579 --> 00:40:22,779
+want to use. And then finally, you go through all those transitions, and you start to build
+
+466
+00:40:22,779 --> 00:40:27,739
+the big matrix of all the coefficients. So you build the matrix of all the constraints,
+
+467
+00:40:27,739 --> 00:40:34,380
+this one. And so how you do it is that you compute the basis, put that on left hand, compute the
+
+468
+00:40:36,779 --> 00:40:44,860
+new basis for the future basis for the new theta, new x new theta, you subtract it from the alpha.
+
+469
+00:40:44,860 --> 00:40:51,860
+On the right-hand side, you get the cost of taking the transition plus the derivation factor,
+
+470
+00:40:51,860 --> 00:40:58,860
+because that's what I have here, cost of the transition plus the cost of the states plus the cost of the transitions.
+
+471
+00:40:58,860 --> 00:41:00,860
+That's the right-hand side.
+
+472
+00:41:00,860 --> 00:41:10,860
+And that gives you the matrix of all the coefficients you try to learn and all the right-hand side values.
+
+473
+00:41:10,860 --> 00:41:20,700
+What I do also is adding all the sample also but the inverse of them just to
+
+474
+00:41:20,700 --> 00:41:28,820
+make sure that basically this will mean everything needs to be smaller than the
+
+475
+00:41:28,820 --> 00:41:35,260
+cost and I will do the opposite saying nothing can be smaller than zero so
+
+476
+00:41:35,260 --> 00:41:40,380
+that's why I do the minus here just to make sure that I put a lower bound as a
+
+477
+00:41:40,380 --> 00:41:46,380
+cost functions cannot be negative or cannot be negative so making sure that everything is up to
+
+478
+00:41:46,380 --> 00:41:52,140
+zero and that's because when I would do the linear programming I would put no bounds on the values I
+
+479
+00:41:52,140 --> 00:41:58,140
+would let him choose the coefficients the way he wants and so I need to give him a upper bound
+
+480
+00:41:58,140 --> 00:42:04,140
+and lower bounds on everything he tries to learn so he gets the upper bound as maximum is the cost
+
+481
+00:42:04,139 --> 00:42:12,379
+plus the future and lower bound is zero. That's what you do here. There is one thing that I haven't
+
+482
+00:42:12,379 --> 00:42:21,339
+showed you yet is that when I do the coefficients I do have nine coefficients that's what I said
+
+483
+00:42:22,779 --> 00:42:29,019
+but what the paper says is that you cannot learn a value functions that will represent
+
+484
+00:42:29,019 --> 00:42:37,820
+all the clips plus all the bases, again, that will grow the dimensionality of what you're
+
+485
+00:42:37,820 --> 00:42:43,900
+trying to learn. Instead, it's that you will learn different value functions for each clip.
+
+486
+00:42:45,099 --> 00:42:51,659
+Each clip will have the value functions of if I'm in this clip, if you want to reach in this clip
+
+487
+00:42:51,659 --> 00:43:02,460
+and you reach in the in the futures with those values X theta and X prime theta prime that
+
+488
+00:43:02,460 --> 00:43:08,179
+will be the cost of reaching me. So you will learn it for every clip. That's what they call
+
+489
+00:43:08,179 --> 00:43:16,420
+tabulations. So the possibility to say that you will want to learn different values for each clip.
+
+490
+00:43:16,420 --> 00:43:21,860
+So I will learn different value for each clip, but I will learn everything at the same time because
+
+491
+00:43:21,860 --> 00:43:29,059
+I need to make sure that the value learned from one clip is reflected in the values that the other
+
+492
+00:43:29,059 --> 00:43:35,780
+clip points towards and that kind of stuff. So that's why I have for every clip I get the nine
+
+493
+00:43:35,780 --> 00:43:43,300
+bases. I compute the coefficients and I put it inside of my clip ID. I put the values for the
+
+494
+00:43:43,300 --> 00:43:51,620
+the compute basis and put the next clip ID, I get the minus equal alpha for the future basis
+
+495
+00:43:51,620 --> 00:43:57,539
+and so on. So I'm learning all the clips at once but each clips will have different values.
+
+496
+00:43:59,460 --> 00:44:06,580
+And so you can see that it has 3000 constraints and adding new constraints every time and learning
+
+497
+00:44:06,579 --> 00:44:14,579
+them and that's already gone. That's the power of having only 36 clips I would say. And being
+
+498
+00:44:15,699 --> 00:44:21,380
+a bit more in your future compared to the paper that we're taking around one hour to do this.
+
+499
+00:44:23,779 --> 00:44:28,900
+And if you want to see what we've just learned basically for the compute basis,
+
+500
+00:44:28,900 --> 00:44:36,700
+this is if I take the clip ID 3 this is the compute basis for it so you see
+
+501
+00:44:36,700 --> 00:44:46,760
+that's my x so from x to minus 2 to 2 on the x-axis and minus pi to pi on the
+
+502
+00:44:46,760 --> 00:44:50,500
+theta axis you could see that basically what it tells you is that it will be
+
+503
+00:44:50,500 --> 00:45:00,500
+really costly to arrive in the negative x with negative theta.
+
+504
+00:45:00,500 --> 00:45:04,980
+And it's basically less expensive to be on the positive side,
+
+505
+00:45:04,980 --> 00:45:05,460
+that kind of stuff.
+
+506
+00:45:05,460 --> 00:45:10,500
+So finds you the sweet spot of, see,
+
+507
+00:45:10,500 --> 00:45:12,179
+it's not even 0, 0.
+
+508
+00:45:12,179 --> 00:45:15,579
+The sweet spot is probably better to not be 0, 0 in this case.
+
+509
+00:45:15,579 --> 00:45:18,699
+So that's what the value functions, the future value
+
+510
+00:45:18,700 --> 00:45:20,540
+functions will give you.
+
+511
+00:45:20,540 --> 00:45:25,540
+And now what I could do, of course, is use exactly that.
+
+512
+00:45:25,540 --> 00:45:30,540
+So what I will have is, again, the same control.
+
+513
+00:45:30,540 --> 00:45:35,020
+And my optimal policy will use my coefficients, my future
+
+514
+00:45:35,020 --> 00:45:35,520
+stuff.
+
+515
+00:45:35,520 --> 00:45:38,860
+So I will use the same function that I use for learning.
+
+516
+00:45:38,860 --> 00:45:43,260
+And I got my x and theta coming from my controllers,
+
+517
+00:45:43,260 --> 00:45:46,140
+depending on where my character is.
+
+518
+00:45:46,139 --> 00:45:54,019
+And now you could see that if I walk forward,
+
+519
+00:45:54,019 --> 00:45:57,819
+I should never try to do that wrong flip anymore.
+
+520
+00:45:57,819 --> 00:46:01,420
+And I have my control, which is what
+
+521
+00:46:01,420 --> 00:46:04,460
+they call the near optimal control,
+
+522
+00:46:04,460 --> 00:46:10,539
+because you've learned for the future into a continuous matter.
+
+523
+00:46:10,539 --> 00:46:12,539
+You have a continuous functions.
+
+524
+00:46:12,539 --> 00:46:15,699
+You get a continuous control for the character
+
+525
+00:46:16,699 --> 00:46:18,579
+asking to walk in the right direction.
+
+526
+00:46:20,659 --> 00:46:24,579
+And this is it for this paper.
+
+527
+00:46:24,579 --> 00:46:28,019
+There is a lot of different value functions
+
+528
+00:46:28,019 --> 00:46:33,019
+that they learn, different basis functions that they've used
+
+529
+00:46:33,059 --> 00:46:36,219
+but I wanted to make sure that the basics were understood
+
+530
+00:46:37,460 --> 00:46:40,460
+to show how you could learn a continuous value function
+
+531
+00:46:40,460 --> 00:46:47,460
+and use a continuous value function instead of the discrete one.
+
+532
+00:46:47,460 --> 00:46:52,460
+I hope you liked it and see you next time.

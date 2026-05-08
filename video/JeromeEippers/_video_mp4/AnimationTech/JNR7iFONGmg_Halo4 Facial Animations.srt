@@ -1,0 +1,831 @@
+1
+00:00:00,000 --> 00:00:05,960
+Imagine you are 15 years ago and you start the production on Halo 4.
+
+2
+00:00:05,960 --> 00:00:09,720
+You want to push the quality of the facial animations in your cutscenes, but you are
+
+3
+00:00:09,720 --> 00:00:12,759
+on an Xbox 360 with limited resources.
+
+4
+00:00:12,759 --> 00:00:19,080
+Hi, I'm Jerome and today I want not to talk about a specific paper per se, but I want
+
+5
+00:00:19,080 --> 00:00:27,039
+to talk about how Halo 4 managed to stream the facial animations inside of an Xbox 360
+
+6
+00:00:27,039 --> 00:00:35,439
+principal component analysis. So for those of you that might not remember what the cutscenes
+
+7
+00:00:35,439 --> 00:00:46,320
+were looking like, so this is Halo 4 on an Xbox 360 probably 11 years ago. And you can see that
+
+8
+00:00:46,320 --> 00:00:53,679
+the facial still holds up on these cutscenes, and it was all runtime cutscenes, so it was all
+
+9
+00:00:53,679 --> 00:01:00,159
+running on the consoles directly. But back then you couldn't execute a really expensive rig like
+
+10
+00:01:01,200 --> 00:01:06,799
+metahuman or having blend shapes and all of those kind of stuff. So you were limited on the kind
+
+11
+00:01:06,799 --> 00:01:16,560
+of rigs you could use. So the choice that Halo made was to use the same production pipeline
+
+12
+00:01:16,560 --> 00:01:22,960
+that they were using when they were doing, let's say, pre-rendered cutscenes. So doing mock apps,
+
+13
+00:01:22,960 --> 00:01:31,360
+doing facial mocap, doing all the stuff that we could do in pre-rendering, which was not the kind
+
+14
+00:01:31,360 --> 00:01:38,400
+of stuff that we could run at runtime back then because of the the the weights of all of those
+
+15
+00:01:38,400 --> 00:01:45,760
+rigs. And we could already record and we could already work with expensive rigs back then,
+
+16
+00:01:45,760 --> 00:01:51,600
+but it's really the runtime that wasn't the issues. So what Halo decided to do was to
+
+17
+00:01:51,600 --> 00:01:56,600
+to use the same pipeline as the pre-rendered one.
+
+18
+00:01:56,640 --> 00:02:01,400
+And then they would pre-render the facial animations
+
+19
+00:02:01,400 --> 00:02:03,140
+as vertex animation.
+
+20
+00:02:04,560 --> 00:02:06,500
+And that's the vertex animation
+
+21
+00:02:06,500 --> 00:02:08,540
+that they would try to stream on the console.
+
+22
+00:02:08,540 --> 00:02:11,600
+So you get rid of the entire rig.
+
+23
+00:02:11,600 --> 00:02:14,340
+You only have basically a big alumbic file
+
+24
+00:02:14,340 --> 00:02:17,160
+with all the vertices moving through times.
+
+25
+00:02:17,160 --> 00:02:20,439
+And that's what you try to stream on the console.
+
+26
+00:02:20,439 --> 00:02:22,359
+So I would do the same here.
+
+27
+00:02:22,359 --> 00:02:27,159
+What I would do first is that I would import
+
+28
+00:02:27,159 --> 00:02:31,520
+all the libraries I need and then I would create a material
+
+29
+00:02:31,520 --> 00:02:33,520
+because I will work with some things
+
+30
+00:02:33,520 --> 00:02:35,919
+outside of the usual framework.
+
+31
+00:02:35,919 --> 00:02:40,919
+Now, I've created official animations
+
+32
+00:02:41,120 --> 00:02:46,120
+using Omniverse Audio2Face.
+
+33
+00:02:46,280 --> 00:02:49,159
+So it's really a big alumbic file
+
+34
+00:02:49,159 --> 00:02:52,479
+with all my vertices moving.
+
+35
+00:02:52,479 --> 00:02:54,960
+And that's why it takes a bit of time to actually import
+
+36
+00:02:54,960 --> 00:02:56,479
+because it's quite massive.
+
+37
+00:02:56,479 --> 00:03:04,979
+And what I have is a head that is based on 123,000 triangles.
+
+38
+00:03:04,979 --> 00:03:10,359
+And that has a bit more than 60,000 vertices.
+
+39
+00:03:10,359 --> 00:03:14,439
+And it's only 220 frames of animations.
+
+40
+00:03:14,439 --> 00:03:17,359
+But really, because, as I said, we
+
+41
+00:03:17,360 --> 00:03:23,280
+moving every vertices through time basically means that if you have 200 frames of animations you have
+
+42
+00:03:23,280 --> 00:03:31,440
+200 different heads. So that's what I have in my frames here. It's 220 frames of 60,000 vertices
+
+43
+00:03:31,440 --> 00:03:37,600
+XYZ positions. So I get all my animations here and what I would do is that I would want to be able
+
+44
+00:03:37,599 --> 00:03:48,079
+to stream that to the graphic card. So I will create a vertex buffer for the vertices,
+
+45
+00:03:48,079 --> 00:03:52,000
+the positions, and I will make it as dynamic because I will update the values all the time
+
+46
+00:03:52,000 --> 00:03:57,439
+and I will do a second one with the normals. So I get both informations. I don't want to stream
+
+47
+00:03:57,439 --> 00:04:03,840
+normals. I would just keep them static. It's not perfect, but it makes it easier. And then I get
+
+48
+00:04:03,840 --> 00:04:09,920
+my vertex array, that's how we need to render everything. And then what I will do is that
+
+49
+00:04:09,920 --> 00:04:16,319
+I will create a shader because the framework is not expecting this kind of data. It's just
+
+50
+00:04:16,319 --> 00:04:22,720
+a simple shader. We just take the normal and the positions. I get the positions and I get the normal
+
+51
+00:04:23,439 --> 00:04:29,519
+and I multiply that by the view matrix and the position matrix. So it's correctly placed on screen
+
+52
+00:04:29,519 --> 00:04:36,439
+and then the fragment shader itself is the default one from the framework just to make sure
+
+53
+00:04:36,439 --> 00:04:42,959
+that I push everything I need inside of all my gbuffers and then I can create my program and I
+
+54
+00:04:42,959 --> 00:04:56,399
+can finally render that animation so what you could see is this character playing the animations
+
+55
+00:04:56,400 --> 00:05:03,120
+I've created, so as I said, 60,000 vertices, so there's no normal map, it's all inside
+
+56
+00:05:03,120 --> 00:05:08,880
+of the mesh directly, all the little bumps, it's fairly heavy mesh, and the way you render
+
+57
+00:05:08,880 --> 00:05:18,560
+this is really what I said, it's 220 different heads and I'm just uploading those heads on
+
+58
+00:05:18,560 --> 00:05:25,520
+the GPU every frame, so basically I take my buffer and I update what is inside of the
+
+59
+00:05:25,519 --> 00:05:32,240
+buffer with the correct frame at every frame. And it works, I mean I'm streaming the entire data.
+
+60
+00:05:33,439 --> 00:05:40,799
+Now you would have one big issue with this and the biggest issue is of course the size of what
+
+61
+00:05:40,799 --> 00:05:49,680
+you're trying to stream. In this case just with my 200 frames what I already have is 154 megabytes
+
+62
+00:05:49,680 --> 00:05:58,720
+of data, which is a lot. It's only one character, one head for 200 frames. It's not even an
+
+63
+00:05:58,720 --> 00:06:08,160
+entire cutscene. It's not multiple characters. So you don't have that kind of room on the disk.
+
+64
+00:06:08,960 --> 00:06:14,560
+So you will have to compress that data quite a lot. So basically, if you try to run it this way,
+
+65
+00:06:14,560 --> 00:06:18,959
+your CPU will be busy uncompressing the data,
+
+66
+00:06:18,959 --> 00:06:22,480
+your bus between the CPU and GPU
+
+67
+00:06:22,480 --> 00:06:25,439
+will be busy sending the data every time,
+
+68
+00:06:25,439 --> 00:06:27,759
+and your GPU will be just waiting
+
+69
+00:06:27,759 --> 00:06:29,399
+for the data to arrive most of the time.
+
+70
+00:06:29,399 --> 00:06:33,040
+So you will have to really focus
+
+71
+00:06:33,040 --> 00:06:35,480
+on how to be able to stream this kind of data.
+
+72
+00:06:36,360 --> 00:06:39,120
+And the solution that was used by Halo
+
+73
+00:06:39,120 --> 00:06:44,120
+was to go with the principal component analysis
+
+74
+00:06:44,120 --> 00:06:48,879
+to compress the data and send them with a lighter solution.
+
+75
+00:06:48,879 --> 00:06:53,079
+So that's what it will go through at this point.
+
+76
+00:06:53,079 --> 00:06:56,360
+So what is the principle component analysis?
+
+77
+00:06:56,360 --> 00:07:00,480
+Analysis is the fact that if you have a data
+
+78
+00:07:00,480 --> 00:07:02,639
+with a lot of dimensions,
+
+79
+00:07:02,639 --> 00:07:05,680
+you might want to reduce the number of dimensions.
+
+80
+00:07:05,680 --> 00:07:10,680
+So usually when you see the PCA explain what you will have
+
+81
+00:07:10,680 --> 00:07:19,360
+explain what you will have is, for instance, a bunch of 3D points scattered in a plot and you ask
+
+82
+00:07:19,360 --> 00:07:26,160
+the system, give me the line through all those points that represent the biggest variations.
+
+83
+00:07:26,160 --> 00:07:32,759
+So that's really what the principle component means is find the component that has the biggest
+
+84
+00:07:32,759 --> 00:07:39,800
+variations that represent the best the values. So you get one line through all your points.
+
+85
+00:07:39,800 --> 00:07:45,800
+And then you can ask for a second component that will be orthogonal to the first one and
+
+86
+00:07:45,800 --> 00:07:53,639
+that represent the second most important directions for all your data.
+
+87
+00:07:53,639 --> 00:07:59,000
+And you can remap your data inside of those two vectors inside of being in 3D.
+
+88
+00:07:59,000 --> 00:08:04,800
+So in statistics, for instance, you might have a population where you would ask for
+
+89
+00:08:04,800 --> 00:08:11,600
+the weights, the size, the age, the sleeping habits, what they eat, all that kind of stuff.
+
+90
+00:08:12,319 --> 00:08:22,960
+And you might do a PCA to reduce the number of features to a lower number so you could see if
+
+91
+00:08:22,960 --> 00:08:30,639
+there is a correlation between a bunch of values and if you start to get clusters of populations
+
+92
+00:08:30,639 --> 00:08:36,399
+in some places it will mean that a bunch of your values are actually related and that kind of stuff.
+
+93
+00:08:38,159 --> 00:08:44,000
+In our case we will actually do the same thing. What we have is 220 different heads
+
+94
+00:08:45,199 --> 00:08:53,360
+and so it will be considered as 220 features and what we want to say is that I want to reduce
+
+95
+00:08:53,360 --> 00:09:03,840
+those 220 frames to just, in my case, seven. So I will turn the 220 frames in seven different
+
+96
+00:09:03,840 --> 00:09:07,919
+components. In this case, it will be frames, but it's really seven different components.
+
+97
+00:09:08,639 --> 00:09:12,480
+And what the PC would allow us to do is to use those seven components
+
+98
+00:09:13,360 --> 00:09:20,080
+and reproject the data into the seven components and rebuild the animations. So really, what I'm
+
+99
+00:09:20,080 --> 00:09:24,360
+I'm using is the PCA implementation from scikit-learn.
+
+100
+00:09:24,360 --> 00:09:27,240
+So I will not rewrite PCA from scratch,
+
+101
+00:09:27,240 --> 00:09:29,000
+but I might do it in a different video
+
+102
+00:09:29,000 --> 00:09:32,480
+because there is paper talking about how to write
+
+103
+00:09:33,840 --> 00:09:36,240
+PCA for vertex animation.
+
+104
+00:09:36,240 --> 00:09:37,600
+So it might be interesting to see,
+
+105
+00:09:37,600 --> 00:09:39,320
+but at this point,
+
+106
+00:09:39,320 --> 00:09:43,240
+I just use the default scikit-learn implementations.
+
+107
+00:09:44,200 --> 00:09:48,360
+And it returns, you see, I'm fitting all my animations
+
+108
+00:09:48,360 --> 00:09:50,639
+And it returns me seven components,
+
+109
+00:09:50,639 --> 00:09:54,879
+and those seven components are basically seven heads.
+
+110
+00:09:54,879 --> 00:09:59,879
+So it is 184 floats,
+
+111
+00:10:01,480 --> 00:10:06,480
+so it's basically 60,000 vertices x, y, z, back to back.
+
+112
+00:10:07,960 --> 00:10:11,759
+And what I can do is that I can actually display
+
+113
+00:10:11,759 --> 00:10:14,560
+the different poses that he picked.
+
+114
+00:10:14,560 --> 00:10:17,519
+So that's one of the pose that he can use
+
+115
+00:10:17,519 --> 00:10:21,439
+to recompute my animations, that's a second one,
+
+116
+00:10:21,439 --> 00:10:24,480
+third, fourth, five, six, and seven.
+
+117
+00:10:24,480 --> 00:10:27,759
+So that's all the poses that he wants to use,
+
+118
+00:10:27,759 --> 00:10:31,559
+that he says that he can use to rebuild my animation.
+
+119
+00:10:31,559 --> 00:10:34,559
+And I can multiply those values so I can see
+
+120
+00:10:36,120 --> 00:10:37,759
+more or less what they will do.
+
+121
+00:10:39,000 --> 00:10:42,120
+All right, so you could see all the different poses.
+
+122
+00:10:43,439 --> 00:10:47,240
+What, oh, I'm doing this, I'm just picking the component,
+
+123
+00:10:47,240 --> 00:10:50,639
+I'm multiplying with a value because they will be really close.
+
+124
+00:10:50,639 --> 00:10:55,320
+And I'm adding the mean because a PCA works best
+
+125
+00:10:55,320 --> 00:10:59,799
+if you always remove the mean of all your values
+
+126
+00:10:59,799 --> 00:11:02,360
+before starting to compute the components.
+
+127
+00:11:02,360 --> 00:11:04,919
+So all the components are computed around zeros.
+
+128
+00:11:04,919 --> 00:11:07,240
+So you have to remember that you have a mean
+
+129
+00:11:07,240 --> 00:11:09,399
+that represents the average heads,
+
+130
+00:11:09,399 --> 00:11:11,240
+and then you get the components that represents
+
+131
+00:11:11,240 --> 00:11:16,240
+the offsets of that average head for all values.
+
+132
+00:11:16,240 --> 00:11:18,360
+That's what we have here.
+
+133
+00:11:18,360 --> 00:11:20,639
+And now that I have this, I can actually
+
+134
+00:11:20,639 --> 00:11:29,440
+say, well, you could transform my data into an animation that
+
+135
+00:11:29,440 --> 00:11:40,960
+would be basically is just an array now for the 220 frames
+
+136
+00:11:40,960 --> 00:11:44,560
+instead of having all the vertices that were used
+
+137
+00:11:44,560 --> 00:11:49,840
+is just the weights represent that you want to use to multiply each of the seven components you
+
+138
+00:11:49,840 --> 00:12:01,680
+have. So it's really a 220 frames, seven floats values. And I can render using that PCA. So what
+
+139
+00:12:01,680 --> 00:12:10,480
+I would do is again, I would use the scikit-learn inverse transform now. So I take the animations
+
+140
+00:12:10,480 --> 00:12:17,279
+I receive I do the reverse transform so it will give me back a head and I'm just moving it 30
+
+141
+00:12:17,279 --> 00:12:21,840
+centimeters on the side so I can render the ground truth so that's the first thing I'm
+
+142
+00:12:21,840 --> 00:12:29,039
+rendering here using the buffer I'm sending my true head and then I'm sending the one that has
+
+143
+00:12:29,039 --> 00:12:37,360
+been recomputed thanks to the PCA and what I have is the comparison between the two heads so
+
+144
+00:12:37,360 --> 00:12:44,720
+that the ground screws and that's the PCA animations. So remember this one is 220 different heads
+
+145
+00:12:44,720 --> 00:12:52,159
+and this one is just eight different heads so the mean plus seven components and seven floats for
+
+146
+00:12:52,159 --> 00:12:58,560
+every frame. So you're quite a lot smaller and you get the weights that are used for all the
+
+147
+00:12:58,560 --> 00:13:03,759
+different heads so for all the different components. So you see they study one times the
+
+148
+00:13:03,759 --> 00:13:08,759
+the first component plus minus five times
+
+149
+00:13:10,439 --> 00:13:13,080
+the second components and so on and so on.
+
+150
+00:13:13,080 --> 00:13:14,240
+And I give you that head.
+
+151
+00:13:16,080 --> 00:13:17,840
+So at this point, of course,
+
+152
+00:13:17,840 --> 00:13:19,720
+I have compressed the data quite a lot,
+
+153
+00:13:19,720 --> 00:13:24,720
+but I'm still decompressing the data on the CPU
+
+154
+00:13:25,439 --> 00:13:28,519
+and sending the full heads to the GPU.
+
+155
+00:13:28,519 --> 00:13:30,759
+So I haven't won anything.
+
+156
+00:13:30,759 --> 00:13:32,799
+So what you could do now is define a render
+
+157
+00:13:32,800 --> 00:13:35,880
+to try to make sure that we can render that
+
+158
+00:13:35,880 --> 00:13:37,160
+on the GPU directly.
+
+159
+00:13:40,680 --> 00:13:44,480
+And so the shader basically now just have,
+
+160
+00:13:44,480 --> 00:13:48,920
+instead of having one set of vertices,
+
+161
+00:13:48,920 --> 00:13:50,640
+it will have eight of them.
+
+162
+00:13:50,640 --> 00:13:53,500
+So it will get the mean, the first one is my mean,
+
+163
+00:13:53,500 --> 00:13:58,340
+and then all the different ones are the seven different
+
+164
+00:13:58,340 --> 00:13:59,400
+components.
+
+165
+00:13:59,400 --> 00:14:00,800
+And when you try to render this,
+
+166
+00:14:00,800 --> 00:14:06,120
+Basically, you have to send the seven floats you want to use
+
+167
+00:14:06,120 --> 00:14:09,520
+and how much you want to blend the difference head together.
+
+168
+00:14:09,520 --> 00:14:10,960
+And then you just accumulate the values.
+
+169
+00:14:10,960 --> 00:14:13,200
+It's just you take the mean, and then you
+
+170
+00:14:13,200 --> 00:14:18,800
+add the first component multiplied by the first values,
+
+171
+00:14:18,800 --> 00:14:21,400
+then the second component multiplied by the second values,
+
+172
+00:14:21,400 --> 00:14:22,240
+and so on, and so on.
+
+173
+00:14:22,240 --> 00:14:23,800
+And that's it.
+
+174
+00:14:23,800 --> 00:14:25,960
+And now you can build your buffers.
+
+175
+00:14:25,960 --> 00:14:27,480
+They don't need to be dynamic anymore,
+
+176
+00:14:27,480 --> 00:14:29,640
+because you will build them once,
+
+177
+00:14:29,639 --> 00:14:31,399
+and then you send them to the graphic card
+
+178
+00:14:31,399 --> 00:14:34,840
+and they will stay in VRAM.
+
+179
+00:14:34,840 --> 00:14:38,399
+You don't have to stream them anymore at every frames
+
+180
+00:14:38,399 --> 00:14:41,240
+and you build the programs, of course,
+
+181
+00:14:41,240 --> 00:14:43,240
+so you can render that.
+
+182
+00:14:43,240 --> 00:14:45,840
+And if I want to play my animations
+
+183
+00:14:45,840 --> 00:14:47,439
+and render this animation,
+
+184
+00:14:47,439 --> 00:14:48,600
+I better remove this.
+
+185
+00:14:50,840 --> 00:14:55,840
+What you have now is the only thing you have to send
+
+186
+00:14:55,840 --> 00:14:58,080
+at every frame is just a seven floats
+
+187
+00:14:58,080 --> 00:15:01,300
+and you could render your facial animations
+
+188
+00:15:01,300 --> 00:15:02,660
+just by sending seven floats,
+
+189
+00:15:02,660 --> 00:15:04,900
+because all the components now sits
+
+190
+00:15:04,900 --> 00:15:07,100
+in memory on your graphic card.
+
+191
+00:15:07,100 --> 00:15:12,100
+And that's how Halo 4 was able to achieve
+
+192
+00:15:13,139 --> 00:15:16,620
+this quality of facial animations in the cut scenes.
+
+193
+00:15:17,580 --> 00:15:19,379
+And interestingly, you could see
+
+194
+00:15:19,379 --> 00:15:24,379
+that one of the popular video you had back then
+
+195
+00:15:24,379 --> 00:15:31,500
+was done by Lord Z that actually make a mod and tweak the values of the animations.
+
+196
+00:15:31,500 --> 00:15:38,860
+And he said that he multiplied the facial animation by five and it got that with results that make a lot of people laugh.
+
+197
+00:15:40,860 --> 00:15:47,259
+And it's interesting to see that it really represents what was happening with the PCA
+
+198
+00:15:47,259 --> 00:15:52,539
+because it just multiplied all the values of animation by five and if I really do the same,
+
+199
+00:15:52,539 --> 00:16:00,659
+same, it would give me something quite similar. If I multiply it by 5, I get that same weight
+
+200
+00:16:00,659 --> 00:16:08,819
+result just basically because you are reconstructing your PCA with the wrong weights, you're pushing
+
+201
+00:16:08,819 --> 00:16:21,539
+them too far, all those weights, different weights basically. And I wanted to talk about
+
+202
+00:16:21,539 --> 00:16:28,379
+how Halo 4 did it because to my knowledge, it was one of the first time it was used.
+
+203
+00:16:28,379 --> 00:16:34,219
+I'm still not sure how Hélène Noir, if you remember that game, was doing the rendering.
+
+204
+00:16:34,219 --> 00:16:42,659
+But I was sure that Halo 4 was using PCA and I haven't seen any other game after using that
+
+205
+00:16:42,659 --> 00:16:50,099
+same technique and even Lord Z basically said that it only works on Halo 4 and it never
+
+206
+00:16:50,100 --> 00:16:57,860
+worked in any different LO. It was the only game as far as I know that ever used PCA to render
+
+207
+00:16:57,860 --> 00:17:02,580
+the facial animations instead of the cutscenes. And I find it interesting and I wanted to make
+
+208
+00:17:02,580 --> 00:17:11,220
+sure that it wasn't basically forgotten at some point. So I hope you liked it and see you next time.

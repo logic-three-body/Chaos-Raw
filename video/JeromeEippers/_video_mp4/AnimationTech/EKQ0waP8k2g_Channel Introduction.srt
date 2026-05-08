@@ -1,0 +1,43 @@
+1
+00:00:00,000 --> 00:00:06,879
+Hi, welcome to the AnimationTech channel where we will be looking at the technical side of animation
+
+2
+00:00:06,879 --> 00:00:14,720
+in video game mainly by re-implementing old animation paper that we released a long time ago
+
+3
+00:00:14,720 --> 00:00:20,080
+up to papers that were actually more recent and we will re-implement them inside of Python
+
+4
+00:00:20,080 --> 00:00:27,440
+so we could have an easy visualization of what those papers were about. We will also probably
+
+5
+00:00:27,440 --> 00:00:34,079
+talk a bit about physics and also the mathematics behind animations and physics in video games.
+
+6
+00:00:35,359 --> 00:00:40,560
+My name is Jérôme Perth and I'm an animation technical director for the past 20 years in
+
+7
+00:00:40,560 --> 00:00:48,799
+the game industry. I've been working mainly into designing animation pipeline, writing tools,
+
+8
+00:00:48,799 --> 00:00:56,719
+or writing engine code about animations. And I hope this channel will be of an interest for you
+
+9
+00:00:56,719 --> 00:01:01,439
+and if you want to make sure that they're here about all the videos I would be releasing
+
+10
+00:01:02,799 --> 00:01:08,640
+frequently, I would try to be constant in my release. I would say probably one a month or
+
+11
+00:01:08,640 --> 00:01:14,079
+something like that. Make sure that you hit the subscribe button and see you in the next video.

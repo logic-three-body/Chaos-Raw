@@ -1,0 +1,2247 @@
+1
+00:00:00,000 --> 00:00:06,440
+Let's continue our series about reinforcement learning for animation and this time we will
+
+2
+00:00:06,440 --> 00:00:13,240
+be looking at a paper that has a continuous state space and a parametrized action space.
+
+3
+00:00:13,240 --> 00:00:17,800
+So for each action, instead of just being able to play one clip, we will be able to
+
+4
+00:00:17,800 --> 00:00:20,839
+select several of them and blend them together.
+
+5
+00:00:20,839 --> 00:00:28,640
+Hi, I'm Jérôme and today's paper is Real Time Planning for Parametrized Human Motion,
+
+6
+00:00:28,640 --> 00:00:34,079
+a paper from 2008. As usual, what I would do is that I will
+
+7
+00:00:34,079 --> 00:00:38,480
+import a bunch of libraries I need and I will import my characters,
+
+8
+00:00:39,520 --> 00:00:43,120
+sets of mesh to represent the direction and the targets.
+
+9
+00:00:43,120 --> 00:00:45,840
+And what I would do is that for the animation data,
+
+10
+00:00:46,799 --> 00:00:51,040
+this time instead of using LaFan animations, I would use
+
+11
+00:00:51,040 --> 00:00:55,760
+Matarica AI website to generate a bunch of locomotion animations.
+
+12
+00:00:55,759 --> 00:00:59,359
+So the websites allow you fairly easily
+
+13
+00:00:59,359 --> 00:01:03,359
+to just select the trajectory that you want to see
+
+14
+00:01:03,359 --> 00:01:06,599
+and then generating animations for it
+
+15
+00:01:06,599 --> 00:01:07,959
+and to export that animations.
+
+16
+00:01:07,959 --> 00:01:10,200
+The free tier allows you to generate
+
+17
+00:01:10,200 --> 00:01:11,920
+up to 10 second of animations.
+
+18
+00:01:11,920 --> 00:01:15,599
+So a lot enough for what I need to do here.
+
+19
+00:01:15,599 --> 00:01:20,200
+So what I have is that already a bunch of animations
+
+20
+00:01:20,200 --> 00:01:25,200
+and that I have retargeted on my character
+
+21
+00:01:25,200 --> 00:01:29,120
+And so if we check, those clips I have is those ones.
+
+22
+00:01:29,120 --> 00:01:33,159
+So I got a bunch of turning animations like this
+
+23
+00:01:33,159 --> 00:01:37,879
+and I will have a few of turn animations
+
+24
+00:01:37,879 --> 00:01:39,400
+that then start and stop.
+
+25
+00:01:39,400 --> 00:01:42,719
+So I get 46 different clips like this.
+
+26
+00:01:44,379 --> 00:01:49,379
+And this paper builds on top of the previous,
+
+27
+00:01:49,400 --> 00:01:51,079
+a new optimal character animation
+
+28
+00:01:51,079 --> 00:01:53,480
+with continuous control that we did before.
+
+29
+00:01:53,480 --> 00:01:55,600
+So it uses exactly the same concept
+
+30
+00:01:55,600 --> 00:01:59,600
+for slicing your clips into small steps
+
+31
+00:01:59,600 --> 00:02:02,120
+and realigning all those steps every time.
+
+32
+00:02:02,120 --> 00:02:04,760
+Those clips every time you want to pick an action
+
+33
+00:02:04,760 --> 00:02:06,760
+and play the next clip, you align both.
+
+34
+00:02:06,760 --> 00:02:11,520
+So I will not go through that process again.
+
+35
+00:02:11,520 --> 00:02:14,439
+It is exactly the same process as the
+
+36
+00:02:14,439 --> 00:02:15,759
+near optimal character animation
+
+37
+00:02:15,759 --> 00:02:18,480
+with continuous control paper.
+
+38
+00:02:18,480 --> 00:02:21,080
+So go watch that video if you want to see
+
+39
+00:02:21,080 --> 00:02:23,240
+exactly how those clips works.
+
+40
+00:02:23,240 --> 00:02:27,420
+So the only thing I would do is that I would basically
+
+41
+00:02:27,420 --> 00:02:32,420
+regenerate all the motion clips and go back to the stage
+
+42
+00:02:32,640 --> 00:02:36,020
+we were with the previous paper, which is this.
+
+43
+00:02:36,900 --> 00:02:41,900
+Every clip is something like this, a small step,
+
+44
+00:02:41,980 --> 00:02:44,180
+and then so you get the first contact next
+
+45
+00:02:44,180 --> 00:02:45,219
+and that stops there.
+
+46
+00:02:45,219 --> 00:02:47,540
+So every clip is this and then you will be able to play
+
+47
+00:02:47,540 --> 00:02:50,820
+with putting them back to back.
+
+48
+00:02:50,819 --> 00:02:57,219
+So I got a bunch of clips doing all the different rotation
+
+49
+00:02:57,219 --> 00:03:00,139
+and turns and all of this stuff.
+
+50
+00:03:00,139 --> 00:03:05,379
+So that's the animation data, is the clips of the animation
+
+51
+00:03:05,379 --> 00:03:07,419
+data we'll be using.
+
+52
+00:03:07,419 --> 00:03:10,139
+So what I will have is, as usual,
+
+53
+00:03:10,139 --> 00:03:13,180
+I will have a player that's allowed me to just say,
+
+54
+00:03:13,180 --> 00:03:15,819
+I want to play this clip after that one, after that one,
+
+55
+00:03:15,819 --> 00:03:18,299
+and so on, and so on, and keep track of the positions
+
+56
+00:03:18,300 --> 00:03:21,300
+and realign all the clips automatically.
+
+57
+00:03:21,300 --> 00:03:26,380
+So I'll load that code.
+
+58
+00:03:26,380 --> 00:03:31,380
+And just to show you exactly as before,
+
+59
+00:03:31,939 --> 00:03:34,500
+what I can do is I can just set the player
+
+60
+00:03:34,500 --> 00:03:37,540
+to randomly pick a clip every time.
+
+61
+00:03:37,540 --> 00:03:39,860
+And you get this basically.
+
+62
+00:03:39,860 --> 00:03:43,460
+It just randomly picks clips
+
+63
+00:03:43,460 --> 00:03:46,100
+and you can see that it could generate
+
+64
+00:03:46,099 --> 00:03:54,900
+fairly continuous motion with no foot sliding, except that it might have discontinuities
+
+65
+00:03:54,900 --> 00:04:00,259
+completely between clips, but the player is still able to do what we were doing in the
+
+66
+00:04:00,259 --> 00:04:04,139
+previous paper.
+
+67
+00:04:04,139 --> 00:04:12,659
+And following the exact same system as the previous paper, what we need to compute now
+
+68
+00:04:12,659 --> 00:04:19,060
+is computing the physical continuity between each clip so basically making sure that
+
+69
+00:04:21,699 --> 00:04:28,259
+when we pick a motion and we pick a clip after another one it is physically plausible.
+
+70
+00:04:29,699 --> 00:04:37,779
+Also make sure that we never pick the wrong foot by giving a really high cost of playing a clip
+
+71
+00:04:37,780 --> 00:04:47,540
+that is on the wrong foot. And I'm also taking that time to compute how much playing a clip after
+
+72
+00:04:47,540 --> 00:04:55,620
+another one will actually rotate the character and will actually move the character on X and Z
+
+73
+00:04:55,620 --> 00:05:01,060
+positions. So all this code is exactly the same as the previous paper, no difference here. So
+
+74
+00:05:01,060 --> 00:05:07,660
+So I've just run it before and I will just reload the stuff that I've created.
+
+75
+00:05:07,660 --> 00:05:16,060
+So right now I have a big table that gives me the physics costs from any clip to any
+
+76
+00:05:16,060 --> 00:05:17,060
+other clip.
+
+77
+00:05:17,060 --> 00:05:25,379
+I get the rotation delta from any clip to any other clip and the same for position X
+
+78
+00:05:25,379 --> 00:05:26,379
+and Z.
+
+79
+00:05:26,379 --> 00:05:36,180
+video. We have the exact same features that we had previously. Now, what we want to do
+
+80
+00:05:36,180 --> 00:05:43,259
+is actually train an optimal policy, trying to match a goal. And the first goal that we're
+
+81
+00:05:43,259 --> 00:05:49,219
+trying to match is the easy one is to make sure that the character I control goes in
+
+82
+00:05:49,220 --> 00:06:02,180
+the direction I want him to go. And for this, the paper has it's fairly similar to the continuous
+
+83
+00:06:02,180 --> 00:06:09,500
+control. It's just take a different approach on the approximations of the value function.
+
+84
+00:06:09,500 --> 00:06:17,380
+So if you remember the previous one, we were using basis functions to approximate the value
+
+85
+00:06:17,379 --> 00:06:23,620
+functions. And why we had to do this is because the value function is inside of a continuous space.
+
+86
+00:06:23,620 --> 00:06:31,300
+So it's hard to train it on every possible values. So what we do is that we train on a subset
+
+87
+00:06:32,339 --> 00:06:39,459
+and we try to approximate the value function as best as we could with something that will
+
+88
+00:06:39,460 --> 00:06:48,620
+will give us what we expect the value to be outside of the value we've truly seen.
+
+89
+00:06:48,620 --> 00:06:59,460
+We did it with basis functions and basically what this is called usually, it's a regression.
+
+90
+00:06:59,460 --> 00:07:04,900
+So what you have is a function that you don't know, a bunch of points on that functions
+
+91
+00:07:04,900 --> 00:07:12,060
+that you do compute and you try to regress and find an approximations for the function
+
+92
+00:07:12,060 --> 00:07:13,060
+itself.
+
+93
+00:07:13,060 --> 00:07:16,380
+So, basis functions was one way of doing it.
+
+94
+00:07:16,380 --> 00:07:21,660
+This paper decided to go with extra tree regressors.
+
+95
+00:07:21,660 --> 00:07:26,060
+And why they've picked it is because it's a known regressor.
+
+96
+00:07:26,060 --> 00:07:33,300
+It's good at giving you an approximation of any functions when you throw a lot of data
+
+97
+00:07:33,300 --> 00:07:41,780
+at it. And the advantage of an XF3 regressor compared to the basis functions is that it is
+
+98
+00:07:41,780 --> 00:07:48,580
+able to approximate anything without a prior knowledge of what the value functions should look
+
+99
+00:07:48,580 --> 00:07:56,180
+like. If you remember when we did it with basis functions, what happened is that you do have to
+
+100
+00:07:56,180 --> 00:08:00,980
+to kind of guess what the value function would be
+
+101
+00:08:00,980 --> 00:08:04,980
+to figure out what is the basis functions you want to use
+
+102
+00:08:04,980 --> 00:08:08,780
+to address and to approximate them.
+
+103
+00:08:08,780 --> 00:08:11,139
+Here, you could just throw a regressor at it
+
+104
+00:08:11,139 --> 00:08:13,920
+and see what it would learn from it.
+
+105
+00:08:17,500 --> 00:08:20,699
+It has a little higher cost in memory, of course,
+
+106
+00:08:20,699 --> 00:08:25,139
+because it has more parameters to learn
+
+107
+00:08:25,139 --> 00:08:29,180
+and memorized and just the few basis functions you could use.
+
+108
+00:08:29,180 --> 00:08:32,580
+But it's also better at learning a value functions
+
+109
+00:08:32,580 --> 00:08:37,179
+that will not be extremely smooth.
+
+110
+00:08:37,179 --> 00:08:39,500
+What happened is basis functions,
+
+111
+00:08:39,500 --> 00:08:42,779
+we assume that the value functions will be quite smooth
+
+112
+00:08:42,779 --> 00:08:47,019
+and then we could just use a bunch of Gaussian values
+
+113
+00:08:47,019 --> 00:08:48,580
+to approximate it.
+
+114
+00:08:48,580 --> 00:08:51,100
+The regressor, the extractor regressor,
+
+115
+00:08:51,100 --> 00:08:58,620
+just accept any shape without assuming that it will be smooth or anything. So that's the first
+
+116
+00:08:58,620 --> 00:09:05,820
+difference between the two papers. They use a different type of regressor. In my case, I will
+
+117
+00:09:05,820 --> 00:09:12,060
+use the extra tree regressor from sci-pi directly because it exists. I know that it's stable there
+
+118
+00:09:12,060 --> 00:09:20,139
+and I could just use this one. They do implement their own with some specific mathematics behind it.
+
+119
+00:09:21,100 --> 00:09:28,100
+I will not go into detail with those, I will just use the regressor.
+
+120
+00:09:28,100 --> 00:09:35,100
+Okay, let's go through how to train the optimal policy.
+
+121
+00:09:35,100 --> 00:09:37,700
+It is fairly similar to the previous system.
+
+122
+00:09:37,700 --> 00:09:45,139
+So what you do is that you start with an empty, but value functions where everything is zero.
+
+123
+00:09:45,139 --> 00:09:51,060
+So basically you have no knowledge of what the value function will be, set it all to
+
+124
+00:09:51,060 --> 00:10:00,900
+zero. And you start to create a training set out of all the possible states you could have.
+
+125
+00:10:00,900 --> 00:10:13,460
+So the way you do it is that you randomly start at any in any states. And from there,
+
+126
+00:10:13,460 --> 00:10:24,180
+you use your optimal policy to traverse, to start from that states and you just use the
+
+127
+00:10:24,180 --> 00:10:30,740
+policy and see what you get as a result. And for all the steps you take, so you basically move
+
+128
+00:10:30,740 --> 00:10:39,300
+forward as if you were playing, and for all of those you store the pair between the states
+
+129
+00:10:39,300 --> 00:10:45,300
+and the reward that you would get from taking that action.
+
+130
+00:10:45,300 --> 00:10:53,300
+So you store the states and reward that you encounter while traversing
+
+131
+00:10:53,300 --> 00:10:57,540
+your states. Once you have all of those,
+
+132
+00:10:57,540 --> 00:11:01,460
+when you have a set of those, you train your
+
+133
+00:11:01,460 --> 00:11:06,180
+extra tree regressors to approximate all the value functions.
+
+134
+00:11:06,180 --> 00:11:20,180
+So you get a new set of value functions and you re-update all your pairs you had.
+
+135
+00:11:20,180 --> 00:11:25,060
+So basically, you know, you've computed states and rewards, states, rewards, states, reward.
+
+136
+00:11:25,700 --> 00:11:29,620
+You recompute the value functions and then you go back through all the states you've seen.
+
+137
+00:11:30,260 --> 00:11:34,660
+You retake the best optimal trajectory you could have taken,
+
+138
+00:11:34,659 --> 00:11:39,299
+best optimal action you could have taken from there, you get a new reward probably,
+
+139
+00:11:40,100 --> 00:11:45,699
+and you update the values for each of them. And when you've done this, you start the loop again,
+
+140
+00:11:46,259 --> 00:11:54,179
+you reset a bunch of random starting positions, walk through and get a few new trajectories
+
+141
+00:11:54,179 --> 00:11:59,860
+that should probably be better because your value functions get better and better every time,
+
+142
+00:11:59,860 --> 00:12:03,539
+and you keep repeating this until you get conversions.
+
+143
+00:12:04,899 --> 00:12:09,060
+What they would do is that they would stop getting new data at some point,
+
+144
+00:12:09,060 --> 00:12:13,460
+and then they would just train the value functions on itself with all the data they have.
+
+145
+00:12:14,580 --> 00:12:22,019
+Let's not spend too much time on that detail. But yeah, usually that's how you do it.
+
+146
+00:12:22,019 --> 00:12:26,500
+It's the loop of getting a bunch of data, training your value functions,
+
+147
+00:12:26,500 --> 00:12:32,019
+updating all the data you had, get more data and so on and so on until convergence.
+
+148
+00:12:33,379 --> 00:12:40,500
+And to check that you have converge, we compute the Bellman residual and it's just the computation
+
+149
+00:12:40,500 --> 00:12:50,500
+of knowing this states expected last time this reward and if I actually take my policy,
+
+150
+00:12:50,500 --> 00:12:54,500
+it gets that as a reward and you check the difference between the two.
+
+151
+00:12:54,500 --> 00:13:01,299
+and the goal is to have zero difference to get the expected reward being exactly the reward
+
+152
+00:13:01,940 --> 00:13:02,820
+you are waiting for.
+
+153
+00:13:05,700 --> 00:13:11,700
+So that's it, that's how the algorithm will work and now we will train this and see how
+
+154
+00:13:12,340 --> 00:13:21,299
+we could do it. So I will do it for the example of rotating my character and so the only
+
+155
+00:13:24,500 --> 00:13:28,220
+Boom, boom, boom, boom, boom, boom, boom, boom, boom.
+
+156
+00:13:28,220 --> 00:13:30,659
+Why is the reward fairly simple?
+
+157
+00:13:30,659 --> 00:13:32,059
+Yeah, that's it there.
+
+158
+00:13:32,059 --> 00:13:35,340
+So the reward is, as before,
+
+159
+00:13:35,340 --> 00:13:38,740
+is basically I will encode everything
+
+160
+00:13:38,740 --> 00:13:43,379
+as saying that my character should walk forward
+
+161
+00:13:43,379 --> 00:13:44,419
+inside of a state space.
+
+162
+00:13:44,419 --> 00:13:47,539
+So the state space is always local for my character.
+
+163
+00:13:47,539 --> 00:13:50,539
+And the only thing I want to do is to make it sure
+
+164
+00:13:50,539 --> 00:13:54,939
+that it walk forward inside of the state space,
+
+165
+00:13:54,939 --> 00:13:58,500
+say basically anything that tells me that it is an angle
+
+166
+00:13:58,500 --> 00:14:01,219
+would say that's the offsets,
+
+167
+00:14:01,219 --> 00:14:06,219
+that's making me not walk in the direction I want it to walk.
+
+168
+00:14:07,299 --> 00:14:10,339
+So the only thing I compute is the angle
+
+169
+00:14:10,339 --> 00:14:15,339
+of my character local to itself where it end up walking.
+
+170
+00:14:15,340 --> 00:14:23,019
+up working. So that's my state say so much rotations offsets I want to have
+
+171
+00:14:23,019 --> 00:14:30,340
+compared to in front of me. So I will have a transition function that is just
+
+172
+00:14:30,340 --> 00:14:38,620
+able to say I'm in this clip with a plane on X and Z positions and I get an
+
+173
+00:14:38,620 --> 00:14:44,660
+angle relative to my plane and I want to play a next clip to that and where
+
+174
+00:14:44,659 --> 00:14:49,939
+That that will bring me that's basically what it returns me it returns the next clip
+
+175
+00:14:50,539 --> 00:14:54,860
+Then the next X prime the next Z prime and the next
+
+176
+00:14:55,459 --> 00:14:58,779
+That are primed the next rotation. So the transitions
+
+177
+00:15:00,339 --> 00:15:05,059
+Basically is computed the same way as it was done in the continuous state space. I
+
+178
+00:15:06,259 --> 00:15:08,659
+get the transition reward as
+
+179
+00:15:08,659 --> 00:15:13,579
+is what is the reward of taking one of the actions?
+
+180
+00:15:13,579 --> 00:15:16,980
+So basically, if I'm in specific states
+
+181
+00:15:16,980 --> 00:15:19,100
+and I want to go to the next states,
+
+182
+00:15:19,100 --> 00:15:22,059
+what is the reward of doing that?
+
+183
+00:15:22,059 --> 00:15:24,539
+And basically, in this case, the reward is negative,
+
+184
+00:15:24,539 --> 00:15:27,100
+is the inverse of the cost.
+
+185
+00:15:27,100 --> 00:15:29,500
+So the bigger the cost,
+
+186
+00:15:30,579 --> 00:15:32,559
+the more negative that reward is.
+
+187
+00:15:33,899 --> 00:15:36,740
+And the state reward is just the reward
+
+188
+00:15:36,740 --> 00:15:41,580
+of being inside of a state itself and a state reward.
+
+189
+00:15:41,580 --> 00:15:44,299
+What I would do is that I would say anything
+
+190
+00:15:44,299 --> 00:15:49,299
+that is over the original animation number 25
+
+191
+00:15:50,220 --> 00:15:52,820
+returns a big negative score.
+
+192
+00:15:52,820 --> 00:15:57,019
+And that's just because I know that all of my animations
+
+193
+00:15:57,019 --> 00:16:02,019
+I've done here, as you see, I get the walking and curve,
+
+194
+00:16:02,019 --> 00:16:07,699
+walking in curve, I get a bunch of turn, I get to walk forward, then everything else
+
+195
+00:16:07,699 --> 00:16:15,139
+is start, stop, slowing down and stops. So I'm in a controller that's where I just want to
+
+196
+00:16:15,139 --> 00:16:20,340
+walk in a specific direction. So basically, picking any animation that is not a walking
+
+197
+00:16:20,340 --> 00:16:30,819
+animation is a big negative reward. And apart from that, where am I here? Otherwise, I just check
+
+198
+00:16:32,019 --> 00:16:39,860
+where this state will bring me relative to where I want to walk actually and that's it,
+
+199
+00:16:39,860 --> 00:16:48,259
+they will just return the absolute angle. So if my states make me walk in the direction I want it,
+
+200
+00:16:49,220 --> 00:16:58,340
+that's basically a reward of zero, otherwise it's a negative reward of how much disalignment you have.
+
+201
+00:16:58,340 --> 00:17:06,140
+So, fairly stretchable forward for the rewards and that kind of stuff.
+
+202
+00:17:06,140 --> 00:17:13,380
+What I will have is how to pick, to read my value function compared to the top-primes
+
+203
+00:17:13,380 --> 00:17:17,940
+and the clip ID.
+
+204
+00:17:17,940 --> 00:17:23,019
+And here is the stuff that I've done a little differently than the paper.
+
+205
+00:17:23,019 --> 00:17:30,859
+paper is using an extra three regressor and then it's just using it directly to get the value.
+
+206
+00:17:32,700 --> 00:17:38,700
+What I wanted to do here, it was to be able to use NumPy and the vectorization of NumPy so I could
+
+207
+00:17:41,339 --> 00:17:49,099
+basically request the value functions for every states in one go and having all of that computed
+
+208
+00:17:49,099 --> 00:17:55,899
+in parallel, which is something that is fairly hard to do with the implementation of the
+
+209
+00:17:55,899 --> 00:18:00,939
+extra tree regressor in scipy. I mean, that's one tree that runs on one core and so on.
+
+210
+00:18:02,699 --> 00:18:08,139
+So what I've done is that I would compute the value functions, the extra trees regressor,
+
+211
+00:18:08,139 --> 00:18:15,899
+I will compute all of them. And then once they compute it, I will pre compute a search table.
+
+212
+00:18:15,900 --> 00:18:20,220
+So basically, I will use the value functions and I will say, that's nice, you have an extra
+
+213
+00:18:20,220 --> 00:18:28,460
+tree regressor that gives me an approximation. Now just give me a big table of pre-competed
+
+214
+00:18:28,460 --> 00:18:33,980
+values so I could just pick the closest one. And at least I can do that in parallel for all the
+
+215
+00:18:33,980 --> 00:18:42,060
+clips in one go. So that's why I have here the value functions actually are not the trees exactly.
+
+216
+00:18:42,059 --> 00:18:49,980
+they are one big table with a bunch of pre-competed values for me. And so that
+
+217
+00:18:49,980 --> 00:18:58,619
+allows me to find easily old indices that I want to search inside of
+
+218
+00:18:58,619 --> 00:19:05,579
+that table and then to return the values of that table. And I use optimal
+
+219
+00:19:05,579 --> 00:19:16,199
+policy then basically is just taking the starting clip I have and picking the
+
+220
+00:19:16,199 --> 00:19:23,379
+transitions from the starting clip towards all the clips at once so taking
+
+221
+00:19:23,379 --> 00:19:28,539
+taking the transition between my clip and everything else that's giving me the
+
+222
+00:19:28,539 --> 00:19:34,679
+x prime z prime and theta prime of all the possible transitions then I compute
+
+223
+00:19:34,680 --> 00:19:45,480
+transition rewards for all those different transitions. And I can compute the future reward
+
+224
+00:19:45,480 --> 00:19:53,000
+for all of them again, multiplying by the discount factor. And once I have that,
+
+225
+00:19:53,000 --> 00:19:59,240
+I just pick the one that has the highest score. And then what I return is the picked one, the new
+
+226
+00:19:59,240 --> 00:20:05,240
+x prime z prime theta prime and the reward and this time in the reward I picked the
+
+227
+00:20:06,279 --> 00:20:11,559
+the transitions plus the future reward so that's basically the future reward
+
+228
+00:20:13,079 --> 00:20:18,680
+and I'm adding the state reward to it because that state reward doesn't change anyway it's
+
+229
+00:20:19,319 --> 00:20:25,319
+the reward of being in my state now not the reward of being in any future state or anything
+
+230
+00:20:25,319 --> 00:20:32,319
+And so that's the value functions and the policy itself.
+
+231
+00:20:32,319 --> 00:20:35,319
+I will not care about this one.
+
+232
+00:20:35,319 --> 00:20:45,319
+And so what happened is now I could do the algorithm of trying to train that value function.
+
+233
+00:20:45,319 --> 00:20:53,319
+And see, it's done the way the paper describes it.
+
+234
+00:20:53,319 --> 00:21:03,319
+basically I take height 100 random starting positions so I picked randomly any clip and
+
+235
+00:21:03,319 --> 00:21:10,679
+I picked randomly any angle and that becomes my state so one clip one angle that's my state
+
+236
+00:21:11,319 --> 00:21:21,079
+and then from that state I use my optimal policy to get the next clip and I store
+
+237
+00:21:23,319 --> 00:21:34,679
+I store my state in the X so I store my current clip and data and I store the associated reward
+
+238
+00:21:34,679 --> 00:21:44,200
+for it and I keep this for 10 steps. I keep walking using my optimal policy for 10 steps
+
+239
+00:21:44,200 --> 00:21:51,319
+and recording every pair of state reward and once I have that pairs of state reward
+
+240
+00:21:51,319 --> 00:22:00,480
+I train for each of my clip I will train an extra tree regressor. So it's the
+
+241
+00:22:00,480 --> 00:22:06,919
+same concept as the continuous character control. You have one value function per
+
+242
+00:22:06,919 --> 00:22:13,519
+clip. So basically it is a continuous state space where the clip itself is
+
+243
+00:22:13,519 --> 00:22:19,639
+tabulated. So you learn a bunch of continuous state space next to each
+
+244
+00:22:19,640 --> 00:22:28,360
+other and a bunch of value functions next to each other. So each clip has its own value function
+
+245
+00:22:29,560 --> 00:22:35,000
+into a continuous value functions and then you train all of them at the same time.
+
+246
+00:22:35,000 --> 00:22:40,120
+So because you will start from one clip and read the value functions of the other one and so on.
+
+247
+00:22:40,120 --> 00:22:47,320
+So you have to train all of them at once, consider them as one big value functions
+
+248
+00:22:47,319 --> 00:22:57,720
+except the clips are tabulated. So compute the extractor regressor with all the pairs of states
+
+249
+00:22:57,720 --> 00:23:07,399
+and reward. And as I said, what I do after that is that I predict a bunch of values because that
+
+250
+00:23:07,399 --> 00:23:16,279
+is again vectorized and parallelized fairly well. So I can predict, I think I predict 300
+
+251
+00:23:16,279 --> 00:23:25,160
+different values for each of my trees. And I put all of that into one big table,
+
+252
+00:23:25,160 --> 00:23:32,039
+so I will be able to use NumPy to do computation in parallel on that big table.
+
+253
+00:23:34,039 --> 00:23:40,200
+And so once you've done this, what you do is computing the residual. So how much errors
+
+254
+00:23:40,200 --> 00:23:48,360
+you have between what reward I was expecting before and what reward I receive now that I've
+
+255
+00:23:48,360 --> 00:23:58,440
+updated my value functions and at the same time I update the expected return to be the new
+
+256
+00:23:58,440 --> 00:24:04,039
+expected reward basically. So that's the expected reward for the next iteration now
+
+257
+00:24:04,039 --> 00:24:11,399
+has been updated with the new rewards I have now. Again, I've run this before and I will just reload
+
+258
+00:24:14,119 --> 00:24:19,960
+what I've loaded and what you could see is that I haven't done a lot of epoch because basically
+
+259
+00:24:21,240 --> 00:24:31,399
+it's fairly easy to learn in this case. What you see is the mean error, the mean residual,
+
+260
+00:24:31,400 --> 00:24:38,680
+Bellman residual, so it drops fairly quickly and I get the maximum residual error, so also
+
+261
+00:24:38,680 --> 00:24:45,400
+dropping between the best expected reward and what I actually get. I don't have a lot of difference.
+
+262
+00:24:47,160 --> 00:24:56,040
+And so I can now have a gamepad and I can start to play with what we've learned
+
+263
+00:24:56,039 --> 00:25:10,480
+here. And so now every time I write it, it will just use the same optimal policy of checking
+
+264
+00:25:10,480 --> 00:25:21,599
+every possible clip, checking the future reward to see how good this gets. And so we have something
+
+265
+00:25:21,600 --> 00:25:29,820
+that is fairly close to the continuous control except that I would agree that
+
+266
+00:25:29,820 --> 00:25:37,240
+using the extractory regressor was a lot simpler to use than trying to find what
+
+267
+00:25:37,240 --> 00:25:45,600
+would be the best basis functions for the for the value functions and it's
+
+268
+00:25:45,600 --> 00:25:53,200
+it's quite responsive. You could tweak if you wanted to learn something a bit more responsive
+
+269
+00:25:54,720 --> 00:26:02,960
+and by giving less score to the physicality continuity, but it does work.
+
+270
+00:26:02,960 --> 00:26:17,559
+Now, what this paper shows is that learning with extra tree regressor was needed if they
+
+271
+00:26:17,559 --> 00:26:24,720
+wanted to do, in that case they were doing grabbing animations, so giving an object asks
+
+272
+00:26:24,720 --> 00:26:27,600
+the character to move toward that object and grabbing it.
+
+273
+00:26:27,600 --> 00:26:33,360
+I don't have graphing animations so what I would do instead is stopping at a specific
+
+274
+00:26:33,360 --> 00:26:38,160
+target. So I will give him targets somewhere in the world and I want the character to walk
+
+275
+00:26:38,160 --> 00:26:45,040
+toward the target and stopping on the target. It basically gives the same concept, maybe
+
+276
+00:26:45,040 --> 00:26:53,600
+a little less visual but it's still working. So what I will have is what I call the reach goal
+
+277
+00:26:53,600 --> 00:27:03,720
+policy. So I have a bunch of animations that are stopping animations. So I know
+
+278
+00:27:03,720 --> 00:27:08,440
+which one they are. So that's all my stopping clips. Those one were just the
+
+279
+00:27:08,440 --> 00:27:16,960
+two stops, two-step stops at the end. Now the only thing I need is to know, you know,
+
+280
+00:27:16,960 --> 00:27:21,800
+I will ask it to stop at a specific position, which means that by the time
+
+281
+00:27:21,799 --> 00:27:27,879
+take the decision I need to make sure that take the decision that if I play that clip it would
+
+282
+00:27:27,879 --> 00:27:35,480
+stop where I want it to be so I need to know what is the state in which I need to be to actually
+
+283
+00:27:35,480 --> 00:27:40,200
+make sure that if I play that stop I will stop where I want it so that's the stop positions
+
+284
+00:27:40,200 --> 00:27:48,919
+it's basically give me where I actually need to be when I take that decision to play this clip
+
+285
+00:27:48,920 --> 00:27:53,960
+so it would just finish the animation in the right spot, so I compute basically why the stop
+
+286
+00:27:53,960 --> 00:28:06,759
+needs to be starting to stop at zero zero zero. Now the reward function for this system normally
+
+287
+00:28:06,759 --> 00:28:20,920
+is this. As they said, you basically give it just a reward. If you are stopping on the right spot,
+
+288
+00:28:20,920 --> 00:28:29,720
+you get a reward of one. And every time you do not, your reward is zero.
+
+289
+00:28:29,720 --> 00:28:39,720
+basically that's a sparse reward function so it means that there is a really not a lot of time
+
+290
+00:28:39,720 --> 00:28:51,160
+something that gives you a reward so they say in the paper that you could just train with this
+
+291
+00:28:51,160 --> 00:28:58,759
+reward functions and that would work and that's magic it's something that is known to be extremely
+
+292
+00:28:58,759 --> 00:29:08,680
+hard to train actually. And with the data I have was not able to just hope for the best like they
+
+293
+00:29:08,680 --> 00:29:15,160
+were saying and then make it work. Because what happened is that you have two cases basically
+
+294
+00:29:15,160 --> 00:29:22,440
+and you have to find the right balance between the two. If your reward from reaching a certain
+
+295
+00:29:22,440 --> 00:29:30,519
+position is really big. What happens is that it would transfer that value through your value functions
+
+296
+00:29:31,160 --> 00:29:37,000
+through every state near it. So everything will say it's really important for me to reach that
+
+297
+00:29:37,000 --> 00:29:45,559
+point. I don't care if the transition cost is really high, if all my feet are sliding,
+
+298
+00:29:45,559 --> 00:29:51,400
+if I pick the wrong clip, as long as I'm reaching that reward, that's what matters.
+
+299
+00:29:52,440 --> 00:29:59,440
+So that's what happens if you give your reward for reaching a value that's too high.
+
+300
+00:29:59,440 --> 00:30:04,440
+On the other hand, if your reward value is too small, basically what the system will
+
+301
+00:30:04,440 --> 00:30:10,900
+learn is that everything is bad anyway.
+
+302
+00:30:10,900 --> 00:30:15,600
+There is no reward of walking more in that direction than anything else.
+
+303
+00:30:15,600 --> 00:30:20,279
+So what it will learn at the end is that as long as everything is negative anyway, let's
+
+304
+00:30:20,279 --> 00:30:26,119
+pick the one that gives a nice continuous animation and I don't care if I reach the goal or not
+
+305
+00:30:27,000 --> 00:30:32,599
+and you really need to fight between those two and it's really hard to find the right values
+
+306
+00:30:32,599 --> 00:30:40,279
+that will actually let you but let the value functions learn exactly how to get there especially
+
+307
+00:30:40,279 --> 00:30:49,799
+because in my case I have 200 clips I think and I only have a few stops so really not a lot of
+
+308
+00:30:49,799 --> 00:30:57,399
+stopping clips. So it's really sparse in my case. So I was not able to train my value functions
+
+309
+00:30:58,759 --> 00:31:05,319
+just by doing this. So there is a bunch of tricks you could apply when you try to train
+
+310
+00:31:05,319 --> 00:31:11,559
+a sparse value functions like that one. So what I would have to do to train these value functions,
+
+311
+00:31:12,279 --> 00:31:17,639
+I would not be able to just let it hope that you will find something
+
+312
+00:31:17,640 --> 00:31:23,960
+by just stumbling upon one positive values and then hoping that it will
+
+313
+00:31:23,960 --> 00:31:27,920
+start to learn that maybe going that direction is the good way. So what I
+
+314
+00:31:27,920 --> 00:31:32,400
+would do is that I will add a bunch of tricks that you could use when you try
+
+315
+00:31:32,400 --> 00:31:38,600
+to train values like this one that has a release pass reward. The first thing you
+
+316
+00:31:38,600 --> 00:31:46,400
+could do is to have a bootstrap. So basically instead of starting from
+
+317
+00:31:46,400 --> 00:31:52,960
+nothing start from something that's not it works. So what I would do is that I will give him a bunch
+
+318
+00:31:52,960 --> 00:32:00,720
+of known trajectories that are actually reaching the goal and I'm starting from those trajectories
+
+319
+00:32:00,720 --> 00:32:07,759
+instead of starting from nothing. That's the first thing. The second thing I realized that I needed
+
+320
+00:32:07,759 --> 00:32:18,480
+was the fact that although it was able to find the target when he was fairly in the certain
+
+321
+00:32:18,480 --> 00:32:25,279
+area around it, when he was too far from it, I had nothing that was forcing him to to walk back
+
+322
+00:32:25,279 --> 00:32:34,879
+in the right direction. So I would also add a penalty of being too far away from the goal.
+
+323
+00:32:34,880 --> 00:32:42,040
+So basically, it would force the system to say, if I'm really far, it's better that I walk in the direction of the goal.
+
+324
+00:32:42,400 --> 00:32:47,280
+And as soon as close enough, I will find the best trajectory to reach the goal anyway.
+
+325
+00:32:47,840 --> 00:32:54,720
+But I actually had to have those two different costs.
+
+326
+00:32:55,120 --> 00:33:01,320
+One that's trying to get to the goal and one that's really far, you try to walk towards mainly the goal.
+
+327
+00:33:01,319 --> 00:33:11,319
+And then the last thing I've done is instead of telling the system that I want him to...
+
+328
+00:33:13,319 --> 00:33:19,319
+Every time I get the new reward instead of setting that value for the new reward,
+
+329
+00:33:19,319 --> 00:33:21,319
+I was using a temporal difference.
+
+330
+00:33:21,319 --> 00:33:30,319
+So I'm only computing the error I have between the expected reward I wanted and the true reward I wanted.
+
+331
+00:33:30,319 --> 00:33:36,799
+want it. And I'm only slightly updating the expected reward.
+
+332
+00:33:36,799 --> 00:33:44,519
+Instead of just replacing it, I just said, I take 10% of the new reward, and I love 10%
+
+333
+00:33:44,519 --> 00:33:48,399
+of that new reward. And that's how I managed to make this learn.
+
+334
+00:33:48,399 --> 00:33:57,079
+So basically, the transition functions is a bit different, because before everything
+
+335
+00:33:57,080 --> 00:34:01,480
+was local to my character and I was telling them the character that it has to
+
+336
+00:34:01,480 --> 00:34:08,579
+work forward and that's it and I was computing the angle. This time every
+
+337
+00:34:08,579 --> 00:34:15,120
+state's encode in the position X and Z where the target is. So if my character
+
+338
+00:34:15,120 --> 00:34:19,760
+is here and the target is here that's what it's encoded. If it works like this
+
+339
+00:34:19,760 --> 00:34:26,200
+basically the new values is this offset. So everything is always realigned
+
+340
+00:34:26,199 --> 00:34:33,079
+to the character. So my target is always represented as a local offset from my character. So I get my
+
+341
+00:34:33,079 --> 00:34:42,279
+transition. What I will have is an inverse transition functions basically computing the
+
+342
+00:34:42,279 --> 00:34:49,879
+exact opposite of this one saying that if I'm now in a specific states and I was coming from
+
+343
+00:34:49,880 --> 00:34:54,039
+another state. Where was I? That's what the transition inverse does.
+
+344
+00:34:55,880 --> 00:35:03,160
+I get the transition reward, same as before. It's the physical costs and inverse the physical costs.
+
+345
+00:35:03,880 --> 00:35:10,200
+And I get the state reward. And the only thing that the state rewards does is this. If I'm
+
+346
+00:35:10,199 --> 00:35:21,399
+playing a stop animation, I'm just checking am I in a radius of 50
+
+347
+00:35:21,399 --> 00:35:25,039
+centimeters around where I wanted him to stop and if it's the case you get a
+
+348
+00:35:25,039 --> 00:35:33,119
+reward of one and if you ever pick that state reward with that stopping
+
+349
+00:35:33,119 --> 00:35:37,279
+animations while you actually do not stop in the right spot you get the
+
+350
+00:35:37,280 --> 00:35:44,000
+massive negative reward, saying that that was not what I wanted you to do. Never stops outside of
+
+351
+00:35:44,000 --> 00:35:54,000
+your stopping animation. And that's why I, for all the other cases, if I'm really far from my goal,
+
+352
+00:35:54,000 --> 00:36:01,680
+I get a little penalty from being too far. That's it. That's my state reward. I still get my value
+
+353
+00:36:01,679 --> 00:36:07,599
+functions instead of now it's an x and z value functions the 2d value function and my optimal
+
+354
+00:36:07,599 --> 00:36:13,039
+policy it's basically the same optimal policy as before i take my transitions i get the transition
+
+355
+00:36:13,039 --> 00:36:20,559
+reward i read the value functions i get the value functions for it and i picked the best one the
+
+356
+00:36:20,559 --> 00:36:27,759
+only thing i did just to avoid having those massive negative values getting injected inside of the
+
+357
+00:36:27,760 --> 00:36:38,800
+value functions. What I've done is that if I realized that it picked a stopping animation
+
+358
+00:36:38,800 --> 00:36:46,160
+while it shouldn't have anyway, basically restart the search for the optimal policy
+
+359
+00:36:46,960 --> 00:36:53,360
+by removing any stopping animations from the the available clip you can look at. So basically,
+
+360
+00:36:53,360 --> 00:37:01,280
+I'm checking every clip, if it decided that the best clip it could pick was a stopping
+
+361
+00:37:01,280 --> 00:37:08,960
+animation while it wasn't supposed to stop, I just tell him search again, this time doesn't
+
+362
+00:37:08,960 --> 00:37:14,400
+count for the stopping animations.
+
+363
+00:37:14,400 --> 00:37:15,720
+So that's the value of functions.
+
+364
+00:37:15,720 --> 00:37:19,599
+Now I do need to do that bootstrap.
+
+365
+00:37:19,599 --> 00:37:26,639
+basically what I have is a system that's allowed me to roll back trajectories. I can say I'm starting
+
+366
+00:37:26,639 --> 00:37:35,279
+from one position and I walk backwards from there. That's what the rollback trajectory will do.
+
+367
+00:37:36,000 --> 00:37:43,440
+And so for instance, let's pick this one. I get all the my stopping animations and I will roll back
+
+368
+00:37:43,440 --> 00:37:49,639
+eight steps and you can see basically there's a kind of stuff I will start the
+
+369
+00:37:49,639 --> 00:37:55,480
+learning from you know I have all those different trajectories that will
+
+370
+00:37:55,480 --> 00:38:03,200
+eventually anyway stop all in the same position so that's that's what the the
+
+371
+00:38:03,200 --> 00:38:12,320
+bootstrapping would do I will have all of those trajectories pre-generated and
+
+372
+00:38:12,320 --> 00:38:18,160
+I can start to learn from those. So I will not run this because it would take a bunch of time.
+
+373
+00:38:18,160 --> 00:38:24,400
+I will do this 100 times different positions for all the stops. So it would generate
+
+374
+00:38:25,760 --> 00:38:29,600
+100,000 different trajectories that actually reach the end.
+
+375
+00:38:31,840 --> 00:38:36,160
+Oh, I can do it. So I can show you what happens. I don't think it's that long. So
+
+376
+00:38:36,159 --> 00:38:41,079
+So I generate a lot of trajectories, yeah.
+
+377
+00:38:41,079 --> 00:38:50,519
+And then I can display now all the, for every clip animation,
+
+378
+00:38:50,519 --> 00:38:55,599
+you could see all those areas, all positions
+
+379
+00:38:55,599 --> 00:38:58,399
+that I know that if I'm in that state,
+
+380
+00:38:58,399 --> 00:39:00,279
+I'm able to reach the stopping animations.
+
+381
+00:39:00,279 --> 00:39:04,000
+So it gives me a lot of data to start from.
+
+382
+00:39:04,000 --> 00:39:10,400
+I have a bunch of data that I know that are good enough to start learning from.
+
+383
+00:39:11,760 --> 00:39:17,760
+And so hopefully it means that every other clips would start to try to reach those points or
+
+384
+00:39:17,760 --> 00:39:21,119
+another points further and I can stuff and then I would be able to train.
+
+385
+00:39:21,119 --> 00:39:36,880
+The only difference this time is because it's a lot longer, there is a lot more value functions
+
+386
+00:39:36,880 --> 00:39:41,759
+and a lot more data in all the value functions. So the only thing I've done to speed up the
+
+387
+00:39:41,759 --> 00:39:49,079
+process is that I've started a multiprocessing, so I will actually train the value functions
+
+388
+00:39:49,079 --> 00:39:56,360
+in a pool. So I will actually use all my cores and all my CPUs to train it. But
+
+389
+00:39:56,360 --> 00:40:00,299
+that's not really important. Everything else is basically the same. You know, I'm
+
+390
+00:40:00,299 --> 00:40:09,799
+bootstrapping with a bunch of known trajectories that are valid with an
+
+391
+00:40:09,799 --> 00:40:17,960
+expected, the best expected reward I could get from it. Anyway, it's even higher
+
+392
+00:40:17,960 --> 00:40:26,039
+because it doesn't take the transition cost into account and then generating a bunch of new paths
+
+393
+00:40:26,039 --> 00:40:32,920
+and then you stops every time you actually reach the goal you stop because you don't want to see
+
+394
+00:40:32,920 --> 00:40:41,400
+what happened after the fact that you reached the goal. So train the values and it's the same
+
+395
+00:40:41,400 --> 00:40:46,559
+loop when I'm training the values, creating the pre-computed tables and
+
+396
+00:40:46,559 --> 00:40:50,240
+reusing them and then recomputing the residual and all that kind of stuff.
+
+397
+00:40:50,240 --> 00:41:00,760
+Again, all of that has been run before and I can show you here what happened with
+
+398
+00:41:00,760 --> 00:41:08,519
+the score and the mean value. So, for every epoch, so I run it 50 epoch this
+
+399
+00:41:08,519 --> 00:41:15,639
+time. The only thing I've done also, yeah I've done a lot of stuff to make that able to learn.
+
+400
+00:41:16,519 --> 00:41:24,360
+You can see that it started to learn and so basically at every epoch it's generating it's
+
+401
+00:41:25,079 --> 00:41:38,199
+around 2600 different trajectories and that's the number of trajectories that actually reached
+
+402
+00:41:38,200 --> 00:41:45,000
+the goal in 10 steps while learning. You can see that it was starting to get better but it was fairly
+
+403
+00:41:45,000 --> 00:41:51,000
+slow so after 10 generations what I did is basically I kept the same value function
+
+404
+00:41:52,200 --> 00:41:59,240
+but I made him forget all the previous trajectory he did and I make him restart again and you can
+
+405
+00:41:59,240 --> 00:42:07,800
+can see that it suddenly gets a big jump because it has less
+
+406
+00:42:07,800 --> 00:42:10,600
+example of wrong trajectories.
+
+407
+00:42:10,600 --> 00:42:15,640
+And so I guess the value functions are softer and better
+
+408
+00:42:15,640 --> 00:42:18,600
+at learning the values that don't have too much.
+
+409
+00:42:18,600 --> 00:42:21,400
+And I tried to do it several times,
+
+410
+00:42:21,400 --> 00:42:22,880
+make him forget again.
+
+411
+00:42:22,880 --> 00:42:27,400
+And basically, it capped at the same level every time.
+
+412
+00:42:27,400 --> 00:42:32,480
+So it nearly reached 100%, meaning I can start from anywhere
+
+413
+00:42:32,480 --> 00:42:36,800
+and in 10 steps, it's always able to reach the stop.
+
+414
+00:42:36,800 --> 00:42:38,960
+And I can display one of the value functions,
+
+415
+00:42:38,960 --> 00:42:39,480
+for instance.
+
+416
+00:42:39,480 --> 00:42:42,840
+So you could see what the value functions look like.
+
+417
+00:42:42,840 --> 00:42:48,920
+So the pre-computed one goes from minus 1,000 to 1,000.
+
+418
+00:42:48,920 --> 00:42:52,360
+And you get that there, not exactly in the middle,
+
+419
+00:42:52,360 --> 00:42:54,280
+a bit offsets.
+
+420
+00:42:54,280 --> 00:42:59,920
+That's where it wants that clip to be able to reach the stops.
+
+421
+00:42:59,920 --> 00:43:02,960
+And again, I can play this.
+
+422
+00:43:02,960 --> 00:43:06,160
+So right now, it's not input anymore.
+
+423
+00:43:06,160 --> 00:43:09,760
+It will randomly pick a position and try
+
+424
+00:43:09,760 --> 00:43:13,000
+to get that character to walk toward that goal.
+
+425
+00:43:16,160 --> 00:43:20,280
+And it has 50 centimeters rear that I
+
+426
+00:43:20,280 --> 00:43:26,120
+agreed to not trying to make it get perfectly on the stop.
+
+427
+00:43:26,120 --> 00:43:29,120
+Because, again, those clips are not perfect.
+
+428
+00:43:29,120 --> 00:43:30,800
+So I want to make sure that it's still
+
+429
+00:43:30,800 --> 00:43:38,519
+able to reach the end goal easily by giving him
+
+430
+00:43:38,519 --> 00:43:40,320
+a bit of slack, let's say.
+
+431
+00:43:45,120 --> 00:43:49,920
+And with all the tricks to train those value functions,
+
+432
+00:43:49,920 --> 00:43:54,960
+It is then possible to do it.
+
+433
+00:43:54,960 --> 00:44:01,240
+Without all those added stuff on top of the paper,
+
+434
+00:44:01,240 --> 00:44:04,960
+I'm not sure I would have been able to learn
+
+435
+00:44:04,960 --> 00:44:08,680
+these value functions to do this.
+
+436
+00:44:08,680 --> 00:44:12,320
+Now, that's the default system.
+
+437
+00:44:12,320 --> 00:44:15,960
+It basically used the exact same thing
+
+438
+00:44:15,960 --> 00:44:17,280
+as the continuous functions now.
+
+439
+00:44:17,280 --> 00:44:19,440
+I'm just playing one clip and that's it.
+
+440
+00:44:20,640 --> 00:44:25,640
+Pick the best clip to reach a goal every time.
+
+441
+00:44:26,480 --> 00:44:29,400
+What the paper says is that what you have now
+
+442
+00:44:29,400 --> 00:44:33,480
+is a suboptimal search because it is linked
+
+443
+00:44:33,480 --> 00:44:36,400
+to all the clip it has and is not able
+
+444
+00:44:36,400 --> 00:44:39,280
+to learn something a bit more smooth
+
+445
+00:44:39,280 --> 00:44:44,280
+that would be able to reach more easily the goal.
+
+446
+00:44:47,280 --> 00:44:54,000
+so comes into play the motion groups so what they have
+
+447
+00:44:56,080 --> 00:45:03,040
+what they decided to do is this instead of picking one clip
+
+448
+00:45:04,800 --> 00:45:09,120
+what you do is that you regroup those clips together and that's what they've done here
+
+449
+00:45:09,119 --> 00:45:20,239
+see they get a bunch of groups and those groups will become your clip.
+
+450
+00:45:22,159 --> 00:45:26,559
+And inside of those groups you have a bunch of animations that represent the same kind of stuff
+
+451
+00:45:27,199 --> 00:45:36,239
+and that those animations can be blended together so you could choose to blend between
+
+452
+00:45:36,240 --> 00:45:40,720
+your first animation and the second one and to have all the in-betweens.
+
+453
+00:45:42,720 --> 00:45:47,440
+So that's what the motion groups will be here. That would be exactly the same thing. I would
+
+454
+00:45:47,440 --> 00:45:55,840
+take a bunch of indices and I would take a bunch of weights to decide how they
+
+455
+00:45:55,840 --> 00:46:00,840
+that represents the blend between the two.
+
+456
+00:46:02,640 --> 00:46:05,620
+And then I can show an example by picking,
+
+457
+00:46:05,620 --> 00:46:10,620
+so basically I picked a bunch of indices like that
+
+458
+00:46:10,740 --> 00:46:14,380
+and a bunch of weights and you can see that what I have
+
+459
+00:46:16,860 --> 00:46:18,180
+here is the same as before.
+
+460
+00:46:18,180 --> 00:46:21,220
+You know, I have one clip that is able to do this,
+
+461
+00:46:21,220 --> 00:46:24,820
+but then I can actually start to blend
+
+462
+00:46:24,820 --> 00:46:32,780
+and it will be a bit different and you could choose the different blend weights
+
+463
+00:46:32,780 --> 00:46:39,220
+between the different clips and so now what you end up with is what they
+
+464
+00:46:39,220 --> 00:46:48,740
+called the parametrized action space because now my action is not just the
+
+465
+00:46:48,740 --> 00:46:57,540
+clip I had, it is the fact that each of my clips have different possible values.
+
+466
+00:46:57,540 --> 00:47:02,500
+They have one parameter that decides how much you can tweak them.
+
+467
+00:47:03,940 --> 00:47:09,620
+So now I actually need to build the same system as what they've done here. So
+
+468
+00:47:09,620 --> 00:47:15,620
+regrouping all the animations together, that do make sense. And for this I had to write a bunch
+
+469
+00:47:15,619 --> 00:47:21,779
+of helpers functions to compute the different angle of each of them and all that kind of stuff
+
+470
+00:47:22,420 --> 00:47:31,699
+to regroup them and by playing all of those I've ended up with this list of motion group indices.
+
+471
+00:47:31,699 --> 00:47:38,420
+So now those two indices become one motion group from which I can blend between the two.
+
+472
+00:47:38,420 --> 00:47:43,779
+Those three become one motion group and I can blend between the two animations and so on and so on.
+
+473
+00:47:43,780 --> 00:47:48,100
+it was basically built by hand in the same way as what they've done.
+
+474
+00:47:48,100 --> 00:47:54,340
+They're also saying that every clip was chosen by hand and blended by hand.
+
+475
+00:47:55,860 --> 00:48:09,620
+And now that I have those motion clips, what I would do is define a bunch of weights
+
+476
+00:48:09,619 --> 00:48:17,299
+for them depending of if I have two indices or three indices I will decide the weights on how I
+
+477
+00:48:17,299 --> 00:48:24,579
+want to blend them and again why I would do this is because what the paper does
+
+478
+00:48:26,659 --> 00:48:32,420
+normally it picks one of the motion group and it treats the motion group as
+
+479
+00:48:32,420 --> 00:48:36,420
+as one action that you can pick.
+
+480
+00:48:36,420 --> 00:48:40,019
+And so what you do is that the algorithm works as before.
+
+481
+00:48:40,019 --> 00:48:45,099
+You pick the clip, except that what they've done
+
+482
+00:48:45,099 --> 00:48:46,740
+as once you've picked the clip,
+
+483
+00:48:46,740 --> 00:48:51,740
+you actually evaluate the parameterized version
+
+484
+00:48:53,500 --> 00:48:54,700
+X amount of time.
+
+485
+00:48:54,700 --> 00:48:59,700
+So you slice it and you take the value of zero one
+
+486
+00:49:00,180 --> 00:49:02,260
+and then one zero and all in the between
+
+487
+00:49:02,260 --> 00:49:06,980
+you can choose how many between C1 and you pick the best parametrized version you could have.
+
+488
+00:49:08,820 --> 00:49:19,460
+You pick the best group and out of that group you re-evaluate your value functions
+
+489
+00:49:20,020 --> 00:49:25,860
+X amount of time to pick the best parameter you could have. What I would do would be the same
+
+490
+00:49:25,860 --> 00:49:32,019
+thing except that, again, I want to be able to parallelize all of that with numpy.
+
+491
+00:49:33,539 --> 00:49:41,059
+So I would go the opposite way. From all my groups, I would, in advance,
+
+492
+00:49:42,900 --> 00:49:49,380
+parametrize all of them. So I will have, I don't remember how many groups I have,
+
+493
+00:49:49,380 --> 00:49:54,980
+but I have a bunch of groups and for all of those groups, I would take 11 samples in between.
+
+494
+00:49:54,980 --> 00:50:03,139
+So I would parametrize all those groups and I would flatten all the list of parametrized
+
+495
+00:50:03,139 --> 00:50:11,699
+groups in advance. Which is what I'm doing here with the group count. That returns the number
+
+496
+00:50:11,699 --> 00:50:20,019
+of parametrized versions of the groups I have. So I have now basically 847s
+
+497
+00:50:20,019 --> 00:50:25,599
+different clip I can pick from because that's basically what it is it's all
+
+498
+00:50:25,599 --> 00:50:30,059
+the different group with all the different parameters version of the group
+
+499
+00:50:30,059 --> 00:50:42,840
+itself while I had only 150 clips in the beginning so I'm growing the action
+
+500
+00:50:42,840 --> 00:50:50,000
+space basically and then I can display all those groups I have so that means
+
+501
+00:50:50,000 --> 00:50:57,599
+that I get this animation for group 0 and I can see parametrized between those two.
+
+502
+00:50:57,599 --> 00:51:02,159
+I get that and that's all the different parametrized versions I have.
+
+503
+00:51:02,159 --> 00:51:12,400
+So I get all my actions now, my animations are slightly parametrized.
+
+504
+00:51:12,400 --> 00:51:19,800
+What I would do is again I would need to compute the cost of any parametrized version towards
+
+505
+00:51:19,800 --> 00:51:24,039
+any other parameterized version. So basically that's the reason why I flattened everything in
+
+506
+00:51:24,039 --> 00:51:28,920
+the beginning because I would need to compute the physics costs between all of the cases.
+
+507
+00:51:28,920 --> 00:51:37,400
+What they do is they probably compute it at runtime only for the small groups that they know
+
+508
+00:51:37,400 --> 00:51:42,440
+that they want to stay in. Again I will flatten everything in advance and I will compute everything
+
+509
+00:51:42,440 --> 00:51:51,960
+in advance. And then the learning is all the same system. What I have is all my stop indices,
+
+510
+00:51:51,960 --> 00:51:56,280
+except now it's a bunch of stop indices that were parameterized with different lengths,
+
+511
+00:51:56,280 --> 00:52:03,559
+different stops. So I have a lot more different stops. Again, I will have a lot more standing
+
+512
+00:52:03,559 --> 00:52:12,360
+position for all those steps. And same way, I would also need to bootstrap my learning
+
+513
+00:52:13,000 --> 00:52:22,920
+with a bunch of trajectories that I know works. This time, instead of having a lot of random
+
+514
+00:52:22,920 --> 00:52:31,880
+positions around it and growing only a few paths, what I would do, because I have a lot more possible
+
+515
+00:52:33,559 --> 00:52:47,239
+trajectories to start from. I will only pick one but I will spread it a lot more. So I would say
+
+516
+00:52:47,239 --> 00:52:52,840
+I'm starting from here and instead of picking the best trajectory you give me the 20 best
+
+517
+00:52:52,840 --> 00:53:00,759
+trajectories starting from there and then only growing a lot less further than that. So instead
+
+518
+00:53:00,760 --> 00:53:05,660
+Instead of having a bunch of long trajectories now, I have a lot of really small ones.
+
+519
+00:53:05,660 --> 00:53:08,500
+And hopefully I'm still able to learn my value functions, right?
+
+520
+00:53:08,500 --> 00:53:10,560
+That's what I wanted to get.
+
+521
+00:53:10,560 --> 00:53:15,600
+I will not run this code because that is a lot longer.
+
+522
+00:53:15,600 --> 00:53:24,680
+And all the optimal trajectories and all of that stays exactly the same as before.
+
+523
+00:53:24,680 --> 00:53:27,600
+It's only my optimal policy now and it's a bit different.
+
+524
+00:53:27,599 --> 00:53:35,000
+And it's only different for one little case, is that before when I was getting my value
+
+525
+00:53:35,000 --> 00:53:43,199
+function I had one value function per clip.
+
+526
+00:53:43,199 --> 00:53:48,839
+Now I have one value function per motion group, that was the idea.
+
+527
+00:53:48,839 --> 00:53:57,559
+You have one, you find the best motion group itself and from that one you picked the best
+
+528
+00:53:57,559 --> 00:54:05,320
+parametrized version. So because I've pre-flattened everything, what I have now is that
+
+529
+00:54:06,759 --> 00:54:10,679
+it means that I only need to evaluate the value function.
+
+530
+00:54:14,759 --> 00:54:18,840
+Well, I need to evaluate the same value functions for all my parametrized versions. So that's what
+
+531
+00:54:18,840 --> 00:54:26,840
+I'm doing here. That's why I have that weird clip that says group count and then the clip value
+
+532
+00:54:26,840 --> 00:54:32,519
+functions, which is divided by 11, because I know that I've parameterized 11 times each of them.
+
+533
+00:54:32,519 --> 00:54:40,360
+So they're grouped like this. And I just need to say, okay, all those values, all those values
+
+534
+00:54:40,360 --> 00:54:44,600
+need to check that value functions, all those values need to check that value functions,
+
+535
+00:54:44,600 --> 00:54:49,240
+and so on, so on. So that's the only difference between this version and the other versions,
+
+536
+00:54:49,240 --> 00:54:57,240
+that a bunch of actions share the same the same value function.
+
+537
+00:54:59,160 --> 00:55:01,240
+And so I need to run that.
+
+538
+00:55:06,200 --> 00:55:13,240
+And apart from that, learning process is basically the same thing.
+
+539
+00:55:13,240 --> 00:55:19,920
+I've trained it several times, I've tweaked a bunch of values by keeping the same value
+
+540
+00:55:19,920 --> 00:55:21,120
+functions.
+
+541
+00:55:21,120 --> 00:55:32,600
+So the only thing you see here in the epoch and the score of epoch and that stuff is the
+
+542
+00:55:32,600 --> 00:55:37,800
+last time I trained the value functions because basically I trained it with the old one and
+
+543
+00:55:37,800 --> 00:55:45,000
+I reduced, I think the, now I made it learn really close and then started to make it learn
+
+544
+00:55:45,000 --> 00:55:48,280
+further and further and further to make sure that it starts to reach.
+
+545
+00:55:50,280 --> 00:55:57,320
+And that's what you see now is the latest run, latest learn. And you could see that
+
+546
+00:55:57,960 --> 00:56:05,560
+it basically at every iterations it adds 800 something, so it doesn't seem number as group.
+
+547
+00:56:05,559 --> 00:56:18,880
+So again, always able to find the spot in less than 10 steps more or less.
+
+548
+00:56:18,880 --> 00:56:29,799
+And I can let it play and we can see what happens now.
+
+549
+00:56:29,800 --> 00:56:36,240
+So basically, this time, if I let him run, that would be better.
+
+550
+00:56:36,240 --> 00:56:41,960
+It should be better at stopping on the spot because that's what I've learned him.
+
+551
+00:56:41,960 --> 00:56:47,900
+I did not give him that big range of possible actions to pick from.
+
+552
+00:56:47,900 --> 00:56:50,360
+He tries to stop exactly in the spot.
+
+553
+00:56:50,360 --> 00:56:54,360
+Now you could see that sometimes he does big steps to reach it and that's probably because
+
+554
+00:56:54,360 --> 00:56:56,720
+I gave him a bunch of trajectories.
+
+555
+00:56:56,720 --> 00:57:01,720
+instead of finding the best closest one it finds one of the trajectories that
+
+556
+00:57:01,720 --> 00:57:08,840
+will bring him back where it wanted to be but that's in a nutshell how it works
+
+557
+00:57:08,840 --> 00:57:15,720
+it has a hard time finding the spot when it's too close if it if it walked just
+
+558
+00:57:15,720 --> 00:57:20,240
+next to it you would have to do around and come back because there is not
+
+559
+00:57:20,240 --> 00:57:27,200
+enough, a parametrized version to make short steps and that kind of stuff. But it reaches
+
+560
+00:57:29,440 --> 00:57:39,840
+more easily the targets we want them to reach. So this is the parametrized version,
+
+561
+00:57:39,840 --> 00:57:49,120
+so continuous state space and parametrized action space that this paper gives us. I
+
+562
+00:57:49,119 --> 00:57:52,719
+I hope you liked it and see you next time.

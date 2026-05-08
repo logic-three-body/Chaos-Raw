@@ -1,0 +1,1183 @@
+1
+00:00:00,000 --> 00:00:06,320
+You have character animation data with issues with your feet that are sliding on the ground and you want to fix those
+
+2
+00:00:07,160 --> 00:00:15,040
+Hi, I'm Jerome and today we will be looking at the footscade cleanup for motion capture editing a paper from 2002
+
+3
+00:00:16,960 --> 00:00:20,440
+As always the first thing I would do is importing the
+
+4
+00:00:20,719 --> 00:00:26,420
+All the libraries I would need inside of my notebook and I will load my characters as I'm doing
+
+5
+00:00:26,420 --> 00:00:31,860
+every time. Now one thing I would do on top of this is creating a new mesh and
+
+6
+00:00:31,860 --> 00:00:38,179
+that mesh is just a little target that I can place on the ground to display
+
+7
+00:00:38,179 --> 00:00:43,540
+where I want to do some contacts. So just creating a new mesh. Now I would need
+
+8
+00:00:43,540 --> 00:00:49,740
+to change a little my skeleton because the paper itself assumes that you have
+
+9
+00:00:49,740 --> 00:00:55,219
+this skeleton. Basically it needs to have an eel joint and a ball joint and
+
+10
+00:00:55,219 --> 00:01:01,219
+and that's because they need to be able to know where the ground is relative to your ankle
+
+11
+00:01:01,219 --> 00:01:04,219
+and in my skeleton I don't have those bones yet
+
+12
+00:01:04,219 --> 00:01:16,219
+so what I would do is inject the new bones here inside of my skeleton as child of the foot
+
+13
+00:01:16,219 --> 00:01:21,219
+and now that I have this I actually have the same skeleton as what they want to have
+
+14
+00:01:21,219 --> 00:01:27,219
+And now that I have the skeleton, I can actually load my animation on top.
+
+15
+00:01:27,219 --> 00:01:34,219
+And what I would do is that I would load the animation once as the animation I'm retargeting,
+
+16
+00:01:34,219 --> 00:01:36,219
+and that's the reason why my feet would be sliding.
+
+17
+00:01:36,219 --> 00:01:42,219
+If you check the video about the animation data, I explain why that's happening.
+
+18
+00:01:42,219 --> 00:01:47,219
+It's because my character has different proportions, so the feet would be sliding.
+
+19
+00:01:47,219 --> 00:01:55,859
+And now what I will do also is I will import the original animation data, as is, with the
+
+20
+00:01:55,859 --> 00:02:02,379
+character squashed, but with the actual position from the animation data.
+
+21
+00:02:02,379 --> 00:02:09,780
+And the reason why I'm doing this is because the paper itself is there to fix your feet
+
+22
+00:02:09,780 --> 00:02:15,419
+on the ground when you know that the feet should be locked.
+
+23
+00:02:15,420 --> 00:02:23,180
+it doesn't help you to detect when you want to lock the feet. It's allow you to compute it properly
+
+24
+00:02:23,180 --> 00:02:33,020
+but not the when. So luckily enough for me, the data from the Lafan database is actually extremely
+
+25
+00:02:33,020 --> 00:02:41,580
+stable. So I will load the animation as the original data and I will use just the position
+
+26
+00:02:41,580 --> 00:02:47,340
+of the bones and the speed of the bones to know when I want to get the contacts and when I wanted
+
+27
+00:02:47,340 --> 00:02:56,939
+to move. So what I do is that I load twice the animation and then my character is a little bigger
+
+28
+00:02:56,939 --> 00:03:04,939
+than the one from the data. So I'm moving the character up a little so there's a little bit
+
+29
+00:03:04,939 --> 00:03:15,340
+of the ground, otherwise the feet are really in the ground. Now, as I said, I want to compute
+
+30
+00:03:15,340 --> 00:03:22,659
+when I want to get the contacts. And what I will do is that I would build a big buffer
+
+31
+00:03:22,659 --> 00:03:31,740
+with all the contacts for every frame. So I have a buffer which has the frame count
+
+32
+00:03:31,740 --> 00:03:39,340
+and then four values and those four values are the left heel, left ball, right heel, right ball
+
+33
+00:03:40,780 --> 00:03:46,540
+contacts basically when it's static or not and I'm just using the extract feed contacts which is
+
+34
+00:03:47,980 --> 00:03:53,580
+just using an heuristic on the speed and I'm checking the the bone itself and if the bones
+
+35
+00:03:53,580 --> 00:04:04,700
+from the left is moving faster than 0.04 cm per second or something. I don't remember exactly
+
+36
+00:04:05,420 --> 00:04:11,980
+the speed itself but basically if the speed is lower than that I'm assuming that there is a
+
+37
+00:04:11,980 --> 00:04:21,100
+contact otherwise it's moving. Now what I do after is actually smoothing the signal a little
+
+38
+00:04:21,100 --> 00:04:24,860
+because it happens that you have a contact and then for one frame it turns off the contact
+
+39
+00:04:24,860 --> 00:04:31,900
+and the kind of stuff. And I want to make sure that if I have just one or two frames that says
+
+40
+00:04:31,900 --> 00:04:37,500
+I'm not in contact, it's probably mean that is just a bug in the detection. So I just want to
+
+41
+00:04:37,500 --> 00:04:43,020
+smooth the signal and make sure that I will always have at least three frames of contacts.
+
+42
+00:04:43,020 --> 00:04:47,980
+And that's what these little smooth functions are doing here. So now I can have
+
+43
+00:04:47,980 --> 00:04:56,100
+my contact timing and then we could display exactly what this means here and
+
+44
+00:04:56,100 --> 00:05:03,980
+so what I have is the animation moving and then you could see when I've
+
+45
+00:05:03,980 --> 00:05:10,060
+detected that I want to have a contact and that's thanks to the original motion
+
+46
+00:05:10,060 --> 00:05:15,660
+and you can see that the feet themselves are sliding compared to where the
+
+47
+00:05:15,660 --> 00:05:22,439
+contacts are. At the bottom I have the signal on off for left heel, left ball,
+
+48
+00:05:22,439 --> 00:05:31,980
+right heel, right ball basically. Now that we know what the contacts, when the
+
+49
+00:05:31,980 --> 00:05:37,020
+contacts should happen, I can actually go through the paper and see what the
+
+50
+00:05:37,020 --> 00:05:45,060
+algorithm is. So for the footskate cleanup methods, they basically have five
+
+51
+00:05:45,060 --> 00:05:51,300
+different phases. And the first phase is to determine the position of each constraint.
+
+52
+00:05:51,300 --> 00:05:58,100
+So to compute the constraint position, what the algorithm will do is compute it one bone at a time
+
+53
+00:05:58,980 --> 00:06:06,819
+and what you do is that if you detect that the heel should be static, what you do is you go
+
+54
+00:06:06,819 --> 00:06:14,500
+forward in time and then go for L1 frames. So it's a constant. You could change and tweak
+
+55
+00:06:15,139 --> 00:06:22,259
+how long that window of frames will be. But then what you do is that you go forward in time and
+
+56
+00:06:22,259 --> 00:06:32,259
+you check every frame as long as they also says that they are all in constraint. You take the
+
+57
+00:06:32,259 --> 00:06:36,539
+the average of all those positions so you get all the positions take the average
+
+58
+00:06:36,539 --> 00:06:42,379
+and you drop it on the ground to get the contact on the ground and for every
+
+59
+00:06:42,379 --> 00:06:47,860
+other frames if they say I mean I'm in constraint and the frame before was
+
+60
+00:06:47,860 --> 00:06:52,539
+already in constraint basically I already competed the average so I just keep
+
+61
+00:06:52,539 --> 00:06:58,579
+the same constraint as the one from the frame before. You do this for each of
+
+62
+00:06:58,579 --> 00:07:06,139
+your bones and the only thing that will change is if for instance the ball says
+
+63
+00:07:06,139 --> 00:07:12,060
+I'm in constraint for the first time in this frame you will check if the heel
+
+64
+00:07:12,060 --> 00:07:17,779
+was already constrained if it's the case basically you re-project the distance
+
+65
+00:07:17,779 --> 00:07:22,219
+of the ball so you don't change the relation between heel ball the distance
+
+66
+00:07:22,219 --> 00:07:26,299
+between the heel ball so it means that if you complete the heel first you put
+
+67
+00:07:26,300 --> 00:07:29,060
+the heel on the ground, and then the ball says,
+
+68
+00:07:29,060 --> 00:07:30,900
+now I'm also constrained.
+
+69
+00:07:30,900 --> 00:07:32,139
+You put the ball on the ground
+
+70
+00:07:32,139 --> 00:07:34,900
+and you move it to keep the same distance.
+
+71
+00:07:34,900 --> 00:07:35,980
+If you do the opposite,
+
+72
+00:07:35,980 --> 00:07:38,379
+it means that you get the ball first on the ground.
+
+73
+00:07:38,379 --> 00:07:40,580
+By the time you hit the heel on the ground,
+
+74
+00:07:40,580 --> 00:07:45,580
+you actually move the heel to realign the distance also.
+
+75
+00:07:46,740 --> 00:07:48,939
+So that's what I'm doing here.
+
+76
+00:07:48,939 --> 00:07:52,139
+I'm computing the contact position.
+
+77
+00:07:52,139 --> 00:07:55,699
+And the difference I have is so I've used the L1
+
+78
+00:07:55,699 --> 00:08:02,819
+as a 10 frame. And I will build a big buffer with all my constraint position buffer. So
+
+79
+00:08:02,819 --> 00:08:11,620
+it takes all the frame counts, the position for the left, left, right, left, right balls,
+
+80
+00:08:11,620 --> 00:08:19,419
+and then the XYZ position for the space. And I'm doing the entire buffer at once because
+
+81
+00:08:19,419 --> 00:08:23,899
+basically I know the length of my animation, I can compute the entire animation in one
+
+82
+00:08:23,900 --> 00:08:31,300
+the algorithm basically says that you could do it this way or you could do
+
+83
+00:08:31,300 --> 00:08:36,800
+frame by frame and recompute everything or you could just try to build a bunch
+
+84
+00:08:36,800 --> 00:08:40,940
+of buffers that have just the right sizes. It's easier for me to implement this
+
+85
+00:08:40,940 --> 00:08:46,139
+paper by just saying well I'm doing the entire animation in one go. So I get a
+
+86
+00:08:46,139 --> 00:08:52,259
+constraint buffer, position buffer and see basically that's what I'm
+
+87
+00:08:52,259 --> 00:08:55,379
+I'm checking here, I'm checking if the constraint was,
+
+88
+00:08:55,379 --> 00:08:59,299
+if the object was already constrained the frame before.
+
+89
+00:08:59,299 --> 00:09:02,139
+In that case, I just keep the same position.
+
+90
+00:09:02,139 --> 00:09:04,379
+Otherwise, I move forward L1 frame
+
+91
+00:09:04,379 --> 00:09:07,779
+and I do the average and I drop it on the ground.
+
+92
+00:09:07,779 --> 00:09:11,139
+And I do it for each and also
+
+93
+00:09:12,139 --> 00:09:13,580
+reprojecting the distance.
+
+94
+00:09:13,580 --> 00:09:17,460
+And I do it for each left heel, left ball and so on.
+
+95
+00:09:17,460 --> 00:09:20,100
+So now that I've compute this,
+
+96
+00:09:20,100 --> 00:09:23,540
+I can display what I will have here.
+
+97
+00:09:23,540 --> 00:09:26,820
+And basically now, it's the same as before,
+
+98
+00:09:26,820 --> 00:09:29,019
+except that the position you could see here
+
+99
+00:09:29,019 --> 00:09:34,019
+for each target, they actually properly match where
+
+100
+00:09:36,460 --> 00:09:39,080
+I will want them as the average of all the positions
+
+101
+00:09:39,080 --> 00:09:42,860
+and basically the distance between heel and ball
+
+102
+00:09:42,860 --> 00:09:44,560
+are respected every time.
+
+103
+00:09:44,560 --> 00:09:58,860
+The second part of the algorithm now is to compute the ankle position and rotation you
+
+104
+00:09:58,860 --> 00:10:02,740
+will want to apply because of those constraints.
+
+105
+00:10:02,740 --> 00:10:09,540
+Again, to compute that ankle position and rotation, you have several cases that can
+
+106
+00:10:09,539 --> 00:10:18,500
+happen and the the first case we will cover basically is the case when we have a double
+
+107
+00:10:18,500 --> 00:10:23,939
+constraint so basically the heel and the ball are constrained that means that now we could
+
+108
+00:10:23,939 --> 00:10:30,579
+actually compute exactly where the ankle should be because that's the the simplest
+
+109
+00:10:31,779 --> 00:10:37,779
+case I have a fully constrained foot I can complete compute the ankle the orientation
+
+110
+00:10:37,779 --> 00:10:43,699
+of the ankle and the position of the ankle. Now if you have a single constraint, so meaning that
+
+111
+00:10:43,699 --> 00:10:48,579
+maybe you only have the heel that is constrained or maybe you only have the ball that is constrained,
+
+112
+00:10:48,579 --> 00:10:59,059
+the only thing you have to do is not compute any reorientation of the ankle, you only want to move
+
+113
+00:10:59,060 --> 00:11:07,700
+move the ball, move the ankle to match the right heel, the right ball or the right heel
+
+114
+00:11:07,700 --> 00:11:10,140
+position depending on the context.
+
+115
+00:11:10,140 --> 00:11:16,060
+So if you have a double constraint, you actually compute the position and orientation, and
+
+116
+00:11:16,060 --> 00:11:19,980
+you have a single constraint, you only move the position.
+
+117
+00:11:19,980 --> 00:11:24,700
+But that would work if you only have that single case.
+
+118
+00:11:24,700 --> 00:11:28,420
+So if you only have always a single constraint
+
+119
+00:11:28,420 --> 00:11:31,580
+or always double constraint, now you
+
+120
+00:11:31,580 --> 00:11:34,220
+need to be able to transition from a single constraint up
+
+121
+00:11:34,220 --> 00:11:36,700
+to a double constraint and all that kind of stuff.
+
+122
+00:11:36,700 --> 00:11:42,020
+And that's what this explanation here is.
+
+123
+00:11:42,020 --> 00:11:47,780
+It's about the fact that if, for instance, you
+
+124
+00:11:47,780 --> 00:11:51,020
+compute a single constraint and you move your heel
+
+125
+00:11:51,020 --> 00:11:53,700
+and goes where you want it, and then the frame after is
+
+126
+00:11:53,700 --> 00:11:59,460
+double constraint, you will pop in that right position instantly. What you want to do instead
+
+127
+00:11:59,460 --> 00:12:11,460
+is when we compute the actual angle for the angle, we don't save that information as an
+
+128
+00:12:11,460 --> 00:12:16,900
+absolute value. We don't remember that it's exactly where we want the foot to be. We always
+
+129
+00:12:16,899 --> 00:12:24,819
+compute those values as an offset compared to what the animation is. So if my animation
+
+130
+00:12:24,819 --> 00:12:31,299
+says that my foot was here and I computed this position, I keep that information of
+
+131
+00:12:32,500 --> 00:12:40,340
+offsets. I would want to correct on the ankle. And then if I come from a single
+
+132
+00:12:40,340 --> 00:12:53,060
+constraint, I can propagate that offsets back in time and I can linearly blend that offset off.
+
+133
+00:12:53,060 --> 00:13:01,139
+So what it means that if my constraint is here and my foot was here, the offset is that angle.
+
+134
+00:13:01,700 --> 00:13:06,820
+And so what I will do is that the frame before, I will also reapply that offset a little,
+
+135
+00:13:06,820 --> 00:13:12,020
+but a little less and then the frame before I still add that offset but a little less so first
+
+136
+00:13:12,020 --> 00:13:18,660
+thing you do is that you rotate the ankle back in time you rotate the ankle and then you move the
+
+137
+00:13:18,660 --> 00:13:25,780
+foot and it's the same if you have a double constraint and you reach a single constraint
+
+138
+00:13:26,500 --> 00:13:32,660
+the same way you add that offsets and then you move the foot back and then add that offset and
+
+139
+00:13:32,659 --> 00:13:34,059
+and then move your foot back.
+
+140
+00:13:34,059 --> 00:13:38,179
+And you do it back in time and forward in time.
+
+141
+00:13:38,179 --> 00:13:40,899
+And then if you have that weird case
+
+142
+00:13:40,899 --> 00:13:43,740
+when you actually go from double constrain,
+
+143
+00:13:43,740 --> 00:13:45,100
+back double constrain,
+
+144
+00:13:45,100 --> 00:13:47,339
+you need to cross over that information.
+
+145
+00:13:47,339 --> 00:13:49,279
+And that's the third case here.
+
+146
+00:13:49,279 --> 00:13:53,179
+So again, ankle position and the rotation.
+
+147
+00:13:53,179 --> 00:13:57,059
+So I will have my buffer for the ankle rotation
+
+148
+00:13:57,059 --> 00:13:59,779
+and the buffer for the ankle position
+
+149
+00:13:59,779 --> 00:14:08,899
+for both left and right and the first thing I compute is the compute the double constraints.
+
+150
+00:14:08,899 --> 00:14:14,980
+So again, that's easy because then I can just compute the constraint and save that information
+
+151
+00:14:14,980 --> 00:14:24,579
+inside of my buffer. And if I have to compute the single constraint, what happens is we check
+
+152
+00:14:24,580 --> 00:14:35,220
+if you have a single constraint, we then go back in time to see if we come from a double
+
+153
+00:14:35,220 --> 00:14:44,100
+constraint. If it's the case, I do the slabs. I'm lapping the amount of error I was doing
+
+154
+00:14:44,100 --> 00:14:54,340
+because of the rotation. In the opposite way, if I will be reaching a double constraint,
+
+155
+00:14:54,580 --> 00:15:00,740
+Then I also slurping that stuff and then the third case when I come from and go back to
+
+156
+00:15:00,740 --> 00:15:07,940
+I'm slurping the two slurps together and then you get that final result. So that's basically what this
+
+157
+00:15:09,300 --> 00:15:16,960
+Is doing and the only thing you have here is that we formula for the alpha and that comes from the paper also
+
+158
+00:15:17,620 --> 00:15:18,980
+Dave
+
+159
+00:15:18,980 --> 00:15:22,300
+They hear so basically that's how they smooth
+
+160
+00:15:22,300 --> 00:15:30,760
+the transition. They don't do purely linear correction. They do easy and easy out
+
+161
+00:15:30,760 --> 00:15:35,140
+correction and that's what the formula allows you to have. And so I can compute
+
+162
+00:15:35,140 --> 00:15:41,220
+my constraints and now what I will have is my buffer here. I can display it and
+
+163
+00:15:41,220 --> 00:15:49,900
+you could see where I would want the ankle to be and that's basically where
+
+164
+00:15:49,899 --> 00:15:55,139
+every time you see there is a constraint that's actually where I want the
+
+165
+00:15:55,139 --> 00:16:00,659
+ankle to be when we compute it. So we've computed the orientation and the
+
+166
+00:16:00,659 --> 00:16:06,299
+position of the ankle. We can go to the next step and the next one is to
+
+167
+00:16:06,299 --> 00:16:12,779
+compute the root placement and the root placement basically means that for
+
+168
+00:16:12,779 --> 00:16:19,299
+instance imagine that you try to fix the foot and you put it really far away
+
+169
+00:16:19,300 --> 00:16:27,060
+away from where the the hips can be, then you will have the issue that the foot cannot reach
+
+170
+00:16:27,060 --> 00:16:33,700
+the constraint you wanted to fix. So what we will do is that we will move the the hips so
+
+171
+00:16:34,980 --> 00:16:38,420
+we will make sure that the foot can always reach the position we want to do.
+
+172
+00:16:39,620 --> 00:16:46,660
+And the root placement, well basically again it depends on the the case and how you want to
+
+173
+00:16:46,659 --> 00:16:52,740
+compute it. If you only have one foot that is constrained, you could only, and it's too far,
+
+174
+00:16:52,740 --> 00:17:00,899
+you could only move the root in the direction of the foot you're pulling. But if both feet are
+
+175
+00:17:00,899 --> 00:17:09,619
+constrained, you actually need to compute the position here of where, by pulling on both feet,
+
+176
+00:17:09,620 --> 00:17:17,460
+where the hips should be and that's basically at the intersection of both spheres so if imagine
+
+177
+00:17:17,460 --> 00:17:23,540
+you have your foot and then you draw a sphere that is the size of your leg and you do that for
+
+178
+00:17:23,540 --> 00:17:29,700
+the second one you have two spheres and that means you have one point in the middle where you could
+
+179
+00:17:29,700 --> 00:17:36,340
+put the hips that make sure that both legs can reach the position if the hips is at that spot
+
+180
+00:17:36,339 --> 00:17:43,539
+so that's how you do this and basically again to avoid having your root that just pulls
+
+181
+00:17:44,099 --> 00:17:50,500
+one frame when suddenly you cannot reach what they do is that they average the position
+
+182
+00:17:51,220 --> 00:17:56,899
+they average the the correction they will put on the roots along a bunch of frames
+
+183
+00:17:58,740 --> 00:18:05,619
+so this is what we do here in the root position we try to compute the offset compare both legs
+
+184
+00:18:06,339 --> 00:18:08,699
+If the distance does not match and then
+
+185
+00:18:10,740 --> 00:18:17,139
+Average the position of all those roots and I have a buffer so I will have a buffer of the
+
+186
+00:18:17,659 --> 00:18:19,980
+The root position now I would want to have
+
+187
+00:18:20,819 --> 00:18:24,939
+In my case I can display where I want the hips to be
+
+188
+00:18:26,819 --> 00:18:35,199
+Basically it won't change much because I'm actually never pulling the legs further than what the character is because my character is actually bigger
+
+189
+00:18:35,200 --> 00:18:43,920
+that what the original animation was, so I will never have the need to pull that route.
+
+190
+00:18:45,120 --> 00:18:53,519
+Now, because of the average, you're not sure that you will always be able to reach that position,
+
+191
+00:18:53,519 --> 00:18:57,680
+but that's not an issue, it will be fixed by the next step anyway.
+
+192
+00:18:57,680 --> 00:19:08,160
+The next step is to be able to actually compute the IK. The way they have implemented that is
+
+193
+00:19:08,160 --> 00:19:15,840
+to go through these steps. You do compute the angle thanks to the fact that the legs in this
+
+194
+00:19:15,840 --> 00:19:20,080
+case will be a triangle and then you could compute the angle you need for that triangle.
+
+195
+00:19:20,079 --> 00:19:27,559
+So they do it in several paths, so you get the original pose, you don't move anything
+
+196
+00:19:27,559 --> 00:19:35,199
+on that pose, then you change the knee angle and that's by computing this formula here.
+
+197
+00:19:35,199 --> 00:19:44,199
+It's basically computing the angle thanks to the length of both legs and the length
+
+198
+00:19:44,199 --> 00:19:46,319
+of the targets you're trying to reach.
+
+199
+00:19:46,319 --> 00:19:51,960
+So you basically compute the triangle and you try to compute the angle you will have
+
+200
+00:19:51,960 --> 00:19:54,240
+at the knee.
+
+201
+00:19:54,240 --> 00:19:58,399
+And then when you computed that angle, you rotate the knee and now that you have rotated
+
+202
+00:19:58,399 --> 00:20:04,759
+the knee, you could see the distance you have between where your foot would be and where
+
+203
+00:20:04,759 --> 00:20:06,720
+your target should be.
+
+204
+00:20:06,720 --> 00:20:13,079
+And you could rotate the entire leg to make sure that you are aligned with the foot.
+
+205
+00:20:13,079 --> 00:20:20,519
+you realign the ankle to match what the ankle target was, and the last step they do and they
+
+206
+00:20:20,519 --> 00:20:28,039
+actually stretch the leg. And why do they stretch the leg? Because of two things. The first thing is
+
+207
+00:20:28,039 --> 00:20:34,199
+that if you remember when we moved the route, we said that we were doing the average, which means
+
+208
+00:20:34,199 --> 00:20:39,879
+that it's possible that your route is still too far for the leg to actually be able to reach it.
+
+209
+00:20:39,880 --> 00:20:42,760
+So you do need to be able to stretch the leg
+
+210
+00:20:42,760 --> 00:20:47,060
+because of the smoothing we did on the roots.
+
+211
+00:20:48,720 --> 00:20:50,360
+And the second thing that's,
+
+212
+00:20:50,360 --> 00:20:54,640
+it's when we try to do IK on that kind of stuff
+
+213
+00:20:54,640 --> 00:20:58,160
+with the legs that's really close to being stretched.
+
+214
+00:20:58,160 --> 00:21:00,600
+What happened in IKs is that
+
+215
+00:21:01,680 --> 00:21:06,240
+if your leg is really close to be straight,
+
+216
+00:21:07,120 --> 00:21:11,680
+being straight or not will actually change the distance here really a little.
+
+217
+00:21:11,680 --> 00:21:19,039
+So you might try to reach a point that is one or two centimeters away and then it will be really
+
+218
+00:21:19,039 --> 00:21:26,400
+visible on your knee. Usually we call that a knee pop. It's something that you could see when you
+
+219
+00:21:26,400 --> 00:21:33,440
+do IK. You see that knee that moves really fast because it just goes from here to here
+
+220
+00:21:33,440 --> 00:21:42,160
+just because it had to close a really small distance so what they do is that they
+
+221
+00:21:44,080 --> 00:21:51,039
+detect that the ankle is really close to be straight and they allow the leg to stretch
+
+222
+00:21:51,039 --> 00:21:58,640
+in that case so they can avoid that knee pops and give more times for the for the knee to be straight
+
+223
+00:21:58,640 --> 00:22:07,800
+And I would do the same except I will do a bit differently that the paper is doing it.
+
+224
+00:22:07,800 --> 00:22:18,720
+I will not stretch the actual leg, I will just lock the angle of the knee and I will
+
+225
+00:22:18,720 --> 00:22:26,680
+just stretch by moving the foot relative to the leg, meaning that basically that the formation
+
+226
+00:22:26,680 --> 00:22:31,720
+is absorbed by my ankle and it's really not visible when you have a small
+
+227
+00:22:31,720 --> 00:22:37,279
+distance seeing that the the ankle in changing in size is not more visible
+
+228
+00:22:37,279 --> 00:22:41,640
+than trying to stretch the entire leg and moving knees ankle and everything so
+
+229
+00:22:41,640 --> 00:22:48,440
+just by doing this I mean it's it's enough and so what I'm doing is this
+
+230
+00:22:48,440 --> 00:22:54,400
+the the the part that you have here all the Arcos formula it's the one I'm
+
+231
+00:22:54,400 --> 00:23:02,720
+doing here, so you are preparing all the different lengths compared to the distance, computing the
+
+232
+00:23:02,720 --> 00:23:10,880
+vector, computing the arcos. And then I'm taking that arcos, and what I'm doing is that I'm
+
+233
+00:23:12,160 --> 00:23:18,960
+putting it through a polynomial. I'll show you the polynomial later. Basically, just to make
+
+234
+00:23:18,960 --> 00:23:23,200
+make sure that my ankle would avoid having that knee pop,
+
+235
+00:23:23,200 --> 00:23:26,559
+and then I can compute the angle,
+
+236
+00:23:26,559 --> 00:23:28,319
+I can rotate the knee,
+
+237
+00:23:28,319 --> 00:23:30,440
+I can recompute the position of the knee,
+
+238
+00:23:30,440 --> 00:23:33,640
+I can rotate the entire leg,
+
+239
+00:23:33,640 --> 00:23:35,559
+compute the global position of the foot,
+
+240
+00:23:35,559 --> 00:23:37,440
+and then put back my ankle.
+
+241
+00:23:37,440 --> 00:23:40,799
+So it's all the step of the paper,
+
+242
+00:23:40,799 --> 00:23:43,680
+and I do the same for the right leg and all kind of stuff.
+
+243
+00:23:43,680 --> 00:23:47,559
+And just to show you what that weird polynomial is,
+
+244
+00:23:47,559 --> 00:23:49,319
+It's just this.
+
+245
+00:23:49,319 --> 00:23:54,039
+So basically, we could see it's really close
+
+246
+00:23:54,039 --> 00:23:55,279
+of a straight line.
+
+247
+00:23:55,279 --> 00:23:58,119
+And that's, an arc cost basically means
+
+248
+00:23:58,119 --> 00:24:00,879
+that it's the inverse of the Christmas.
+
+249
+00:24:00,879 --> 00:24:05,039
+So at minus one, I have 180 degrees.
+
+250
+00:24:05,039 --> 00:24:07,359
+So my leg is really straight.
+
+251
+00:24:07,359 --> 00:24:09,599
+And what I do is I have something
+
+252
+00:24:09,599 --> 00:24:13,759
+that is nearly mapping, except here at the end.
+
+253
+00:24:13,759 --> 00:24:17,319
+So the blue will be the arc cost value.
+
+254
+00:24:17,319 --> 00:24:20,759
+and my orange one is the functions that I'm computing.
+
+255
+00:24:20,759 --> 00:24:23,679
+You see that basically that means that if my leg
+
+256
+00:24:23,679 --> 00:24:27,960
+should have been a straight line with 180 degrees,
+
+257
+00:24:27,960 --> 00:24:32,799
+I'm just keeping a little angle in there.
+
+258
+00:24:32,799 --> 00:24:34,519
+And that it goes further.
+
+259
+00:24:34,519 --> 00:24:38,439
+And so you will always be able to make sure
+
+260
+00:24:38,439 --> 00:24:40,119
+that you always keep an angle.
+
+261
+00:24:40,119 --> 00:24:41,759
+And it's a smooth angle here.
+
+262
+00:24:41,759 --> 00:24:44,759
+So at least I never have a straight leg
+
+263
+00:24:44,759 --> 00:24:45,799
+and I'm never stretching.
+
+264
+00:24:45,799 --> 00:24:48,119
+So it's not exactly how they were doing it,
+
+265
+00:24:48,119 --> 00:24:52,639
+but it's one way of not having the knee pop, let's say.
+
+266
+00:24:55,119 --> 00:24:59,359
+I can compute my IK, so at least I have something to show.
+
+267
+00:24:59,359 --> 00:25:04,359
+And now I can render what they had here.
+
+268
+00:25:08,559 --> 00:25:13,359
+And then you could see that when the constraint are on,
+
+269
+00:25:13,360 --> 00:25:17,200
+Basically, my legs are properly placed,
+
+270
+00:25:17,200 --> 00:25:21,000
+my foot are properly placed where the ankle wanted to be,
+
+271
+00:25:21,000 --> 00:25:25,120
+except that you could see pops every time
+
+272
+00:25:25,120 --> 00:25:28,340
+my animation turns on and off.
+
+273
+00:25:29,300 --> 00:25:34,300
+You get that pop for every constraint.
+
+274
+00:25:36,840 --> 00:25:41,540
+And so that's actually the last step of the algorithm.
+
+275
+00:25:42,420 --> 00:25:44,259
+is the final processing.
+
+276
+00:25:44,259 --> 00:25:47,180
+And what the final processing does is,
+
+277
+00:25:47,180 --> 00:25:51,819
+well, realizing that we've computed every ankle position
+
+278
+00:25:51,819 --> 00:25:55,700
+and all of that as an offset
+
+279
+00:25:55,700 --> 00:25:58,539
+compared to where the animation was.
+
+280
+00:25:59,420 --> 00:26:02,819
+And if you remember what we've moved from single to double,
+
+281
+00:26:02,819 --> 00:26:07,819
+or double to single, we smooth out that information.
+
+282
+00:26:08,259 --> 00:26:10,619
+And basically what the final processing
+
+283
+00:26:10,620 --> 00:26:16,300
+would be doing is the same thing it would say okay now we could detect every
+
+284
+00:26:16,300 --> 00:26:24,180
+time a constraint is done on and off and we could also propagate the the the
+
+285
+00:26:24,180 --> 00:26:30,780
+offsets and blend them in and blend them out the same way we did for the
+
+286
+00:26:30,780 --> 00:26:37,900
+single to double except now we do it for every constraint so check for the for
+
+287
+00:26:37,900 --> 00:26:43,580
+the ankle, make sure that we turn on and off, and then we blend that information also forward
+
+288
+00:26:43,580 --> 00:26:51,500
+the same way. And then when we've done this, we can finally do the IK on that solution
+
+289
+00:26:51,500 --> 00:26:59,720
+instead of doing the IK before doing the final processing. And now what we have is this.
+
+290
+00:26:59,720 --> 00:27:07,759
+You could see that moving in and out of a constraint now is perfectly smooth because
+
+291
+00:27:07,759 --> 00:27:09,880
+we smooth out that information.
+
+292
+00:27:09,880 --> 00:27:17,759
+So we have exactly what we wanted.
+
+293
+00:27:17,759 --> 00:27:22,160
+And this is one of the way you could fix sliding issues.
+
+294
+00:27:22,160 --> 00:27:27,400
+If you find this video to be too fast or too slow or not enough in detail, feel free to
+
+295
+00:27:27,400 --> 00:27:33,920
+comments at the bottom so I know how to adjust for future videos and I will see
+
+296
+00:27:33,920 --> 00:27:37,720
+you for the next paper.

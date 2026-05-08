@@ -1,0 +1,343 @@
+1
+00:00:00,000 --> 00:00:07,759
+Hi, when we studied the motion graph paper we were trying to align two different point clouds
+
+2
+00:00:07,759 --> 00:00:13,439
+and to do this we had an optimization function that basically says that we were trying to find
+
+3
+00:00:14,720 --> 00:00:21,440
+the minimal distance between two point clouds if you did rotate and translate one of the point
+
+4
+00:00:21,440 --> 00:00:30,240
+workloads and that minimization functions had a closed form solution that we could use directly
+
+5
+00:00:30,240 --> 00:00:36,400
+and that's what we did in the in the study but I've never tried to actually derive those functions
+
+6
+00:00:36,400 --> 00:00:43,760
+myself to see how you get from that minimization problem to the optimized closed form solutions
+
+7
+00:00:43,760 --> 00:00:50,640
+so let's try to see how we could compute this so the first thing I will do so I will just define
+
+8
+00:00:50,640 --> 00:00:58,240
+a bunch of symbols that will be needed for SimPy and when we start from the minimization problem
+
+9
+00:00:59,200 --> 00:01:07,359
+this one is a vector is xyz points and points xyz also so I will rewrite the square distance
+
+10
+00:01:07,359 --> 00:01:15,519
+formula with the actual formula for the translate we have here and basically what you will do is
+
+11
+00:01:15,519 --> 00:01:21,420
+you have a function that basically says the first point x because now I have x y
+
+12
+00:01:21,420 --> 00:01:29,239
+and z so x y is minus the x prime y multiplied by the cossiness of the
+
+13
+00:01:29,239 --> 00:01:35,199
+angle plus the z prime multiplied by the sinus plus x zeros and the same for the
+
+14
+00:01:35,199 --> 00:01:41,920
+z is multiplied cossiness minus x multiplied by the sinus. I remove the y's
+
+15
+00:01:41,920 --> 00:01:46,000
+because when I'm trying to do a minimization problem here, I'm only
+
+16
+00:01:46,000 --> 00:01:51,799
+rotating and translating alongs x and z, so the y will be constant, so no
+
+17
+00:01:51,799 --> 00:01:56,320
+matter what the values will be for theta x0 and z0, y will always be the same, so
+
+18
+00:01:56,320 --> 00:02:02,320
+it's useless inside of my minimization problem. And now because we're taking the
+
+19
+00:02:02,320 --> 00:02:08,080
+square, the square distance, basically it means that I could just leave the
+
+20
+00:02:08,080 --> 00:02:11,840
+functions as this, otherwise I would have to do the square roots of these to get
+
+21
+00:02:11,840 --> 00:02:17,879
+the distance but then v squared would be square root squared and I don't need to deal with
+
+22
+00:02:17,879 --> 00:02:18,879
+it.
+
+23
+00:02:18,879 --> 00:02:29,439
+So I could just do this formula and that's what you have now in terms of x0, x is x i,
+
+24
+00:02:29,439 --> 00:02:31,680
+x prime i and so on and so on.
+
+25
+00:02:31,680 --> 00:02:37,520
+Has been rearranged to get rid of the parenthesis automatically by sin pi.
+
+26
+00:02:37,520 --> 00:02:43,719
+Now when you try to do a minimization problem of a function, what you do, especially if
+
+27
+00:02:43,719 --> 00:02:50,600
+you have square functions, you could just take the derivative of your functions and
+
+28
+00:02:50,600 --> 00:02:57,280
+look where the gradient will be zero, because that will be your minimum.
+
+29
+00:02:57,280 --> 00:02:59,680
+And so we will do exactly the same thing here.
+
+30
+00:02:59,680 --> 00:03:08,280
+I will take the partial derivatives of my functions in respect to theta and that gives
+
+31
+00:03:08,280 --> 00:03:15,200
+me that big function here and I take the partial derivative in respect to x0 and z0 and I
+
+32
+00:03:15,200 --> 00:03:17,960
+get all those two here.
+
+33
+00:03:17,960 --> 00:03:25,400
+Now from those functions what you do as I said you put them equal to 0 and I will expand
+
+34
+00:03:25,400 --> 00:03:30,920
+them so I will propagate the sums all over the place. So I get the first
+
+35
+00:03:30,920 --> 00:03:37,159
+functions equal zero, the second and the third equal zeros. What I have now is a
+
+36
+00:03:37,159 --> 00:03:42,000
+bunch of sums where I can see that I have also a bunch of constants inside of
+
+37
+00:03:42,000 --> 00:03:47,200
+those sums. So I will try to factor those terms and if I factor those terms
+
+38
+00:03:47,200 --> 00:03:52,280
+now I have to multiply by a bunch of stuff equal zero to multiply by a bunch
+
+39
+00:03:52,280 --> 00:03:58,140
+of stuff equals zero. I can get rid of those two because two x equals zero means x equals
+
+40
+00:03:58,140 --> 00:04:08,180
+zero. The two is useless. So I can get rid of all those twos. And I get now this with
+
+41
+00:04:08,180 --> 00:04:13,479
+all the constants outside x zero because zero with the sums. And we could see that we have
+
+42
+00:04:13,479 --> 00:04:21,079
+a lot of sums that are looking always the same. I get the sum of y, z prime i, same
+
+43
+00:04:21,079 --> 00:04:27,919
+it's already here, the same with a yxi. And inside of the paper they already
+
+44
+00:04:27,919 --> 00:04:36,399
+replaced those sums of yixi by xbar and I will do that same substitution here
+
+45
+00:04:36,399 --> 00:04:41,799
+because it would make it more readable and it would be making the life for
+
+46
+00:04:41,799 --> 00:04:48,560
+SimPy a bit easier to solve. So I get the xbar, zbar, xprimebar, zprimebar
+
+47
+00:04:48,560 --> 00:04:56,780
+define at this one, I can do that substitution inside of my three functions.
+
+48
+00:04:56,780 --> 00:05:04,579
+Now those start to look a bit more simple and what we can see is that the
+
+49
+00:05:04,579 --> 00:05:11,720
+first one still depends on x, z and theta, while the second one only depends on
+
+50
+00:05:11,720 --> 00:05:18,199
+x0 and theta and the third one only on z0 and theta. So I will try to solve those
+
+51
+00:05:18,199 --> 00:05:22,920
+to for x and z so I will be able to start to do substitution inside of the
+
+52
+00:05:22,920 --> 00:05:31,039
+other one so I'll solve x for x0 and I'll solve for z0 and if I do this I
+
+53
+00:05:31,039 --> 00:05:38,079
+basically have x0s equal x bar minus x prime bar cos theta minus z prime bar
+
+54
+00:05:38,079 --> 00:05:44,560
+sin theta and it's actually these functions we actually found x0s the
+
+55
+00:05:44,560 --> 00:05:51,680
+same way they've found it here and we found z zeros the same way they found set zeros here.
+
+56
+00:05:53,199 --> 00:05:59,680
+Now because I have x zero and z zero only depending on theta, what I can do is I take
+
+57
+00:05:59,680 --> 00:06:07,279
+my x zero and I'll replace it inside of the first functions and do the same for the z zero
+
+58
+00:06:07,279 --> 00:06:12,560
+all over the place and if I do that substitution and then expand everything
+
+59
+00:06:12,560 --> 00:06:20,720
+luckily enough a lot of parameters get cancelled out and you have this big
+
+60
+00:06:20,720 --> 00:06:28,000
+functions and now it's on your functions of the synus and cossinus data and more
+
+61
+00:06:28,000 --> 00:06:32,680
+importantly it's actually a polynomial where you could see that every term is
+
+62
+00:06:32,680 --> 00:06:36,840
+either a term multiplied by cossinus or synus so it's something multiplied by
+
+63
+00:06:36,840 --> 00:06:42,120
+synus by cossinus by cossinus synus so all of them is always multiplied either
+
+64
+00:06:42,120 --> 00:06:49,240
+by cosinus or sinus. So I can try to rearrange these functions and collect for the sinus
+
+65
+00:06:49,240 --> 00:06:59,240
+and cosinus terms. And what you end up with is something broken up. And what you end up with
+
+66
+00:07:01,240 --> 00:07:08,439
+is something, a big functions multiplied by sinus theta and a big parenthesis multiplied by
+
+67
+00:07:08,439 --> 00:07:10,040
+by Cosinus theta.
+
+68
+00:07:10,040 --> 00:07:13,180
+Now, basically, I have A Sinus A,
+
+69
+00:07:13,180 --> 00:07:16,600
+Sinus theta plus B Cosinus theta,
+
+70
+00:07:16,600 --> 00:07:18,699
+which is equal to zero,
+
+71
+00:07:18,699 --> 00:07:21,959
+which means that with a bunch of rearrangement,
+
+72
+00:07:21,959 --> 00:07:26,959
+you can end up with A Sinus equal minus B Cosinus,
+
+73
+00:07:27,519 --> 00:07:30,319
+and then Sinus divided by Cosinus equal minus B
+
+74
+00:07:30,319 --> 00:07:31,800
+divided by A.
+
+75
+00:07:31,800 --> 00:07:35,399
+And you finally end up with theta equal r tangent
+
+76
+00:07:35,399 --> 00:07:37,800
+of minus B divided by A.
+
+77
+00:07:37,800 --> 00:07:40,720
+So minus b divided by a.
+
+78
+00:07:40,720 --> 00:07:47,720
+And if I do this, so minus a divided by b here,
+
+79
+00:07:47,720 --> 00:07:51,960
+you get this formula, which is actually what they have here.
+
+80
+00:07:51,960 --> 00:07:59,080
+It's the same functions for the theta we have solved.
+
+81
+00:07:59,080 --> 00:08:03,480
+So now we have theta x0 and z0 as a closed form
+
+82
+00:08:03,480 --> 00:08:06,199
+solutions in the same way the paper did.
+
+83
+00:08:06,199 --> 00:08:09,719
+So this is how you derived those functions.
+
+84
+00:08:09,719 --> 00:08:10,560
+Hope you liked it.
+
+85
+00:08:10,560 --> 00:08:11,879
+It was a short one.
+
+86
+00:08:11,879 --> 00:08:13,259
+See you next time.

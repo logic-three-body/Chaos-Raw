@@ -1,0 +1,835 @@
+1
+00:00:00,000 --> 00:00:06,360
+hi in the previous video about spline and curves what we've studied was the
+
+2
+00:00:06,360 --> 00:00:11,560
+Bezier curve and when we started to extend the Bezier curve to do a spline
+
+3
+00:00:11,560 --> 00:00:15,880
+and to attach several Bezier curves back to back what happened is that we were
+
+4
+00:00:15,880 --> 00:00:21,240
+sharing the first and last point and we were only sharing that one so we had a
+
+5
+00:00:21,240 --> 00:00:28,960
+discontinuity in our curve if you remember this shape we had here the
+
+6
+00:00:28,960 --> 00:00:34,359
+the first point, basically the tangent going in that direction for the first
+
+7
+00:00:34,359 --> 00:00:38,760
+basic curve and then the tangent we want to get to get it to go in this
+
+8
+00:00:38,760 --> 00:00:41,840
+direction for the second tangent so we don't have that discontinuities because
+
+9
+00:00:41,840 --> 00:00:47,600
+we have different angle here. It is quite annoying to compute every time to
+
+10
+00:00:47,600 --> 00:00:51,240
+make sure that you know that your previous points and the next point would
+
+11
+00:00:51,240 --> 00:00:56,740
+actually be on a line so you have continuity inside of your curve and so
+
+12
+00:00:56,740 --> 00:01:04,180
+So for this, what we will do is instead of parametrizing our curve using the four points,
+
+13
+00:01:04,180 --> 00:01:09,700
+what we want to do is to be able to parametrize it using only the first and the last point
+
+14
+00:01:09,700 --> 00:01:13,140
+and then giving directly the tangent we want to use.
+
+15
+00:01:13,140 --> 00:01:18,260
+So saying I want it to go in that direction and then the second point will go in that
+
+16
+00:01:18,260 --> 00:01:23,500
+direction and then we will be sharing that point and tangent to the next one and that
+
+17
+00:01:23,500 --> 00:01:30,099
+And Salo has to more easily make sure that we have continuity between those stuff.
+
+18
+00:01:30,099 --> 00:01:36,819
+So this type of curve now is what we call an Hermit curve.
+
+19
+00:01:36,819 --> 00:01:46,340
+And the Hermit curve is basically defined as this, is defined as the endpoints and as
+
+20
+00:01:46,340 --> 00:01:49,939
+the tangent, so basically as the derivative of the endpoints.
+
+21
+00:01:49,939 --> 00:01:54,879
+So we now have the points and the first derivative
+
+22
+00:01:54,879 --> 00:02:00,280
+of those points, the value we want to give to our function.
+
+23
+00:02:00,280 --> 00:02:03,239
+Before being able to compute this, what we will have to do
+
+24
+00:02:03,239 --> 00:02:08,479
+is to understand how we could do it just doing polynomial.
+
+25
+00:02:08,479 --> 00:02:13,360
+And we will start from those mathematics,
+
+26
+00:02:13,360 --> 00:02:16,560
+and then we will build the mid-curve after it.
+
+27
+00:02:16,560 --> 00:02:21,599
+So if we want to fit a polynomial
+
+28
+00:02:21,599 --> 00:02:25,240
+through a certain set of points,
+
+29
+00:02:25,240 --> 00:02:28,599
+you could actually fit any type of polynomial
+
+30
+00:02:28,599 --> 00:02:34,000
+of a certain degrees to the number of points degree n plus 1.
+
+31
+00:02:34,000 --> 00:02:37,879
+So if I have a cubic polynomial,
+
+32
+00:02:37,879 --> 00:02:41,840
+I can fit it to go through four points.
+
+33
+00:02:41,840 --> 00:02:44,480
+And again, as we were doing cubic,
+
+34
+00:02:44,479 --> 00:02:46,519
+mainly I will focus on those cubic.
+
+35
+00:02:46,519 --> 00:02:50,759
+So let's say that I will have, in this case,
+
+36
+00:02:50,759 --> 00:02:55,280
+if it agrees to do it, I have those four points
+
+37
+00:02:55,280 --> 00:02:58,239
+and I want to define a curve, a cubic curve
+
+38
+00:02:58,239 --> 00:03:00,979
+that will go through those four points.
+
+39
+00:03:00,979 --> 00:03:04,439
+How we do this is that we start from the cubic function
+
+40
+00:03:05,479 --> 00:03:07,439
+and the cubic function itself, you know,
+
+41
+00:03:07,439 --> 00:03:11,359
+is the ATQ plus BT square plus CT plus D.
+
+42
+00:03:11,360 --> 00:03:13,520
+So that's a cubic functions,
+
+43
+00:03:15,680 --> 00:03:17,840
+the generic form of the cubic functions.
+
+44
+00:03:17,840 --> 00:03:22,440
+So what do we know from the points we actually want to match?
+
+45
+00:03:22,440 --> 00:03:27,440
+We know that when my function is at T zero,
+
+46
+00:03:27,760 --> 00:03:29,540
+the value will be two.
+
+47
+00:03:29,540 --> 00:03:32,520
+When a function is at T one, the value will be one.
+
+48
+00:03:32,520 --> 00:03:34,200
+At T three, the value will be four.
+
+49
+00:03:34,200 --> 00:03:37,200
+And at T four, the value will be one again.
+
+50
+00:03:37,200 --> 00:03:45,640
+So I can have those as the values I would want to compute.
+
+51
+00:03:45,640 --> 00:03:48,720
+And now what I can do is that I can actually
+
+52
+00:03:48,720 --> 00:03:52,400
+substitute the 0, 1, 3, and 4 through these functions, which
+
+53
+00:03:52,400 --> 00:03:57,040
+give us that d, because all the 0s will make everything
+
+54
+00:03:57,040 --> 00:03:59,400
+disappear, d equals 2.
+
+55
+00:03:59,400 --> 00:04:01,960
+And then everything will be 1, 1, 1.
+
+56
+00:04:01,960 --> 00:04:06,560
+So a, b, c, and d, a plus b plus c plus d equal 1.
+
+57
+00:04:06,560 --> 00:04:10,800
+add in the cube, 27, 9, 3, plus D equal 4,
+
+58
+00:04:10,800 --> 00:04:15,479
+and same for 4, 64, 16, 4, and D equal 1.
+
+59
+00:04:15,479 --> 00:04:19,199
+So that give us basically a system of four equations
+
+60
+00:04:19,199 --> 00:04:21,079
+and four unknown.
+
+61
+00:04:21,079 --> 00:04:23,720
+Now, that's something that we could easily solve.
+
+62
+00:04:24,639 --> 00:04:26,899
+And so I will just put those,
+
+63
+00:04:28,959 --> 00:04:31,319
+there was equation in the matrix form,
+
+64
+00:04:31,319 --> 00:04:36,199
+and basically I have the 2141 equal my big matrix
+
+65
+00:04:36,199 --> 00:04:38,920
+coming from here, the D comes from the first one,
+
+66
+00:04:38,920 --> 00:04:42,759
+A, B, C, D, one, one, one, one, 27, nine, three,
+
+67
+00:04:42,759 --> 00:04:44,399
+coming the next nine and so on and so on,
+
+68
+00:04:44,399 --> 00:04:46,639
+and I get the A, B, C, D.
+
+69
+00:04:46,639 --> 00:04:49,879
+And now that I have my matrix form,
+
+70
+00:04:49,879 --> 00:04:53,759
+I can actually solve for A, B, C, D,
+
+71
+00:04:53,759 --> 00:04:55,959
+and to solve through A, B, C, D.
+
+72
+00:04:55,959 --> 00:04:59,360
+What I will do in this case is just use
+
+73
+00:04:59,360 --> 00:05:03,959
+the linear algebra solve method from NumPy
+
+74
+00:05:03,959 --> 00:05:06,279
+that would just solve this for me.
+
+75
+00:05:06,279 --> 00:05:11,279
+And in my case now, I have the A, B, C and D parameters
+
+76
+00:05:11,839 --> 00:05:13,259
+coming from the cubic.
+
+77
+00:05:13,259 --> 00:05:17,199
+And if I replace A, B, C, D with those values,
+
+78
+00:05:17,199 --> 00:05:21,439
+now I can actually have a function
+
+79
+00:05:21,439 --> 00:05:23,319
+that will go through my four points.
+
+80
+00:05:23,319 --> 00:05:28,319
+So that's how you compute this kind of polynomial.
+
+81
+00:05:28,319 --> 00:05:38,079
+polynomial. Now that I have this and we understand how we could actually use the system of equation
+
+82
+00:05:38,079 --> 00:05:44,560
+and to build them and having our functions or polynomial goes through a bunch of points,
+
+83
+00:05:45,120 --> 00:05:50,399
+what we can do is we can start to look at the Hermit curve definition itself.
+
+84
+00:05:50,400 --> 00:05:59,680
+And to start with the Hermit curve, what we will have to do is basically remember that we will be
+
+85
+00:05:59,680 --> 00:06:08,400
+doing cubic Hermit curve again, same way. And so I'm starting from the cubic function again,
+
+86
+00:06:08,400 --> 00:06:18,360
+so atq plus bt square plus ct plus d. And I will just rewrite them this as a matrix form. So it's
+
+87
+00:06:18,360 --> 00:06:24,480
+basically exactly the same thing except that I've put them in a matrix form but
+
+88
+00:06:24,480 --> 00:06:31,199
+it's the same formula do not worry about this one and what we will be doing now
+
+89
+00:06:31,199 --> 00:06:38,199
+is again do as usual as the basic curve and all of that kind of stuff we will
+
+90
+00:06:38,199 --> 00:06:45,120
+say that the amide curve is parametrized between 0 and 1 and that will
+
+91
+00:06:45,120 --> 00:06:53,759
+make our life way easier. Now we could do an interpolation saying that at time zero we will be at
+
+92
+00:06:53,759 --> 00:07:01,920
+point zero. At time one we will be at point one and then at time zero we want to have the derivative
+
+93
+00:07:01,920 --> 00:07:08,720
+of point zero and at time one we want the derivative of point one. So what happened when you do this
+
+94
+00:07:08,720 --> 00:07:14,800
+is that we actually compute also the derivative of our function. So that's my cubic functions and
+
+95
+00:07:14,800 --> 00:07:17,120
+and that's the derivative of the cumming function.
+
+96
+00:07:17,120 --> 00:07:19,280
+If you don't remember, you take the derivative,
+
+97
+00:07:19,280 --> 00:07:23,020
+you bring the three in front and do minus one.
+
+98
+00:07:23,020 --> 00:07:28,020
+So I get three AT square plus BT plus C and the D disappear.
+
+99
+00:07:28,520 --> 00:07:31,740
+So that's the derivative itself.
+
+100
+00:07:31,740 --> 00:07:34,600
+And now the same way as we've done
+
+101
+00:07:34,600 --> 00:07:36,280
+when we were doing the polynomial,
+
+102
+00:07:36,280 --> 00:07:41,019
+what we could do is substitute the different values
+
+103
+00:07:41,019 --> 00:07:42,439
+for the different ABCD.
+
+104
+00:07:42,439 --> 00:07:46,839
+So I will have 0.08 again.
+
+105
+00:07:46,839 --> 00:07:50,000
+Everything will be zero, so 0.001 for D.
+
+106
+00:07:50,000 --> 00:07:52,439
+At 0.1, everything will be at one.
+
+107
+00:07:52,439 --> 00:07:55,199
+And then I will have the derivative of the 0.0.
+
+108
+00:07:55,199 --> 00:07:57,720
+Again, I will put zero in these functions now.
+
+109
+00:07:57,720 --> 00:08:00,240
+So everything disappeared except the C.
+
+110
+00:08:00,240 --> 00:08:04,399
+And I'll have the derivative at 0.1,
+
+111
+00:08:04,399 --> 00:08:06,000
+and then I will have three, two, one,
+
+112
+00:08:06,000 --> 00:08:08,000
+and zero, the D has disappeared.
+
+113
+00:08:08,000 --> 00:08:13,000
+So basically now I have the same system of equation
+
+114
+00:08:14,000 --> 00:08:16,879
+as we had before, except that now it takes 0.1,
+
+115
+00:08:16,879 --> 00:08:20,319
+the derivative of 0.0 and derivative of 0.1.
+
+116
+00:08:20,319 --> 00:08:25,319
+And then we could solve for ABCD again.
+
+117
+00:08:26,079 --> 00:08:29,959
+I said that this time I will not solve it numerically
+
+118
+00:08:29,959 --> 00:08:33,639
+because I'm still trying to find the functions itself.
+
+119
+00:08:33,639 --> 00:08:38,199
+So I will solve it by how we actually solve
+
+120
+00:08:38,199 --> 00:08:40,039
+this kind of system usually.
+
+121
+00:08:40,039 --> 00:08:44,039
+And to solve for ABCD, what we do is that we take
+
+122
+00:08:44,039 --> 00:08:46,360
+the inverse of the matrix in the middle.
+
+123
+00:08:46,360 --> 00:08:48,559
+So if you take the inverse of the matrix,
+
+124
+00:08:48,559 --> 00:08:51,679
+now ABCD equal the inverse of the matrix,
+
+125
+00:08:51,679 --> 00:08:56,080
+that's my minus one, multiplied by the point 0.1
+
+126
+00:08:56,080 --> 00:08:58,960
+and both derivatives.
+
+127
+00:08:58,960 --> 00:09:02,879
+And if I compute that inverse,
+
+128
+00:09:02,879 --> 00:09:05,600
+So that's my matrix, compute the inverse.
+
+129
+00:09:05,600 --> 00:09:07,159
+I end up with this matrix.
+
+130
+00:09:07,159 --> 00:09:09,759
+So I could actually write it in the function directly.
+
+131
+00:09:09,759 --> 00:09:14,080
+I get the ABCD equal that matrix multiplied by 0.1
+
+132
+00:09:15,200 --> 00:09:16,559
+derivative and derivative.
+
+133
+00:09:17,820 --> 00:09:21,799
+And now we have our ABCD here.
+
+134
+00:09:21,799 --> 00:09:23,759
+What we could do with that is that remember
+
+135
+00:09:23,759 --> 00:09:28,759
+that we've wrote the ABCD, the function itself
+
+136
+00:09:28,759 --> 00:09:36,759
+itself as a matrix of times multiplied by a b c d so I can substitute the same way again
+
+137
+00:09:36,759 --> 00:09:46,360
+my a b c d remove it completely and only keep the the times the matrix in the middle and my
+
+138
+00:09:47,399 --> 00:09:55,399
+points so point zero point one both derivative remember this formula this shape is really close
+
+139
+00:09:55,399 --> 00:09:59,159
+to the one we were using when we said that we want to do
+
+140
+00:09:59,159 --> 00:10:04,439
+matrix form for Bezier curve. See that's the same except that the matrix is
+
+141
+00:10:04,439 --> 00:10:08,199
+different and here we used p1, p2, p3 and p4
+
+142
+00:10:08,199 --> 00:10:13,079
+but basically it is the same
+
+143
+00:10:14,519 --> 00:10:19,399
+the same comm set now that is 0.0, 0.1 and both derivatives.
+
+144
+00:10:19,399 --> 00:10:23,799
+What we have here is
+
+145
+00:10:23,800 --> 00:10:34,320
+The formula, if we were actually computing everything, again you get the 0.0 multiplied
+
+146
+00:10:34,320 --> 00:10:38,800
+by this, 0.1 multiplied by this, the derivative multiplied by this, and the derivative multiplied
+
+147
+00:10:38,800 --> 00:10:42,360
+by this.
+
+148
+00:10:42,360 --> 00:10:48,840
+And that gives us the Hermit curve, and I can now see, I've used the formula, the one
+
+149
+00:10:48,840 --> 00:10:51,000
+I've computed here, not the matrix form.
+
+150
+00:10:51,000 --> 00:10:56,000
+I've computed the formula, and I've used 0.0,
+
+151
+00:10:56,120 --> 00:10:59,320
+two times, times cubed, minus three,
+
+152
+00:10:59,320 --> 00:11:01,320
+times squares, and all that kind of stuff.
+
+153
+00:11:01,320 --> 00:11:05,480
+And you could see that basically it works now.
+
+154
+00:11:05,480 --> 00:11:08,759
+I have my points, my derivative, I get the curves,
+
+155
+00:11:08,759 --> 00:11:12,240
+and I reach here my points towards my derivative.
+
+156
+00:11:12,240 --> 00:11:14,279
+That's a 1D example.
+
+157
+00:11:14,279 --> 00:11:19,279
+So for zero to one, I have two values.
+
+158
+00:11:19,279 --> 00:11:23,120
+And I can do the same for a 2D example.
+
+159
+00:11:23,120 --> 00:11:31,679
+So instead of having a point that just defined as t at the bottom and having a value for y,
+
+160
+00:11:31,679 --> 00:11:38,759
+I can have an xy points and xy points and then my t, my parameter is 0, 1 will give me
+
+161
+00:11:38,759 --> 00:11:44,000
+the curve the same way we did the Bezier curve.
+
+162
+00:11:44,000 --> 00:11:47,879
+And you can see now, what we have here is a 2D example.
+
+163
+00:11:47,879 --> 00:11:51,879
+So I have the direction in which I want the curve to go.
+
+164
+00:11:51,879 --> 00:11:57,759
+And I get the curve to go through my parameters, my 0 to 1.
+
+165
+00:11:57,759 --> 00:11:59,200
+And it's in a 2D space.
+
+166
+00:12:02,600 --> 00:12:10,919
+And that's what the Amit curve is computing.
+
+167
+00:12:10,919 --> 00:12:15,919
+Now there is, of course, as we define the Hermit curve,
+
+168
+00:12:17,240 --> 00:12:20,479
+where you said that it's another way to compute a curve
+
+169
+00:12:20,479 --> 00:12:24,559
+that goes between points and have tangents.
+
+170
+00:12:24,559 --> 00:12:27,919
+There is a link between how we computed the basic curve
+
+171
+00:12:27,919 --> 00:12:30,919
+and what we're doing here with the Hermit curve.
+
+172
+00:12:30,919 --> 00:12:35,919
+And basically, the formula to go from one to the other
+
+173
+00:12:35,959 --> 00:12:39,039
+is this, is if you
+
+174
+00:12:40,919 --> 00:12:42,919
+If you have a bunch of
+
+175
+00:12:45,959 --> 00:12:50,639
+Hermit, so you will have two points the point zero and point one and you get both
+
+176
+00:12:51,159 --> 00:12:57,919
+Derivative to get back the four points of the basic of the only thing you do is that you take the first point as being the first point
+
+177
+00:12:57,919 --> 00:13:04,079
+The last one has been the last one and then point one of my basic curve is point zero plus
+
+178
+00:13:04,879 --> 00:13:07,240
+a third of the derivative of
+
+179
+00:13:08,000 --> 00:13:13,000
+of 0.0 and 0.2 is the 0.1 minus a third of the derivative.
+
+180
+00:13:13,500 --> 00:13:18,500
+That divided by three will come in logically a bit later
+
+181
+00:13:19,039 --> 00:13:23,960
+when we talk about a few, the stuff.
+
+182
+00:13:23,960 --> 00:13:27,560
+But right now, just remember that we divide by three
+
+183
+00:13:27,560 --> 00:13:31,680
+to get the right point in this case.
+
+184
+00:13:31,680 --> 00:13:35,899
+So to show you that it works, what I could do,
+
+185
+00:13:35,899 --> 00:13:41,740
+it's basically starting from that 2D example again I have my 2D example I
+
+186
+00:13:41,740 --> 00:13:48,539
+have the Bezier what I have the Hermit curve that is the black one and so by
+
+187
+00:13:48,539 --> 00:13:53,419
+using the Hermit curve now I can actually put my points here you know see
+
+188
+00:13:53,419 --> 00:13:57,179
+that's a third of my derivative and I get the points there for my second point
+
+189
+00:13:57,179 --> 00:14:02,299
+and the third point is a third of the derivative less and I get my point here
+
+190
+00:14:02,300 --> 00:14:08,860
+And that's the basic curve and that's the blue dots and you can see that they're perfectly aligned. So
+
+191
+00:14:09,620 --> 00:14:11,620
+they both are
+
+192
+00:14:12,460 --> 00:14:17,740
+Computing exactly the same thing just a bit differently again on how you do it
+
+193
+00:14:19,180 --> 00:14:25,360
+And now if I want to do an omit spline, so I want to actually put a bunch of hermit curves back to back
+
+194
+00:14:25,360 --> 00:14:33,360
+then I can just share not only the last and the first point, but also the
+
+195
+00:14:33,360 --> 00:14:39,519
+tangent and say I will have a continuous function instantly. What I will do is I
+
+196
+00:14:39,519 --> 00:14:47,080
+will rearrange a few of the parameters, you know, because when we build the
+
+197
+00:14:47,080 --> 00:14:52,720
+matrix the first time when we said it was 0.0, 0.1, first the derivative of 0.0,
+
+198
+00:14:52,720 --> 00:14:58,639
+derivative of 0.1. But if I want to share the data between a bunch of curves, it would make
+
+199
+00:14:58,639 --> 00:15:08,879
+more sense if in my data I had 0.0 derivative of 0.0 0.1 derivative of 0.1. So I can just move
+
+200
+00:15:08,879 --> 00:15:17,040
+forward inside of my list of points in derivative and I can build a spline this way. So this is
+
+201
+00:15:17,039 --> 00:15:27,439
+This is what I've done. I've used the matrix form, except that I've swapped the column,
+
+202
+00:15:27,439 --> 00:15:35,120
+so I will get a point derivative point derivative point derivative, and I can just directly reuse
+
+203
+00:15:35,120 --> 00:15:47,480
+this to have a complete list, to have a list of hermit curves that goes back to
+
+204
+00:15:47,480 --> 00:15:52,840
+back. So if I define now my list of points as a points and a derivative of points
+
+205
+00:15:52,840 --> 00:15:59,680
+and derivative points and derivative, I can have this hermit curve that goes
+
+206
+00:15:59,680 --> 00:16:09,080
+through a bunch of points. And so this was the video about the Hermit curve
+
+207
+00:16:09,080 --> 00:16:16,400
+and Hermit spline and in the next one we will go through how to compute a bunch
+
+208
+00:16:16,400 --> 00:16:20,000
+of stuff automatically to do what we call the cardinal spline that will make
+
+209
+00:16:20,000 --> 00:16:27,680
+our life easier when we want to use a Hermit curve. See you next time.

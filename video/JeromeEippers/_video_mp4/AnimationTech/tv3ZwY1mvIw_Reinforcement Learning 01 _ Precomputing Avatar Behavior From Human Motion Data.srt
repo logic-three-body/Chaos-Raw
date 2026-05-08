@@ -1,0 +1,1947 @@
+1
+00:00:00,960 --> 00:00:05,839
+Earlier we've seen how we could create a motion graph starting from one big animation
+
+2
+00:00:06,480 --> 00:00:11,679
+and today as an introduction to reinforcement learning we will see how we could use that motion
+
+3
+00:00:11,679 --> 00:00:18,800
+graph to build a runtime animation controller. Hi, I'm Jérôme and today's paper will be
+
+4
+00:00:18,800 --> 00:00:27,440
+pre-computing avatar behavior from human motion data, a paper from 2004. So the idea of that paper
+
+5
+00:00:27,440 --> 00:00:33,439
+is to start from a motion graph. So what I've done is that I've saved a bunch of information from
+
+6
+00:00:33,439 --> 00:00:38,320
+the notebook with the motion graph. So I don't have to recompute the motion graph from scratch.
+
+7
+00:00:38,320 --> 00:00:44,960
+I would already have all the transitions and all that kind of stuff saved for me. So what I've done
+
+8
+00:00:44,960 --> 00:00:54,640
+is of course loading all the libraries and then I will load my character and I've also added all
+
+9
+00:00:54,640 --> 00:01:04,960
+the foot contact so I can do a quick IK pass to stabilize my foot at run time. I have a sphere
+
+10
+00:01:04,960 --> 00:01:11,920
+for debug and here's the informations I have from the motion graph data. So I have the animation
+
+11
+00:01:11,920 --> 00:01:18,960
+that I've used to do that locomotion. I have the window size that was used. I have the frame
+
+12
+00:01:18,960 --> 00:01:26,000
+validity. So I know inside of that big animations which frames are meant to be used and which are
+
+13
+00:01:26,000 --> 00:01:32,320
+invalid. I had a bunch of range that I didn't want to use. And I get the local minima. So basically
+
+14
+00:01:32,320 --> 00:01:37,440
+all the time, all the places where I could have transitions. So that's all informations coming
+
+15
+00:01:37,440 --> 00:01:44,880
+from the motion graph. What I would do is quickly compute the foot contact again. So I know when
+
+16
+00:01:44,879 --> 00:01:46,920
+when I have a contact on the ground.
+
+17
+00:01:46,920 --> 00:01:51,920
+And as a reminder, here is the animation
+
+18
+00:01:52,359 --> 00:01:55,199
+that was used to build a motion graph.
+
+19
+00:01:55,199 --> 00:02:00,199
+So this is the entire animation here.
+
+20
+00:02:00,439 --> 00:02:03,299
+So a bunch of locomotions walking along
+
+21
+00:02:05,399 --> 00:02:08,199
+and then see that's the range
+
+22
+00:02:08,199 --> 00:02:09,680
+that I want to use the teleportations.
+
+23
+00:02:09,680 --> 00:02:13,919
+And then I get higher turns, smaller turns
+
+24
+00:02:13,920 --> 00:02:15,800
+and all that kind of stuff.
+
+25
+00:02:15,800 --> 00:02:21,160
+So that's what was used when we were doing the motion graph.
+
+26
+00:02:21,160 --> 00:02:24,120
+Now, I will recreate the motion graph here.
+
+27
+00:02:24,120 --> 00:02:26,320
+I only have all the transitions possible.
+
+28
+00:02:26,320 --> 00:02:29,200
+But what I would do is that I will do it the same way
+
+29
+00:02:29,200 --> 00:02:31,200
+as the paper has done it in this case.
+
+30
+00:02:31,200 --> 00:02:39,560
+So instead of using the motion graph with every node,
+
+31
+00:02:39,560 --> 00:02:41,880
+being a bunch of frames and every edge,
+
+32
+00:02:41,879 --> 00:02:45,299
+being the jump where you could go.
+
+33
+00:02:45,299 --> 00:02:47,979
+What we will do is that we will turn this graph
+
+34
+00:02:47,979 --> 00:02:51,359
+into a state and action graph,
+
+35
+00:02:51,359 --> 00:02:55,699
+which is tens of terms that you will hear a lot
+
+36
+00:02:55,699 --> 00:02:57,900
+when we start to talk about reinforcement learning
+
+37
+00:02:57,900 --> 00:02:59,060
+and all of those.
+
+38
+00:02:59,060 --> 00:03:02,000
+So now it's a bunch of states.
+
+39
+00:03:02,000 --> 00:03:05,919
+So instead of having all my frames of animation and jump,
+
+40
+00:03:05,919 --> 00:03:10,500
+I only have the state and the state represents one frame
+
+41
+00:03:10,500 --> 00:03:12,439
+where I can take a decision.
+
+42
+00:03:12,439 --> 00:03:17,439
+So it doesn't represent an animation anymore
+
+43
+00:03:17,439 --> 00:03:19,520
+and represent a pose.
+
+44
+00:03:19,520 --> 00:03:23,199
+And the action itself is the animation you could take,
+
+45
+00:03:23,199 --> 00:03:26,840
+you could do to reach the next state.
+
+46
+00:03:26,840 --> 00:03:31,840
+So each state is one pose and each actions
+
+47
+00:03:34,400 --> 00:03:38,400
+are actually the animations that leads the next state.
+
+48
+00:03:38,400 --> 00:03:41,439
+So I will build the graph in this way.
+
+49
+00:03:41,439 --> 00:03:44,680
+So I will have a state,
+
+50
+00:03:45,819 --> 00:03:47,680
+and each state will have a bunch of actions,
+
+51
+00:03:47,680 --> 00:03:51,840
+and the actions will be knowing the starting frame
+
+52
+00:03:51,840 --> 00:03:54,000
+of animations and the end frame of animations.
+
+53
+00:03:54,000 --> 00:03:57,960
+So that really the action that has the animations.
+
+54
+00:03:57,960 --> 00:04:00,159
+And the way you compute this kind of stuff,
+
+55
+00:04:00,159 --> 00:04:05,159
+basically you start by creating an action of one frame
+
+56
+00:04:05,159 --> 00:04:11,159
+creating an action of one frame between every states as in this case all the
+
+57
+00:04:11,159 --> 00:04:18,319
+bees so you create all the actions then you add what I've done is I'm adding all
+
+58
+00:04:18,319 --> 00:04:23,819
+the transitions that were coming from the computed motion graph that says you
+
+59
+00:04:23,819 --> 00:04:27,079
+could jump from here to here and that kind of stuff so that's all the action
+
+60
+00:04:27,079 --> 00:04:31,240
+that represents the jumps.
+
+61
+00:04:31,240 --> 00:04:38,519
+And then you will basically pick one of any states.
+
+62
+00:04:38,519 --> 00:04:42,639
+And then you check its first action,
+
+63
+00:04:42,639 --> 00:04:43,959
+and then you check the state.
+
+64
+00:04:43,959 --> 00:04:47,639
+And if that state has only one action,
+
+65
+00:04:47,639 --> 00:04:50,519
+you basically collapse the edge.
+
+66
+00:04:50,519 --> 00:04:53,919
+So you make the edge longer and longer and longer.
+
+67
+00:04:53,919 --> 00:04:55,719
+And then basically all the states
+
+68
+00:04:55,720 --> 00:04:58,320
+that don't have any edges anymore discarded.
+
+69
+00:04:58,320 --> 00:05:01,000
+So that's how I've done it here.
+
+70
+00:05:01,000 --> 00:05:06,000
+I get all my edges and then I start to collapse them
+
+71
+00:05:06,080 --> 00:05:09,280
+if they don't have anything that need to lead to.
+
+72
+00:05:09,280 --> 00:05:12,040
+And when you've done all of that,
+
+73
+00:05:12,040 --> 00:05:17,040
+basically you end up with 540 different states.
+
+74
+00:05:18,840 --> 00:05:21,180
+So that's the number of states I have.
+
+75
+00:05:21,180 --> 00:05:25,420
+And each of those states have at least two actions
+
+76
+00:05:25,420 --> 00:05:37,259
+they can pick from. What I would do then, because I have all those states and the states
+
+77
+00:05:37,259 --> 00:05:41,379
+that themselves are the actual animations, I will start to pre-compute a bunch of stuff
+
+78
+00:05:41,379 --> 00:05:46,700
+on those states just to make my life easier when I will keep going through the paper and
+
+79
+00:05:46,700 --> 00:05:54,100
+I need to play back a bunch of stuff. So what I would do is that now every actions I know
+
+80
+00:05:54,100 --> 00:06:01,780
+exactly where they start from and up to where they go. So I will store the trajectory of the root
+
+81
+00:06:01,780 --> 00:06:08,580
+motion directly in the state. Remember my animations is all over the place in world space
+
+82
+00:06:09,620 --> 00:06:15,140
+and I only want to be able to move everything into local space. So everything I will do
+
+83
+00:06:15,939 --> 00:06:21,379
+is that every start of the actions I take the first position as being neutral and bring it back
+
+84
+00:06:21,379 --> 00:06:29,860
+back to zero zero. And I take the trajectory as a local trajectory based on the first frame.
+
+85
+00:06:29,860 --> 00:06:34,620
+And thanks to that one, I can have a local trajectory that basically is just the amount
+
+86
+00:06:34,620 --> 00:06:39,659
+of displacement I have along every frame. So when I would want to play back the animation,
+
+87
+00:06:39,659 --> 00:06:48,779
+the only thing I have to care about now is always adding the amount of trajectory, local
+
+88
+00:06:48,780 --> 00:06:54,300
+trajectory at every frame. I don't need anymore to compute all the transform, bringing back
+
+89
+00:06:54,300 --> 00:06:59,980
+the character, realigning them, all that kind of stuff, because basically all my motion is local
+
+90
+00:06:59,980 --> 00:07:05,500
+to the previous frame that was played anyway. So that's what I'm doing here. I go through every
+
+91
+00:07:05,500 --> 00:07:14,140
+states, I go through every actions and then I pre-compute the local trajectory. So all of that
+
+92
+00:07:14,139 --> 00:07:21,259
+now it's local to the frame of the state itself and then I compute the local trajectory that's
+
+93
+00:07:21,259 --> 00:07:26,860
+just the offsets between frame to frame and I store that inside of the action so now my action has
+
+94
+00:07:27,579 --> 00:07:36,219
+the trajectory it's expect and what I will do so far every time I was doing a paper
+
+95
+00:07:37,579 --> 00:07:43,819
+I was pre-computing an animation and playing back that animation now what I want to be
+
+96
+00:07:43,819 --> 00:07:51,259
+to be able to do is to be runtime. So I will actually create an animation player which just
+
+97
+00:07:51,259 --> 00:08:00,699
+means that I stored informations of which frame I'm playing and what is the positions I'm in space
+
+98
+00:08:01,980 --> 00:08:07,500
+and then I will have the foot lock mechanism. Basically that one is just really a simple
+
+99
+00:08:07,500 --> 00:08:15,500
+like it and just check if the foot or it's even only checking if the toe is on the ground
+
+100
+00:08:15,500 --> 00:08:21,339
+and if it is, I don't allow it to move from frame to frame and then if it's not, I just release
+
+101
+00:08:21,339 --> 00:08:29,180
+that IK with a blend just to get a soft release every time I connect. And then the animation
+
+102
+00:08:29,180 --> 00:08:40,220
+player itself basically knows which action is playing. It knows the frame of inside of that
+
+103
+00:08:40,220 --> 00:08:47,100
+actions, where am I inside of along this action. I get the position and coordinates of really the
+
+104
+00:08:47,100 --> 00:08:54,379
+pose of the character that it computes. I know which frame was played last. If I'm doing a transition,
+
+105
+00:08:54,379 --> 00:08:57,820
+so am I blending between two animations and that kind of stuff.
+
+106
+00:08:58,939 --> 00:09:04,700
+And so what happens is that you ticket every frame saying I need you to compute the next frame
+
+107
+00:09:04,700 --> 00:09:08,700
+and if it has an action it goes and play the next frame of that action
+
+108
+00:09:08,700 --> 00:09:13,659
+and when you reach the end of the action it just put the actions to none and says
+
+109
+00:09:13,659 --> 00:09:19,179
+I have nothing left to play and what happened is that you could set an action and basically
+
+110
+00:09:19,179 --> 00:09:23,259
+you add the new action to the next stuff and so on and so on so that's what the player would do.
+
+111
+00:09:24,379 --> 00:09:31,539
+and if we go and see what happens now I get the animation player so I will
+
+112
+00:09:31,539 --> 00:09:36,779
+start from my player and the only thing I will do is I start with tell him you
+
+113
+00:09:36,779 --> 00:09:42,179
+play you you tick the player the only thing that if you don't have any action
+
+114
+00:09:42,179 --> 00:09:49,539
+to do you will play you basically check in which state you should be you pick
+
+115
+00:09:49,539 --> 00:09:54,019
+any randomly any action inside of that state you set that action and you play
+
+116
+00:09:54,019 --> 00:10:03,460
+and you tick the player. So now you could see it would randomly play any animation from there.
+
+117
+00:10:03,460 --> 00:10:08,659
+And what I can do is I can force him to keep playing and the player will basically keep
+
+118
+00:10:08,659 --> 00:10:14,379
+playing. So now the timeline doesn't represent anything in my case, it's just runtime playing
+
+119
+00:10:14,379 --> 00:10:22,139
+animations. And then that's the character randomly picking an action every time it
+
+120
+00:10:23,100 --> 00:10:29,100
+finishes. Every time it reaches a state, it randomly picks an action. It will go not anywhere.
+
+121
+00:10:29,100 --> 00:10:35,100
+We did the same with the motion graph. We walked randomly the motion graph. It's exactly the same
+
+122
+00:10:35,100 --> 00:10:44,299
+concept here. Nothing really fancy is happening. So what we have is a motion graph that basically
+
+123
+00:10:44,300 --> 00:10:47,300
+It's a bunch of states, and in each of those states,
+
+124
+00:10:47,300 --> 00:10:51,580
+you could take a number of actions leading to the next state.
+
+125
+00:10:51,580 --> 00:10:55,500
+Now, what we want to do is to build a control policy that
+
+126
+00:10:55,500 --> 00:11:02,060
+will allow us to pick the best action to do,
+
+127
+00:11:02,060 --> 00:11:07,540
+depending on a certain target, a certain goal.
+
+128
+00:11:07,540 --> 00:11:10,100
+So if I want to have the character walking along
+
+129
+00:11:10,100 --> 00:11:15,100
+and being able to say, I want you to walk and go there.
+
+130
+00:11:15,180 --> 00:11:17,620
+Basically, that's the goal is to say,
+
+131
+00:11:17,620 --> 00:11:20,259
+I want him to walk and reach that point.
+
+132
+00:11:20,259 --> 00:11:23,580
+I will do the same stuff that they've done in this paper,
+
+133
+00:11:23,580 --> 00:11:27,100
+which says that they wanted to make the boxer, in this case,
+
+134
+00:11:27,100 --> 00:11:29,700
+walk along in the ring to reach the character
+
+135
+00:11:29,700 --> 00:11:31,259
+they had to box with.
+
+136
+00:11:31,259 --> 00:11:35,660
+So, what we will do is that
+
+137
+00:11:35,659 --> 00:11:40,659
+we will discretize the world around the character
+
+138
+00:11:41,980 --> 00:11:44,579
+and giving him a bunch of different targets
+
+139
+00:11:45,939 --> 00:11:47,959
+that are a bunch of goals you could reach.
+
+140
+00:11:47,959 --> 00:11:50,419
+So basically, we say there is a points,
+
+141
+00:11:50,419 --> 00:11:52,139
+20 centimeters in front of you,
+
+142
+00:11:52,139 --> 00:11:53,939
+find the best actions that will make sure
+
+143
+00:11:53,939 --> 00:11:56,740
+that we walk next to that point.
+
+144
+00:11:56,740 --> 00:12:00,240
+I will have another point that will be one meters away,
+
+145
+00:12:00,240 --> 00:12:01,500
+give me the best actions
+
+146
+00:12:01,500 --> 00:12:03,379
+that will actually make me reach that point
+
+147
+00:12:03,379 --> 00:12:04,220
+and so on and so on.
+
+148
+00:12:04,220 --> 00:12:12,940
+It's set up in a circle around the character that gives you a bunch of points that you
+
+149
+00:12:12,940 --> 00:12:19,580
+could start to find the best animations that will allow you to reach any of those points.
+
+150
+00:12:19,580 --> 00:12:25,980
+So at runtime, I will be able to say, I need you to go four decent minutes on your left
+
+151
+00:12:25,980 --> 00:12:31,820
+and then it will give me the best animation that allows me to do this kind of stuff.
+
+152
+00:12:31,820 --> 00:12:38,980
+To do this, basically what you do is that you create a reward function saying for every
+
+153
+00:12:38,980 --> 00:12:45,060
+of the possible actions I have, this is the one that gives me the best results compared
+
+154
+00:12:45,060 --> 00:12:48,220
+to the target you were asking me to do.
+
+155
+00:12:48,220 --> 00:12:54,540
+So what happened is that we have a reward function and that reward function is basically
+
+156
+00:12:54,539 --> 00:12:57,219
+depending on the states you are in
+
+157
+00:12:57,219 --> 00:13:01,579
+and the action you pick.
+
+158
+00:13:01,579 --> 00:13:04,259
+So for every states you are in
+
+159
+00:13:04,259 --> 00:13:06,259
+and for every action you can pick,
+
+160
+00:13:06,259 --> 00:13:10,620
+this is the score, this is the reward you will get.
+
+161
+00:13:10,620 --> 00:13:13,019
+And how they compute this one.
+
+162
+00:13:13,019 --> 00:13:16,240
+So basically what you have is the reward functions.
+
+163
+00:13:16,240 --> 00:13:17,899
+It depends on the states.
+
+164
+00:13:17,899 --> 00:13:21,779
+So the current state of the character.
+
+165
+00:13:21,779 --> 00:13:24,740
+It depends on the target state,
+
+166
+00:13:24,740 --> 00:13:29,740
+so which points am I trying to reach.
+
+167
+00:13:30,220 --> 00:13:32,139
+And then it depends on the action
+
+168
+00:13:32,139 --> 00:13:34,339
+that was taken by the avatar.
+
+169
+00:13:34,339 --> 00:13:38,539
+And what you try to do is you would basically take
+
+170
+00:13:40,419 --> 00:13:44,699
+the position of the character along the trajectory.
+
+171
+00:13:44,699 --> 00:13:48,779
+That's why I saved the trajectory
+
+172
+00:13:48,779 --> 00:13:50,659
+in local space to that action.
+
+173
+00:13:50,659 --> 00:13:54,740
+I will have the point along that trajectory
+
+174
+00:13:54,740 --> 00:13:57,100
+and the point from the target,
+
+175
+00:13:57,100 --> 00:13:59,339
+say the point 10 centimeters in front,
+
+176
+00:13:59,339 --> 00:14:02,299
+the one one meters in front and so on and so on.
+
+177
+00:14:02,299 --> 00:14:04,899
+And I compute the distance of those
+
+178
+00:14:04,899 --> 00:14:08,419
+and then put them through an exponential.
+
+179
+00:14:08,419 --> 00:14:11,500
+And then finally, I have the discount factor.
+
+180
+00:14:11,500 --> 00:14:14,779
+So it's a value that I will use to say
+
+181
+00:14:16,299 --> 00:14:19,379
+the longer the animation is,
+
+182
+00:14:19,379 --> 00:14:21,500
+the worst the reward gets.
+
+183
+00:14:21,500 --> 00:14:26,100
+So if you manage to reach the point in 10 frames,
+
+184
+00:14:26,100 --> 00:14:31,100
+it will be much better if you reach that target in 100 frames.
+
+185
+00:14:31,220 --> 00:14:33,500
+So because you get the exponential here,
+
+186
+00:14:33,500 --> 00:14:35,860
+it will go down fairly quickly,
+
+187
+00:14:35,860 --> 00:14:38,100
+depending on the length of the animations.
+
+188
+00:14:38,100 --> 00:14:41,379
+And then the reward will actually be the maximum value
+
+189
+00:14:41,379 --> 00:14:44,059
+you could find along that path.
+
+190
+00:14:44,059 --> 00:14:46,740
+I will say for that trajectory at some point,
+
+191
+00:14:46,740 --> 00:14:48,220
+it will be really close to my target.
+
+192
+00:14:48,220 --> 00:14:50,220
+So that will be the max t.
+
+193
+00:14:50,220 --> 00:14:54,180
+But again, it finds the best score
+
+194
+00:14:54,180 --> 00:14:59,180
+between long or short term and the closest positions.
+
+195
+00:14:59,700 --> 00:15:03,259
+So that will be the reward function that we'll be computing.
+
+196
+00:15:03,259 --> 00:15:08,259
+So what I would do is compute a bunch of stuff.
+
+197
+00:15:09,660 --> 00:15:11,860
+The first thing that I'm interested in
+
+198
+00:15:11,860 --> 00:15:15,899
+is knowing what is the maximum number of action
+
+199
+00:15:15,899 --> 00:15:17,340
+any states can take.
+
+200
+00:15:17,340 --> 00:15:20,060
+And actually I have one, at least one state
+
+201
+00:15:20,060 --> 00:15:21,340
+that has seven actions.
+
+202
+00:15:22,860 --> 00:15:26,180
+And the second one is the longest action I have
+
+203
+00:15:26,180 --> 00:15:28,340
+and the longest action is 23 frames.
+
+204
+00:15:28,340 --> 00:15:33,220
+So nearly one second of animations, the longest actions.
+
+205
+00:15:34,340 --> 00:15:36,740
+So as they have in the paper,
+
+206
+00:15:36,740 --> 00:15:39,899
+so they said I have a bunch of points around me.
+
+207
+00:15:39,899 --> 00:15:40,899
+So this is what I would do.
+
+208
+00:15:40,899 --> 00:15:43,740
+I will create the targets, positions.
+
+209
+00:15:43,740 --> 00:15:45,420
+So all the points around me,
+
+210
+00:15:45,420 --> 00:15:47,020
+So I'm starting from zero zeros,
+
+211
+00:15:47,020 --> 00:15:51,140
+and then I go in circle with different ranges,
+
+212
+00:15:51,140 --> 00:15:55,060
+and I get more points the further I am.
+
+213
+00:15:55,060 --> 00:16:00,060
+And so that gives me 64 different targets.
+
+214
+00:16:00,180 --> 00:16:02,380
+So 64 different goals I can reach.
+
+215
+00:16:03,340 --> 00:16:08,340
+And then I will compute the immediate reward.
+
+216
+00:16:10,060 --> 00:16:11,400
+So I will compute the reward
+
+217
+00:16:11,400 --> 00:16:14,140
+with the formula I had here.
+
+218
+00:16:14,139 --> 00:16:15,899
+So basically what you have,
+
+219
+00:16:15,899 --> 00:16:18,460
+you get the rewards for each state,
+
+220
+00:16:18,460 --> 00:16:22,199
+for each target, for all the maximum action count.
+
+221
+00:16:23,059 --> 00:16:27,539
+So all of my states have a different number of actions.
+
+222
+00:16:27,539 --> 00:16:29,580
+In this case, to make my life easier,
+
+223
+00:16:29,580 --> 00:16:30,620
+I just take the maximum.
+
+224
+00:16:30,620 --> 00:16:33,740
+So I create a big table,
+
+225
+00:16:33,740 --> 00:16:36,980
+even if most of those points will be minus one.
+
+226
+00:16:36,980 --> 00:16:39,419
+So a really bad reward,
+
+227
+00:16:39,419 --> 00:16:40,899
+basically because you're trying to take an action
+
+228
+00:16:40,899 --> 00:16:41,740
+that doesn't exist.
+
+229
+00:16:41,740 --> 00:16:45,820
+I get the minus one by default says that that would be the action you would never take.
+
+230
+00:16:47,500 --> 00:16:53,899
+And to win sometimes later, at the same time, I compute my next states. So what I do is that
+
+231
+00:16:54,940 --> 00:17:03,820
+I know the trajectory of each of my actions. So I know that if I was in the specific states
+
+232
+00:17:03,820 --> 00:17:09,740
+trying to reach a specific point and I played these specific actions, the next one anyway,
+
+233
+00:17:09,740 --> 00:17:16,220
+will always lead me to the same point and that will be that next state in the state space.
+
+234
+00:17:17,500 --> 00:17:24,620
+So what I've called a state space normally when you do reinforcement learning you get
+
+235
+00:17:24,620 --> 00:17:34,460
+a table of states and action and basically state count and target position count all becomes one
+
+236
+00:17:34,460 --> 00:17:41,019
+big state space. So if you check what I've done here is that I've computed everything using
+
+237
+00:17:42,220 --> 00:17:49,019
+the states and the targets separately and then the action. But then when I'm reaching here what I've
+
+238
+00:17:49,019 --> 00:18:00,140
+do is that I've reshaped the immediate reward and next states as being just a mix of all the
+
+239
+00:18:00,140 --> 00:18:09,020
+different states, states becoming in this case the character position and the target I was trying
+
+240
+00:18:09,020 --> 00:18:14,460
+to reach that becomes only one single state so that's why when I compute the next states I do
+
+241
+00:18:14,460 --> 00:18:21,420
+it this way so I get only one value the next state is one value is really one states right
+
+242
+00:18:23,980 --> 00:18:27,740
+so I have the immediate reward and the next states and so I can actually
+
+243
+00:18:27,740 --> 00:18:34,779
+load my gamepad. Okay. So I can use my pad now to control my character. And what I will do is I
+
+244
+00:18:34,779 --> 00:18:42,700
+will play the animation using that reward. So what happens is that if I don't have any action,
+
+245
+00:18:43,420 --> 00:18:49,900
+I check the states I'm in. And then from there, I compute the
+
+246
+00:18:52,700 --> 00:18:56,380
+I find the closest position, the closest target I can have. So
+
+247
+00:18:56,380 --> 00:19:01,900
+everything was computed in local space. So every time I'm in a state and I'm asking to reach a
+
+248
+00:19:01,900 --> 00:19:08,860
+certain point in world space, I need to convert that position relative to me
+
+249
+00:19:10,460 --> 00:19:16,460
+and then find the closest target I could get. So that's what I'm doing here. I convert the position
+
+250
+00:19:16,460 --> 00:19:25,260
+to be relative to me and then I take all the target positions and I try to find which one
+
+251
+00:19:25,259 --> 00:19:32,859
+I'm the closest one. So I take the distance and I find the minimum argument, the minimum argument
+
+252
+00:19:32,859 --> 00:19:39,740
+inside of that list that gives me the target state I'm trying to reach. And then I can just
+
+253
+00:19:39,740 --> 00:19:47,980
+pick the reward. So I go with my reward and I say I'm in this state with this target state,
+
+254
+00:19:47,980 --> 00:19:53,420
+I get a bunch of actions I can choose from, give me the one that gave me the best reward
+
+255
+00:19:53,420 --> 00:19:59,820
+and then that will be my action. And I get my selected positions and all that kind of stuff
+
+256
+00:19:59,820 --> 00:20:07,980
+just to let you see what I'm playing with. So what I have is this. I get a bunch of stuff on
+
+257
+00:20:07,980 --> 00:20:14,620
+the ground. So I get my ball, which is the target I'm trying to reach. All those little
+
+258
+00:20:15,259 --> 00:20:22,220
+transforms are all the different targets that are possible. And the big one is the one that
+
+259
+00:20:22,220 --> 00:20:26,779
+right now I'm trying to match because that's the closest one to the to the
+
+260
+00:20:26,779 --> 00:20:32,740
+sphere and so if I play my animation you could see what you have there and so
+
+261
+00:20:32,740 --> 00:20:39,500
+the the grid only moves every time there is a state and every time there is an
+
+262
+00:20:39,500 --> 00:20:43,940
+action that is taken so you could see it always tried to reach the closest one
+
+263
+00:20:43,940 --> 00:20:50,860
+and the the the black line is the trajectory projected on the ground that
+
+264
+00:20:50,860 --> 00:20:57,900
+represents the length of the action it takes and what it does. Now what you could see is that
+
+265
+00:20:57,900 --> 00:21:08,140
+with the immediate reward it kind of stay close to that red ball but really even if I move it
+
+266
+00:21:09,180 --> 00:21:16,140
+it tends to do whatever he wants. Every action it picked gives him the best solution to get
+
+267
+00:21:16,140 --> 00:21:23,900
+the closest to the target he wanted to be. But he might get stuck into a weird state instead of the
+
+268
+00:21:25,180 --> 00:21:31,340
+motion graph that means that even his best action would actually make him walk in the wrong
+
+269
+00:21:31,340 --> 00:21:37,580
+direction. So you could see that's what happened. He managed to get close. He reached a bunch of
+
+270
+00:21:37,580 --> 00:21:43,740
+states that had big locomotions. So he was able to walk but then he stuck on something that loops
+
+271
+00:21:43,740 --> 00:21:51,900
+and is not even able to come here. So right now my policy to only use the reward you get from
+
+272
+00:21:53,259 --> 00:22:01,579
+get me the best action is not really accurate, doesn't give me any good results.
+
+273
+00:22:04,140 --> 00:22:09,980
+And that's where we will start to talk about reinforcement learning itself. Now what you
+
+274
+00:22:09,980 --> 00:22:17,180
+want to realize is that the state and action we have now is actually what we call a mark
+
+275
+00:22:17,180 --> 00:22:26,019
+of decision process or MDP in short. And an MDP basically means that any action you can
+
+276
+00:22:26,019 --> 00:22:32,259
+take only depends on the state you are in. You don't care about the past and how you
+
+277
+00:22:32,259 --> 00:22:39,420
+reach that state, the only thing that matters is what is the goal you want to reach.
+
+278
+00:22:39,420 --> 00:22:44,300
+what are the actions that are available to you depending on the states you're in.
+
+279
+00:22:44,300 --> 00:22:52,460
+So it only looks forward. And so the Markov decision process basically has a state and has
+
+280
+00:22:52,460 --> 00:22:59,420
+a set of actions and you get the reward functions by taking one action depending on one state.
+
+281
+00:23:00,460 --> 00:23:08,140
+You get discount factor which basically says how important the future is
+
+282
+00:23:08,140 --> 00:23:13,860
+And then you get the transition functions that tell you, well, if I was in one state
+
+283
+00:23:13,860 --> 00:23:18,500
+and I took one action, what is the next state I'm in, basically.
+
+284
+00:23:18,500 --> 00:23:24,820
+And the goal of the MDP is to find a policy that basically maximizes the cumulative reward
+
+285
+00:23:24,820 --> 00:23:25,900
+along the future.
+
+286
+00:23:25,900 --> 00:23:30,540
+So the real function is this one.
+
+287
+00:23:30,540 --> 00:23:34,660
+You have your gamma again here that reduce.
+
+288
+00:23:34,660 --> 00:23:40,980
+at t0 means the first transition you take is the most important one and then every time you advance
+
+289
+00:23:40,980 --> 00:23:52,900
+one step further this one will decrease and you will have the reward for the next state that
+
+290
+00:23:52,900 --> 00:23:56,580
+picked the next action and then the reward for the next state that picked the next action and so
+
+291
+00:23:56,580 --> 00:24:03,700
+on and so on. And what we're trying to find is to maximize this sum of infinite possibilities
+
+292
+00:24:03,700 --> 00:24:08,500
+you'll have and find the best trajectory through all the states and actions you could take
+
+293
+00:24:08,500 --> 00:24:15,940
+that give you the maximum cumulative reward. That is impossible to compute because it's an
+
+294
+00:24:15,940 --> 00:24:23,539
+infinite sum, so we need to find a way to compute that kind of stuff and what we do usually is that
+
+295
+00:24:23,539 --> 00:24:32,500
+we use the value function. What is the value functions? It basically stores the best reward
+
+296
+00:24:32,500 --> 00:24:43,700
+you could have if you are in one state. So it gives you what you want to do. It basically tells you
+
+297
+00:24:43,700 --> 00:24:51,299
+the maximum score you could have to pick any of the actions you have because you are inside of one
+
+298
+00:24:51,299 --> 00:25:00,740
+state. So that's your immediate reward plus the discounting factor of the next state that already
+
+299
+00:25:00,740 --> 00:25:08,019
+knows what is the best action reward you can have. So it is an iterative process. Basically,
+
+300
+00:25:09,539 --> 00:25:16,660
+you have the immediate reward plus the future reward, but the future reward is actually computed
+
+301
+00:25:16,660 --> 00:25:23,059
+with the same value functions as the one that you have here at this point. And thanks to this
+
+302
+00:25:23,059 --> 00:25:30,420
+formulation, we have the Bellman update rules that basically says that you could just compute this
+
+303
+00:25:30,420 --> 00:25:40,740
+As long as your gamma is less than one, you could iteratively compute this stuff
+
+304
+00:25:41,860 --> 00:25:48,420
+and update the value every time you take one of the actions, you check the future,
+
+305
+00:25:48,420 --> 00:25:51,860
+you update your values to take another action, take the futures and so on.
+
+306
+00:25:51,860 --> 00:25:55,860
+And you can update your value functions and it will converge to a solution.
+
+307
+00:25:55,860 --> 00:26:00,260
+So it starts from picking randomly any state action pair,
+
+308
+00:26:00,260 --> 00:26:04,700
+compute the reward, estimate the value of the future reward,
+
+309
+00:26:04,700 --> 00:26:09,700
+and then update your value functions.
+
+310
+00:26:09,780 --> 00:26:12,700
+What I've done is that instead of have the value functions
+
+311
+00:26:12,700 --> 00:26:16,000
+that's only states and best actions,
+
+312
+00:26:16,000 --> 00:26:17,900
+what I would do is that I would have a value functions
+
+313
+00:26:17,900 --> 00:26:21,460
+that have the states and each of the action,
+
+314
+00:26:21,460 --> 00:26:25,620
+and I will compute all the actions separately.
+
+315
+00:26:25,620 --> 00:26:28,100
+It's just to make the code easier to read here.
+
+316
+00:26:28,100 --> 00:26:31,780
+So basically what you do is this,
+
+317
+00:26:31,780 --> 00:26:36,780
+you randomly pick any states, any action,
+
+318
+00:26:38,860 --> 00:26:41,540
+then you compute the length, you take the reward
+
+319
+00:26:41,540 --> 00:26:43,220
+and I've pre-computed the reward.
+
+320
+00:26:43,220 --> 00:26:44,700
+So at least I don't have to re-compute
+
+321
+00:26:44,700 --> 00:26:46,200
+that same reward as every time.
+
+322
+00:26:46,200 --> 00:26:48,860
+So I've pre-computed the reward, I get it.
+
+323
+00:26:48,860 --> 00:26:52,020
+I also pre-computed what was the next state.
+
+324
+00:26:52,020 --> 00:26:54,340
+So I already have the next state.
+
+325
+00:26:54,340 --> 00:26:57,220
+And I can find the maximum values.
+
+326
+00:26:57,220 --> 00:27:00,960
+So I will go from my value function that I'm computing,
+
+327
+00:27:00,960 --> 00:27:05,960
+get the next states, find what is the best value
+
+328
+00:27:06,400 --> 00:27:08,720
+I could ever dream of in that case,
+
+329
+00:27:08,720 --> 00:27:10,640
+and that's my next max.
+
+330
+00:27:10,640 --> 00:27:14,040
+And I can update my value function with a reward
+
+331
+00:27:14,040 --> 00:27:17,800
+plus the next max, plus the future reward discount.
+
+332
+00:27:17,800 --> 00:27:20,880
+And what they used as a discount was,
+
+333
+00:27:24,340 --> 00:27:32,500
+that's why yeah that's what that here so they've used the the gamma again and
+
+334
+00:27:35,060 --> 00:27:39,940
+it's multiplied directly by it's a power of the length of the animation again so
+
+335
+00:27:41,940 --> 00:27:47,540
+if your action is really long your future reward anyway is less
+
+336
+00:27:47,539 --> 00:27:58,539
+So instead of just taking the number of actions you took, it's actually the length of the animation itself that matters to reach.
+
+337
+00:27:58,539 --> 00:28:10,539
+Then you can see that I'm slowly converging because the amount of values I have in total in my value functions doesn't change,
+
+338
+00:28:10,539 --> 00:28:17,180
+even if I'm actually computing 30,000 different actions there spares, it did
+
+339
+00:28:17,180 --> 00:28:26,619
+converge and quite close to a conversion after 370 epochs, so I've
+
+340
+00:28:26,619 --> 00:28:33,899
+recomputed that value functions every time. And now that I have the value
+
+341
+00:28:33,899 --> 00:28:39,059
+function, well instead of picking the immediate reward as I was doing before, I
+
+342
+00:28:39,059 --> 00:28:41,099
+I can just use my value function
+
+343
+00:28:41,099 --> 00:28:45,579
+and then we could see if the future reward
+
+344
+00:28:45,579 --> 00:28:48,659
+makes the system a bit smarter
+
+345
+00:28:48,659 --> 00:28:51,139
+to go and pick the next animations.
+
+346
+00:28:51,139 --> 00:28:52,700
+So let's see.
+
+347
+00:28:54,500 --> 00:28:57,019
+Walking around, you could see that it goes back
+
+348
+00:28:57,019 --> 00:29:00,980
+to the blue sphere a bit faster
+
+349
+00:29:00,980 --> 00:29:03,740
+and if I give him a target now,
+
+350
+00:29:03,740 --> 00:29:08,259
+I would actually try to reach it a bit further
+
+351
+00:29:08,259 --> 00:29:12,859
+or at least null in straight line when I give him a target.
+
+352
+00:29:12,859 --> 00:29:15,819
+And I can start to annoy him a lot,
+
+353
+00:29:15,819 --> 00:29:17,700
+just changing direction all the time.
+
+354
+00:29:18,660 --> 00:29:23,660
+And as a reminder, if I go back to the immediate mode,
+
+355
+00:29:25,140 --> 00:29:29,660
+this is what happens, it tends to play
+
+356
+00:29:29,660 --> 00:29:32,660
+and live its own life, doesn't care about my targets.
+
+357
+00:29:32,660 --> 00:29:36,579
+And if I ask him to go back with the value functions,
+
+358
+00:29:36,579 --> 00:29:39,579
+here it is going back to the right direction.
+
+359
+00:29:42,899 --> 00:29:47,740
+And so we've trained our first animation controller,
+
+360
+00:29:47,740 --> 00:29:50,899
+basically it is now it has the value functions
+
+361
+00:29:50,899 --> 00:29:53,619
+that allow him to pick the next best action
+
+362
+00:29:55,500 --> 00:29:57,179
+using the future reward.
+
+363
+00:29:58,379 --> 00:30:00,740
+But something you might have noticed is that
+
+364
+00:30:00,740 --> 00:30:03,220
+in this case, I've actually been able to switch
+
+365
+00:30:03,220 --> 00:30:08,220
+from the immediate mode to the value functions.
+
+366
+00:30:09,220 --> 00:30:14,220
+And that's basically because when you train a policy
+
+367
+00:30:15,980 --> 00:30:20,500
+like this, the policy just tells you which action
+
+368
+00:30:20,500 --> 00:30:23,100
+you have to take depending on the states you're in.
+
+369
+00:30:25,460 --> 00:30:30,180
+And so you could use different sets of policies
+
+370
+00:30:30,180 --> 00:30:32,299
+depending on the stuff you want to do
+
+371
+00:30:32,299 --> 00:30:34,399
+inside of your, the same motion graph.
+
+372
+00:30:34,399 --> 00:30:36,659
+So you will have always the same states,
+
+373
+00:30:36,659 --> 00:30:38,039
+always the same actions.
+
+374
+00:30:38,039 --> 00:30:39,079
+The only thing you want to change
+
+375
+00:30:39,079 --> 00:30:41,759
+is how you pick the best action.
+
+376
+00:30:41,759 --> 00:30:43,559
+So something I don't really like in this case
+
+377
+00:30:43,559 --> 00:30:47,399
+is that is not really able to go on the target
+
+378
+00:30:47,399 --> 00:30:49,399
+and stays on the target.
+
+379
+00:30:49,399 --> 00:30:51,519
+What I want to do is to basically says
+
+380
+00:30:51,519 --> 00:30:52,839
+if you're close to the target,
+
+381
+00:30:52,839 --> 00:30:56,480
+you go in idle mode and you stop walking.
+
+382
+00:30:56,480 --> 00:31:00,559
+Unfortunately for me, I don't have in my motion graph
+
+383
+00:31:00,559 --> 00:31:05,399
+any idle animation,
+
+384
+00:31:05,399 --> 00:31:07,759
+because when we did the motion graph earlier,
+
+385
+00:31:07,759 --> 00:31:10,519
+it was to do locomotion.
+
+386
+00:31:10,519 --> 00:31:12,720
+So it basically works all the time.
+
+387
+00:31:12,720 --> 00:31:17,279
+But there is something at the end of my animation here
+
+388
+00:31:17,279 --> 00:31:22,279
+that basically says from frame 950 to frame 1200,
+
+389
+00:31:23,240 --> 00:31:28,240
+it would stay around this spot and just do small steps.
+
+390
+00:31:28,240 --> 00:31:31,120
+So what I would do is that instead of saying,
+
+391
+00:31:31,120 --> 00:31:32,920
+go in idle because I don't have any,
+
+392
+00:31:32,920 --> 00:31:37,359
+I would say, go play those frames of animation
+
+393
+00:31:37,359 --> 00:31:38,440
+when you're close to the target,
+
+394
+00:31:38,440 --> 00:31:41,519
+just stay close and play that.
+
+395
+00:31:41,519 --> 00:31:46,519
+So I could train another policy.
+
+396
+00:31:47,539 --> 00:31:51,120
+So what I would do is that instead of having my value
+
+397
+00:31:51,120 --> 00:31:53,559
+functions, the one that makes me walk,
+
+398
+00:31:53,559 --> 00:31:55,079
+I would do a second value function
+
+399
+00:31:55,079 --> 00:31:57,480
+that I would call value function static.
+
+400
+00:31:57,480 --> 00:32:01,319
+basically says, stay on the spot as best as you can.
+
+401
+00:32:02,799 --> 00:32:04,720
+And this one only depend on the states.
+
+402
+00:32:04,720 --> 00:32:06,279
+Now there is no target anymore.
+
+403
+00:32:06,279 --> 00:32:09,319
+It's really, it's just you are inside of an animation
+
+404
+00:32:09,319 --> 00:32:13,200
+and if I tell you to stop that the action
+
+405
+00:32:13,200 --> 00:32:16,200
+I wanted you to do, there is no targets anyway.
+
+406
+00:32:16,200 --> 00:32:19,360
+So my value functions is way smaller in this case.
+
+407
+00:32:19,360 --> 00:32:22,579
+It's only has state counts and max action count.
+
+408
+00:32:22,579 --> 00:32:33,019
+My reward itself is always zero, except if you were playing animations that started inside
+
+409
+00:32:33,019 --> 00:32:35,980
+of that range and ended inside of that range.
+
+410
+00:32:35,980 --> 00:32:41,939
+So really, I want you to play actions inside of the end of the range.
+
+411
+00:32:41,939 --> 00:32:42,939
+And that's it.
+
+412
+00:32:42,939 --> 00:32:48,099
+And then I propagate the same way I take the next states, find the next maximum score I
+
+413
+00:32:48,099 --> 00:32:49,099
+can have.
+
+414
+00:32:49,100 --> 00:32:51,340
+I have the same future reward discount,
+
+415
+00:32:51,340 --> 00:32:53,860
+depending on the length of the animations, all the same.
+
+416
+00:32:53,860 --> 00:32:56,340
+And then I can compute this reward.
+
+417
+00:32:56,340 --> 00:33:00,820
+And you can see that it convert really quickly
+
+418
+00:33:00,820 --> 00:33:02,540
+because basically everything is zero
+
+419
+00:33:02,540 --> 00:33:05,060
+and the end of the animation is one
+
+420
+00:33:05,060 --> 00:33:07,700
+and you just have to propagate those weights.
+
+421
+00:33:07,700 --> 00:33:10,940
+And now what I do is that I don't control
+
+422
+00:33:10,940 --> 00:33:13,500
+in which state I want to be manually.
+
+423
+00:33:13,500 --> 00:33:18,500
+The only thing that happens is that if I'm close to the goal,
+
+424
+00:33:19,100 --> 00:33:24,380
+If my position is close to the goal at just less than 50 centimeters,
+
+425
+00:33:25,820 --> 00:33:32,060
+I will start to use that policy that says stay next to it. And if I'm further away,
+
+426
+00:33:32,060 --> 00:33:40,620
+I use the walking policy to reach the goal. And so if I am here and I ask him to play,
+
+427
+00:33:41,260 --> 00:33:47,260
+this is what I would get. So the green one means stay in spot. And you can see it plays
+
+428
+00:33:47,259 --> 00:33:55,059
+basically that end of animations, it just stays and plays inside of those animations.
+
+429
+00:33:55,059 --> 00:34:00,619
+And the way the value function was computed, it even gives you best scores if it keeps
+
+430
+00:34:00,619 --> 00:34:07,180
+playing along in animations, because I would have a score of one for being inside an animation,
+
+431
+00:34:07,180 --> 00:34:13,579
+but I will get a big reward because the next one was also in the same range, and I will
+
+432
+00:34:13,579 --> 00:34:16,820
+get a big reward because the next one was also in the same range.
+
+433
+00:34:16,820 --> 00:34:19,660
+So it will tend to play forward.
+
+434
+00:34:19,660 --> 00:34:21,300
+You could see that even here,
+
+435
+00:34:21,300 --> 00:34:23,100
+that represent the frame I was playing,
+
+436
+00:34:23,100 --> 00:34:24,580
+that represent the transition is taking.
+
+437
+00:34:24,580 --> 00:34:27,980
+So you could see it keeps playing all the range
+
+438
+00:34:27,980 --> 00:34:31,100
+and then change every time to go back to the beginning.
+
+439
+00:34:31,100 --> 00:34:35,019
+So that's that loop to give him the best reward.
+
+440
+00:34:35,019 --> 00:34:37,180
+And if I move away, it will go
+
+441
+00:34:37,180 --> 00:34:39,800
+and it will start to walk into that direction.
+
+442
+00:34:39,800 --> 00:34:43,059
+And as long as if it gets close,
+
+443
+00:34:43,059 --> 00:34:44,860
+it goes back to the other one.
+
+444
+00:34:44,860 --> 00:34:46,740
+And I can come back here
+
+445
+00:34:46,740 --> 00:34:50,700
+And it will walk again, coming back to the targets
+
+446
+00:34:50,700 --> 00:34:52,540
+and stop to the targets.
+
+447
+00:34:52,540 --> 00:34:55,060
+So that's the advantage of having this kind of stuff.
+
+448
+00:34:55,060 --> 00:34:58,700
+You could change policies and depending on how you do,
+
+449
+00:34:58,700 --> 00:35:02,100
+see it walk too far, it gets closed again,
+
+450
+00:35:02,100 --> 00:35:03,740
+and so on and so on.
+
+451
+00:35:03,740 --> 00:35:06,180
+Because there is nothing that forces him to not drift
+
+452
+00:35:06,180 --> 00:35:07,020
+when he walks.
+
+453
+00:35:07,020 --> 00:35:09,620
+So it will actually, from time to time,
+
+454
+00:35:09,620 --> 00:35:11,140
+drift away from the target.
+
+455
+00:35:13,100 --> 00:35:13,940
+And that's it.
+
+456
+00:35:13,940 --> 00:35:24,659
+train two different policies on one motion graph and you could you could
+
+457
+00:35:24,659 --> 00:35:29,260
+think of any type of policies doing different stuff what they've done in the
+
+458
+00:35:29,260 --> 00:35:34,340
+paper that it was a boxing one so you have all the different points where you
+
+459
+00:35:34,340 --> 00:35:39,139
+can we can punch and you could of course ask him to punch a specific points and
+
+460
+00:35:39,139 --> 00:35:48,099
+it will move along punch it. Unfortunately, I didn't had enough punching animations inside of
+
+461
+00:35:48,099 --> 00:35:54,019
+my libraries. So I've stayed with the locomotion one. But there's a lot of stuff you could learn.
+
+462
+00:35:54,900 --> 00:35:59,460
+And starting from here, basically, what you will have is
+
+463
+00:36:02,339 --> 00:36:07,539
+two different directions that the paper will start to go. They will get the branch that will try to
+
+464
+00:36:07,539 --> 00:36:12,019
+to get a better motion graph with a lot more connections
+
+465
+00:36:12,019 --> 00:36:12,980
+inside of a motion graph,
+
+466
+00:36:12,980 --> 00:36:15,699
+because the more connections you have is the more states,
+
+467
+00:36:15,699 --> 00:36:19,820
+you have is the more is how quickly you could react
+
+468
+00:36:19,820 --> 00:36:20,659
+because it's all the time
+
+469
+00:36:20,659 --> 00:36:22,460
+you could actually take a decision.
+
+470
+00:36:22,460 --> 00:36:24,460
+You can only take decision at each action.
+
+471
+00:36:24,460 --> 00:36:29,460
+So you would try to have a higher number of connections
+
+472
+00:36:32,139 --> 00:36:33,779
+inside of your motion graph.
+
+473
+00:36:33,779 --> 00:36:35,219
+That's one of the direction.
+
+474
+00:36:35,219 --> 00:36:36,460
+Then you will get the other direction
+
+475
+00:36:36,460 --> 00:36:45,420
+we say, what we want to do is to find another type of structures that allow us to have more
+
+476
+00:36:45,420 --> 00:36:53,980
+and more actions, having actions smaller and smaller and smaller. And so you get the, you
+
+477
+00:36:53,980 --> 00:37:02,059
+could take decisions more often. And so the maximum range you could have is at some point
+
+478
+00:37:02,059 --> 00:37:06,779
+you will have that every frame would be a state and an action and you will be able to
+
+479
+00:37:07,579 --> 00:37:14,539
+take an action at every frame so that will be for in a few paper and basically what will happen
+
+480
+00:37:14,539 --> 00:37:20,940
+when you really have all this you will start to reach what the motion matching is which was
+
+481
+00:37:20,940 --> 00:37:26,779
+the next step says the first step was to say I remove the motion graph and I have value functions
+
+482
+00:37:26,780 --> 00:37:33,580
+that use reinforcement learning on. And then the motion matching would basically say,
+
+483
+00:37:35,100 --> 00:37:41,180
+well, I will remove the reinforcement learning, but I will still have basically a value functions.
+
+484
+00:37:41,180 --> 00:37:47,820
+We'll just see that it's not learned through the same process. It's extracted from the animations,
+
+485
+00:37:47,820 --> 00:37:53,820
+but the concepts are the same. So that's why I love to go through those steps
+
+486
+00:37:53,820 --> 00:38:02,700
+before reaching the motion matching. I hope you liked it and see you in our next paper about
+
+487
+00:38:04,059 --> 00:38:09,740
+animations and reinforcement learning that will be slightly different.

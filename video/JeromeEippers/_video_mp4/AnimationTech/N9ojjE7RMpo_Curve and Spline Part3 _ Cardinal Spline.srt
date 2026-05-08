@@ -1,0 +1,555 @@
+1
+00:00:00,000 --> 00:00:06,440
+Hi, in the previous video we've seen how we could compute an ARMIT curve and the
+
+2
+00:00:06,440 --> 00:00:12,240
+ARMIT curve is using two points and two tangents to draw a curve in between and
+
+3
+00:00:12,240 --> 00:00:17,400
+we started to paste a few of those back-to-back so we could have a spline
+
+4
+00:00:17,400 --> 00:00:22,120
+automatically drawn between all the points. What we want to do now is
+
+5
+00:00:22,120 --> 00:00:26,600
+actually having the fact that we can have a bunch of points and have a
+
+6
+00:00:26,600 --> 00:00:31,320
+a function that goes through those points. So really an interpolation spline without the need
+
+7
+00:00:31,320 --> 00:00:37,719
+for us to compute that tangent of each point, but to just let the the data itself decide
+
+8
+00:00:38,439 --> 00:00:43,240
+what the tangent would be. And that's what the cardinal spline is. The cardinal spline basically
+
+9
+00:00:43,240 --> 00:00:48,120
+takes a bunch of points and compute the tangent for us at each point. So we could use mid-curve
+
+10
+00:00:48,120 --> 00:00:54,359
+in between. However, it does it. It's basically taking the four specific points. It takes the
+
+11
+00:00:54,359 --> 00:00:59,560
+point after the point before, draw that line between the two, and that's the the tangent
+
+12
+00:00:59,560 --> 00:01:06,840
+that we'll be using for that point. And then we have a s factor in front of that tangent,
+
+13
+00:01:06,840 --> 00:01:11,319
+so we could decide to scale it up and down to give it more importance or less importance
+
+14
+00:01:11,960 --> 00:01:18,680
+when we draw the curve itself. So I have a function here that is cardinal to omit
+
+15
+00:01:18,680 --> 00:01:22,440
+with the sFactor, basically takes a bunch of points
+
+16
+00:01:22,440 --> 00:01:25,400
+and returns a list of points,
+
+17
+00:01:25,400 --> 00:01:29,080
+tangents, point, tangents of our derivative every time.
+
+18
+00:01:29,080 --> 00:01:32,880
+So we could pass that to the animate functions we had before.
+
+19
+00:01:32,880 --> 00:01:37,880
+And if I draw this, basically that's what it gave you.
+
+20
+00:01:38,760 --> 00:01:39,840
+You could see that, of course,
+
+21
+00:01:39,840 --> 00:01:41,320
+the first point and the last point,
+
+22
+00:01:41,320 --> 00:01:44,240
+you don't have any curve coming in or out of it.
+
+23
+00:01:44,240 --> 00:01:47,640
+That's just because we don't have enough points before
+
+24
+00:01:47,640 --> 00:01:51,840
+after to compute what the tangent will be for this guy.
+
+25
+00:01:51,840 --> 00:01:57,400
+But you have that S factor that can decide how big is the tangent.
+
+26
+00:01:57,400 --> 00:02:00,599
+So if I bring that S to 0, I basically
+
+27
+00:02:00,599 --> 00:02:02,799
+scaling down completely my tangent.
+
+28
+00:02:02,799 --> 00:02:06,120
+So I have linear interpolation between all of my points.
+
+29
+00:02:06,120 --> 00:02:13,159
+And I can go up and go as crazy and having really weird curves
+
+30
+00:02:13,159 --> 00:02:17,560
+by increasing the tangent size for my function.
+
+31
+00:02:19,000 --> 00:02:21,359
+Now, it works.
+
+32
+00:02:21,359 --> 00:02:23,639
+The only issue we have with this kind of system
+
+33
+00:02:23,639 --> 00:02:27,219
+is that the S factor is not really intuitive to use.
+
+34
+00:02:27,219 --> 00:02:31,680
+It doesn't represent much except for mathematical purpose.
+
+35
+00:02:32,680 --> 00:02:35,319
+Usually when we start to work with planes,
+
+36
+00:02:35,319 --> 00:02:40,319
+it comes from the drawing and the physical world.
+
+37
+00:02:40,319 --> 00:02:46,400
+So, we tend to want to use something that is more meaningful for the user.
+
+38
+00:02:46,400 --> 00:02:49,919
+So what we have is a tension parameter instead.
+
+39
+00:02:49,919 --> 00:02:55,680
+The tension parameters make more sense in the physical world, because imagine you are
+
+40
+00:02:55,680 --> 00:03:02,799
+trying to draw a spline using, you know, rope and paper.
+
+41
+00:03:02,799 --> 00:03:07,099
+What you would have to think about is the tension you put inside of your string will
+
+42
+00:03:07,099 --> 00:03:09,840
+actually decide what type of curve you're drawing.
+
+43
+00:03:09,840 --> 00:03:14,520
+If you put really hard tensions, you basically have a line and if you let it completely loose,
+
+44
+00:03:14,520 --> 00:03:16,080
+you will have a nice curve.
+
+45
+00:03:16,080 --> 00:03:22,159
+So we tend to use tension because it's clearer to use as a concept.
+
+46
+00:03:22,159 --> 00:03:26,840
+And so what we have is a tension parameters that can go between zero and one.
+
+47
+00:03:26,840 --> 00:03:29,560
+Zero means zero tension, I have a nice curve.
+
+48
+00:03:29,560 --> 00:03:36,319
+One being I'm pulling on my string maximum and I have a line basically, a straight line.
+
+49
+00:03:36,319 --> 00:03:38,960
+So how do you compute that tension?
+
+50
+00:03:38,960 --> 00:03:49,840
+give you your s factor from the previous algorithm, but what we have is 1 minus my tension divided by
+
+51
+00:03:49,840 --> 00:03:56,319
+2. And so with a t that goes between 0 and 1, attention that goes between 0 and 1, what you
+
+52
+00:03:56,319 --> 00:04:06,319
+have is that at 0 you have an s that is equal to 0.5 and at 1 you have an s that is 0. And
+
+53
+00:04:06,319 --> 00:04:11,319
+And S that is 0.5 actually is a catmull rom spline.
+
+54
+00:04:12,719 --> 00:04:16,360
+So if you are interested in animations,
+
+55
+00:04:16,360 --> 00:04:19,079
+you probably have heard of the catmull rom spline.
+
+56
+00:04:19,079 --> 00:04:21,439
+And basically it's a specific case
+
+57
+00:04:21,439 --> 00:04:24,800
+and it's a cardinal spline with a S value of 0.5.
+
+58
+00:04:24,800 --> 00:04:26,199
+That's it.
+
+59
+00:04:26,199 --> 00:04:29,360
+So what I have now is my function as a cardinal to omit.
+
+60
+00:04:29,360 --> 00:04:30,920
+Again, work the same way.
+
+61
+00:04:30,920 --> 00:04:33,240
+So I gave a list of points
+
+62
+00:04:33,240 --> 00:04:36,199
+and returns a list of points and derivative.
+
+63
+00:04:36,199 --> 00:04:39,479
+I accept that I pass the tension now directly in
+
+64
+00:04:39,479 --> 00:04:41,519
+and I compute my S using my tension
+
+65
+00:04:41,519 --> 00:04:43,319
+and then everything else stays the same.
+
+66
+00:04:43,319 --> 00:04:48,319
+So if I execute this and I execute my functions,
+
+67
+00:04:49,279 --> 00:04:51,959
+now I have a function that is drone.
+
+68
+00:04:51,959 --> 00:04:54,719
+And you can see that with a tension of zero
+
+69
+00:04:54,719 --> 00:04:58,399
+have smooth functions and with a tension of one
+
+70
+00:04:58,399 --> 00:05:01,279
+have linear functions.
+
+71
+00:05:01,279 --> 00:05:04,159
+You might have noticed that now I actually have drone
+
+72
+00:05:04,160 --> 00:05:07,280
+from the zero up to the last point.
+
+73
+00:05:07,280 --> 00:05:10,120
+And the way to do this, it's actually
+
+74
+00:05:10,120 --> 00:05:14,680
+by repeating the first points and repeating the last points
+
+75
+00:05:14,680 --> 00:05:15,840
+inside of my list.
+
+76
+00:05:15,840 --> 00:05:21,840
+So you always have something to compute that tangent.
+
+77
+00:05:25,040 --> 00:05:29,240
+Now, what we've done so far is still
+
+78
+00:05:29,240 --> 00:05:32,680
+using the AmidCurve functions we had before.
+
+79
+00:05:32,680 --> 00:05:36,160
+and having a function that goes from cardinal to Hermit
+
+80
+00:05:36,160 --> 00:05:39,759
+and then use the Hermit to draw the curve itself.
+
+81
+00:05:39,759 --> 00:05:44,240
+What we can do is try to directly find a mathematical function
+
+82
+00:05:44,240 --> 00:05:48,240
+that's allowed us to directly render a cardinal spline
+
+83
+00:05:48,240 --> 00:05:51,860
+without the need to go through the Hermit function.
+
+84
+00:05:51,860 --> 00:05:56,240
+And to do this, what we will do is basically start
+
+85
+00:05:56,240 --> 00:06:00,720
+from the Hermit function.
+
+86
+00:06:00,720 --> 00:06:04,760
+So I've started with the Amid function as what it was,
+
+87
+00:06:04,760 --> 00:06:07,360
+you know, with the matrix form,
+
+88
+00:06:07,360 --> 00:06:10,520
+and ask SimPy to compute it,
+
+89
+00:06:10,520 --> 00:06:14,560
+and I get that formula, the one we have already seen,
+
+90
+00:06:14,560 --> 00:06:19,000
+with the P1 multiplied by 2T cube and so on,
+
+91
+00:06:19,000 --> 00:06:22,560
+and then you get the delta, the derivative point one,
+
+92
+00:06:22,560 --> 00:06:24,860
+derivative point two, and all that kind of stuff.
+
+93
+00:06:24,860 --> 00:06:28,840
+What I've done is instead of using point zero and point one,
+
+94
+00:06:28,840 --> 00:06:35,960
+like we had before what I did is that I used 0.1 and 0.2 so I have a curve that is drawn between
+
+95
+00:06:35,960 --> 00:06:43,720
+0.1 and 0.2 but it's just the same the same formula I have just changed the letter basically
+
+96
+00:06:45,160 --> 00:06:52,920
+now what I can do is I know how the cardinal spline will actually compute my derivative for 0.1
+
+97
+00:06:52,920 --> 00:07:03,720
+and my derivative 0.2. So I can use that function here and I can replace the derivative of 0.1
+
+98
+00:07:03,720 --> 00:07:14,759
+by the actual formula which is the sp2 minus p0 and the same for the derivative 0.2 it's the s
+
+99
+00:07:14,759 --> 00:07:28,599
+0.3 minus 0.1. And if I again ask it to solve for this and write it as a p0, p1, p2, p3 function,
+
+100
+00:07:29,480 --> 00:07:37,240
+you could have now a really a p0, p1, p2, and p3 function directly with all the factors here.
+
+101
+00:07:37,240 --> 00:07:45,960
+and then we don't have the derivative anymore inside of our matrix but what we have is a bunch of s
+
+102
+00:07:46,600 --> 00:07:54,920
+that represents our curve. So I can now write this again as a matrix and see again it's the same
+
+103
+00:07:54,920 --> 00:07:59,879
+structures as the matrix for the basic curve, the matrix for the Amid curve, now it's a matrix for
+
+104
+00:07:59,879 --> 00:08:06,519
+the cardinal spline using directly the s inside of that matrix here. And I can have my cardinal
+
+105
+00:08:06,519 --> 00:08:13,879
+functions now that directly draw a curve and doesn't go through the step of giving me a list of
+
+106
+00:08:13,879 --> 00:08:22,359
+mid-spline and that kind of stuff. And if I execute this, now what I can do is of course render
+
+107
+00:08:22,359 --> 00:08:29,639
+directly that same cardinal spline as the one I had before, except now that I directly compute
+
+108
+00:08:29,639 --> 00:08:34,279
+the cardinal spline just using the points and not doing the intermediate step.
+
+109
+00:08:37,399 --> 00:08:44,279
+Now there is one particularity to the cardinal spline and what it is is that it says that at best
+
+110
+00:08:44,840 --> 00:08:52,600
+a cardinal spline has a C1 continuity and that might be a confusing term but basically what it means
+
+111
+00:08:53,559 --> 00:08:59,480
+a C0 continuity means your function the continuity inside of a function so a continuous function
+
+112
+00:08:59,639 --> 00:09:03,600
+is a function where you could always
+
+113
+00:09:03,600 --> 00:09:06,240
+keep drawing in with one step.
+
+114
+00:09:06,240 --> 00:09:09,439
+You don't have to lift your pen, basically.
+
+115
+00:09:09,439 --> 00:09:11,319
+So you don't have discontinuity in your function.
+
+116
+00:09:11,319 --> 00:09:15,639
+So at the C0, you have, well, for the function itself,
+
+117
+00:09:15,639 --> 00:09:17,159
+it's continuous.
+
+118
+00:09:17,159 --> 00:09:19,720
+You could see that with the hard tension, of course,
+
+119
+00:09:19,720 --> 00:09:23,960
+even the C1 is my first derivative.
+
+120
+00:09:23,960 --> 00:09:25,559
+I can see not my first derivative now
+
+121
+00:09:25,559 --> 00:09:28,360
+is completely discontinuous.
+
+122
+00:09:28,360 --> 00:09:31,639
+And it said that at best you could have a C1 continuity.
+
+123
+00:09:31,639 --> 00:09:36,639
+So if I go with a really smooth function cardinal spline,
+
+124
+00:09:37,800 --> 00:09:41,639
+you could see that I have my C1 continuity here.
+
+125
+00:09:41,639 --> 00:09:44,960
+Actually, my derivative is continuous function also.
+
+126
+00:09:44,960 --> 00:09:47,379
+But then if I try to get a C2 continuity,
+
+127
+00:09:47,379 --> 00:09:49,560
+which is the second derivative,
+
+128
+00:09:49,560 --> 00:09:52,399
+you could see that I don't have continuity
+
+129
+00:09:52,399 --> 00:09:56,680
+inside of my C2, my second derivative.
+
+130
+00:09:58,360 --> 00:10:07,019
+What that means is usually it's more important if we if we talk about animation in the sense of I don't know physics and that kind of stuff
+
+131
+00:10:08,200 --> 00:10:12,759
+if my spline my cardinal spline here is for instance a
+
+132
+00:10:14,159 --> 00:10:19,840
+Curve that represent the position of my object in time and I want my object to follow that curve
+
+133
+00:10:19,840 --> 00:10:23,120
+What it means is that a C0 is the position of my object
+
+134
+00:10:23,120 --> 00:10:29,120
+My first derivative is the speed of my object at every time.
+
+135
+00:10:29,120 --> 00:10:32,120
+And my second derivative is the acceleration of my object.
+
+136
+00:10:32,120 --> 00:10:36,120
+And you can see that I have discontinuity inside of my acceleration every time.
+
+137
+00:10:36,120 --> 00:10:42,120
+It might be visible, it might not be an issue, depending on what you want to do.
+
+138
+00:10:42,120 --> 00:10:45,120
+Every spline does compute different stuff.
+
+139
+00:10:45,120 --> 00:11:01,120
+So the Cardinal Spline has at best a C1 continuity, and then we will see in the next video another type of Spline that I can actually give us a C2 continuity, and I'll see you next time.
